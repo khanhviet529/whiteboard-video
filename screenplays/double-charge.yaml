@@ -1,0 +1,123 @@
+# Công thức: HIỆN TRƯỜNG VỤ ÁN (xem CONG-THUC.md)
+# Chủ đề: trừ tiền hai lần do retry ở tầng gateway, không phải do double click.
+#
+# Nhịp 4 dùng HAI mô phỏng nối tiếp, mỗi cái trả lời một câu khác nhau:
+#   topology -> "Ở ĐÂU"   : gói tin bay từ đâu đến đâu, ai sinh ra bản sao
+#   race     -> "KHI NÀO" : hai lệnh trừ tiền chồng lấn thời gian ra sao
+
+title: Khách bấm 1 lần, trừ tiền 2 lần
+theme: phongtoi
+domain: be
+case: "SỰ CỐ #04"     # phải bọc nháy: trong YAML dấu # bắt đầu chú thích
+voice: female
+rate: "+6%"
+
+scenes:
+  # ---- NHỊP 1: triệu chứng. Cụ thể, nghe vô lý, chưa lộ nguyên nhân. -------
+  - scene: compare
+    narration: Khách bấm thanh toán một lần. Hệ thống trừ tiền hai lần.
+    items:
+      - label: KHÁCH BẤM
+        value: "1 LẦN"
+      - label: HỆ THỐNG TRỪ
+        value: "2 LẦN"
+        cross: true
+    verdict: KHÔNG AI BÁO LỖI
+
+  # ---- NHỊP 2: loại nghi phạm hiển nhiên ----------------------------------
+  - scene: code
+    narration: Bạn mở log lên. Sạch. Không một exception nào. Cả hai giao dịch đều thành công.
+    heading: LOG THANH TOÁN
+    code:
+      - "charge ok  200"
+      - "charge ok  200"
+    mark: check
+    verdict: CẢ HAI ĐỀU THÀNH CÔNG
+
+  # ---- NHỊP 3: loại cách giải thích 90% người xem đang nghĩ ---------------
+  - scene: checklist
+    narration: Nghi phạm đầu tiên ai cũng nghĩ tới là khách bấm hai lần. Nhưng nút đã disable ngay khi bấm.
+    items:
+      - text: Khách double click?
+      - text: Nút disable ngay lần bấm đầu.
+        focus: true
+
+  - scene: bigstat
+    narration: Vậy request thứ hai từ đâu ra?
+    label: CÂU HỎI
+    value: AI GỬI REQUEST THỨ HAI?
+    size: 140
+    color: alert
+
+  # ---- NHỊP 4a: MÔ PHỎNG "Ở ĐÂU" - gói tin bay giữa các tầng -------------
+  - scene: topology
+    narration: Đi lại đường đi của nó. Khách gửi một request. Gateway chuyển tiếp xuống API. API bắt đầu trừ tiền trong database.
+    min_duration: 13
+    nodes:
+      - { id: client, label: CLIENT,   at: [0.5, 0.00] }
+      - { id: gw,     label: GATEWAY,  at: [0.5, 0.34] }
+      - { id: api,    label: API,      at: [0.5, 0.68] }
+      - { id: db,     label: DATABASE, at: [0.5, 1.00] }
+    # Lich goi tin phai LIEN MACH - ho mot khoang la co giay khong co gi
+    # chuyen dong, mat nguoi xem roi ngay khoi man hinh.
+    packets:
+      - { from: client, to: gw,  at: 0.03, dur: 0.11, label: "PAY" }
+      - { from: gw,     to: api, at: 0.16, dur: 0.11, label: "PAY" }
+      - { from: api,    to: db,  at: 0.29, dur: 0.13, label: "TRỪ TIỀN" }
+      # gateway het kien nhan, tu sinh ban sao - day moi la thu pham
+      - { from: gw,     to: api, at: 0.50, dur: 0.11, label: "PAY LẶP", bad: true }
+      - { from: api,    to: db,  at: 0.63, dur: 0.13, label: "TRỪ LẦN 2", bad: true }
+    events:
+      - { at: 0.45, node: gw, label: "HẾT 2 GIÂY" }
+      - { at: 0.79, node: db, label: "TRỪ 2 LẦN" }
+
+  # ---- NHỊP 4b: MÔ PHỎNG "KHI NÀO" - hai lệnh chồng lấn thời gian --------
+  - scene: race
+    narration: Vấn đề nằm ở chỗ này. Request gốc vẫn đang trừ tiền thì bản sao đã trừ lần nữa. Hai lệnh chồng lên nhau.
+    min_duration: 11
+    lanes:
+      - label: REQUEST GỐC
+        color: blue
+        steps:
+          - { at: 0.04, w: 0.62, text: "ĐANG TRỪ TIỀN" }
+          - { at: 0.70, w: 0.16, text: "TRẢ 200 OK" }
+      - label: BẢN SAO CỦA GATEWAY
+        color: purple
+        steps:
+          - { at: 0.32, w: 0.11, text: "HẾT 2 GIÂY" }
+          # doan chong lan 0.46-0.66 chinh la co che gay bug
+          - { at: 0.46, w: 0.34, text: "TRỪ TIỀN LẦN 2", bad: true }
+    collision:
+      at: 0.88
+      label: TRỪ 2 LẦN
+
+  - scene: bigstat
+    narration: Server không hề biết hai request đó là cùng một lệnh.
+    label: GỐC RỄ
+    value: SERVER KHÔNG BIẾT ĐÓ LÀ CÙNG MỘT LỆNH
+    size: 116
+    color: alert
+
+  # ---- NHỊP 5: gọi tên thủ phạm. Một câu, không giải thích thêm. ----------
+  - scene: sticky
+    narration: Thủ phạm không phải khách. Là cơ chế retry của tầng gateway.
+    heading: THỦ PHẠM
+    body: Retry của gateway, không phải của khách.
+    small: Mọi tầng trung gian đều có thể tự gửi lại mà bạn không biết
+
+  # ---- NHỊP 6: một quy tắc chặn + một chỉ số phát hiện sớm ----------------
+  - scene: checklist
+    narration: Chặn bằng idempotency key. Client sinh khoá, server thấy khoá đã xử lý thì trả lại kết quả cũ chứ không làm lại.
+    items:
+      - text: Client gửi kèm khoá. Trùng khoá thì trả kết quả cũ.
+        focus: true
+      - text: Cảnh báo khi 2 giao dịch cùng số tiền, cùng khách, cách nhau dưới 10 giây.
+
+  # ---- NHỊP 7: câu hỏi về hệ thống của chính người xem --------------------
+  - scene: code
+    narration: Endpoint thanh toán của bạn đã có idempotency key chưa?
+    heading: HỆ THỐNG CỦA BẠN?
+    code:
+      - "POST /payments"
+      - "Idempotency-Key: ?"
+    code_size: 44

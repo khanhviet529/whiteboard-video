@@ -1,0 +1,181 @@
+title: Cache xoá lúc nào?
+theme: brutalist     # brutalist (khối màu) | whiteboard (vẽ tay)
+domain: database     # fe | be | database | infra  -> quyết định màu nhấn + badge
+voice: female        # female = vi-VN-HoaiMyNeural | male = vi-VN-NamMinhNeural
+rate: "+6%"          # nói nhanh hơn 6% cho nhịp TikTok
+
+scenes:
+  # ---------------------------------------------------------------- mở đầu
+  - scene: compare
+    narration: Bạn vừa sửa giá trong database. Nhưng trang web vẫn hiện giá cũ.
+    items:
+      - label: DATABASE
+        value: "120.000"
+        color: green
+      - label: TRANG WEB
+        value: "100.000"
+        color: red
+        cross: true
+        note: VẪN GIÁ CŨ
+    verdict: SAI Ở ĐÂU?
+    verdict_color: ink
+
+  - scene: qa
+    narration: Đây là một câu hỏi phỏng vấn. Cả bài thi nằm ở ba chữ cuối, lúc nào.
+    text: CACHE XOÁ LÚC NÀO?
+    color: red
+
+  # -------------------------------------------------- đáp án phổ biến, chưa đủ
+  - scene: bigstat
+    narration: Đáp án phổ biến là ghi database xong thì xoá cache.
+    value: GHI XONG THÌ XOÁ
+    size: 86
+    color: green
+    sub: Đáp án của 9 trên 10 người
+    sub_color: grey_dark
+
+  - scene: figures
+    narration: Câu đó đúng. Nhưng nó dừng đúng ở chỗ mọi tài liệu cũng dừng.
+    count: 10
+    lit: 9
+    color: purple
+    label: ĐÚNG. VÀ VẪN TRƯỢT.
+    label_color: red
+
+  - scene: checklist
+    narration: Người phỏng vấn giỏi sẽ không phán xét. Họ đào tiếp hai tầng.
+    chips:
+      - { label: THỨ TỰ, color: blue }
+      - { label: XOÁ LỖI, color: green }
+    items:
+      - text: Xoá trước hay xoá sau?
+        highlight: trước
+      - text: Xoá thất bại thì sao?
+        highlight: thất bại
+
+  # ------------------------------------------------------------ tầng 1: thứ tự
+  - scene: title
+    narration: Tầng một. Thứ tự của hai việc.
+    chips:
+      - { label: THỨ TỰ, color: blue }
+      - { label: XOÁ LỖI, color: green }
+    text: TẦNG 1 — THỨ TỰ
+    color: blue
+    underline: true
+    underline_color: blue
+
+  - scene: timeline
+    narration: Nếu bạn xoá cache trước rồi mới ghi database, giữa hai việc có một khe hở.
+    chips:
+      - { label: THỨ TỰ, color: blue }
+      - { label: XOÁ LỖI, color: green }
+    marks:
+      - { at: 0.28, label: XOÁ CACHE, color: amber }
+      - { at: 0.74, label: GHI DATABASE, color: blue }
+    gap:
+      from: 0.28
+      to: 0.74
+      label: KHE HỞ
+      note: 5MS
+      color: red
+    intruder: REQUEST KHÁC
+
+  - scene: flow
+    narration: Một request chen vào đúng khe đó, đọc database thấy giá cũ, rồi nạp chính giá cũ đó vào cache.
+    chips:
+      - { label: THỨ TỰ, color: blue }
+      - { label: XOÁ LỖI, color: green }
+    steps:
+      - { text: CACHE RỖNG, color: amber }
+      - { text: ĐỌC DATABASE, color: purple, arrow_label: cache miss }
+      - { text: NẠP LẠI GIÁ CŨ, color: red, arrow_label: chưa ghi xong }
+    verdict: CACHE GIỜ SAI
+    verdict_color: red
+
+  - scene: bigstat
+    narration: Khe hở chỉ năm mili giây. Nhưng cái sai nằm lại suốt cả TTL, năm phút.
+    chips:
+      - { label: THỨ TỰ, color: blue }
+      - { label: XOÁ LỖI, color: green }
+    value: KHE HỞ 5MS
+    size: 96
+    color: amber
+    sub: Cái sai sống 5 phút
+    sub_color: red
+
+  - scene: sticky
+    narration: Nên quy tắc một, ghi database trước, xoá cache sau.
+    chips:
+      - { label: THỨ TỰ, color: blue, done: true }
+      - { label: XOÁ LỖI, color: green }
+    tone: blue
+    heading: QUY TẮC 1
+    body: Ghi database trước. Xoá cache sau.
+    small: Ngược lại thì một request chen vào sẽ nạp lại đúng giá cũ
+
+  # ------------------------------------------------------- tầng 2: xoá thất bại
+  - scene: title
+    narration: Tầng hai. Thế còn khi lệnh xoá thất bại?
+    chips:
+      - { label: THỨ TỰ, color: blue, done: true }
+      - { label: XOÁ LỖI, color: green }
+    text: TẦNG 2 — XOÁ LỖI
+    color: green
+    underline: true
+    underline_color: green
+
+  - scene: code
+    narration: Lệnh xoá cache thường được gọi kiểu bắn rồi quên. Nó mất, mà không có cảnh báo nào.
+    chips:
+      - { label: THỨ TỰ, color: blue, done: true }
+      - { label: XOÁ LỖI, color: green }
+    heading: LỆNH XOÁ CACHE
+    code: "DEL sanpham:42"
+    mark: cross
+    verdict: KHÔNG AI BÁO LỖI
+    verdict_color: red
+
+  - scene: decay
+    narration: Cache giữ giá cũ một giờ, một ngày, một tuần. Khách phát hiện trước bạn.
+    chips:
+      - { label: THỨ TỰ, color: blue, done: true }
+      - { label: XOÁ LỖI, color: green }
+    label: CACHE
+    value: "100.000"
+    color: red
+    stops: [1 GIỜ, 1 NGÀY, 1 TUẦN]
+    verdict: KHÁCH THẤY TRƯỚC BẠN
+    verdict_color: pink
+    customer: Sao giá sai?
+
+  - scene: sticky
+    narration: Quy tắc hai, luôn đặt TTL. Đó là lưới cuối khi lệnh xoá bị mất.
+    chips:
+      - { label: THỨ TỰ, color: blue, done: true }
+      - { label: XOÁ LỖI, color: green, done: true }
+    tone: green
+    heading: QUY TẮC 2
+    body: TTL là lưới cuối.
+    small: TTL 60 giây = chấp nhận tối đa 1 phút dữ liệu cũ
+
+  # ----------------------------------------------------------------- chốt lại
+  - scene: checklist
+    narration: Câu trả lời ba mươi giây, gồm bốn dòng.
+    items:
+      - text: Ghi database trước, xoá cache sau.
+        highlight: trước
+      - text: Xoá trước để lại giá cũ suốt cả TTL.
+        highlight: TTL
+      - text: Lệnh xoá có thể mất, nên luôn đặt TTL.
+        highlight: luôn
+      - text: TTL 60 giây là tối đa 1 phút dữ liệu cũ.
+        highlight: 1 phút
+
+  - scene: code
+    narration: Còn cache của bạn, TTL đang đặt bao nhiêu giây?
+    heading: CACHE CỦA BẠN?
+    code:
+      - "// bình luận"
+      - "ttl = ?"
+    code_size: 44
+    color: ink

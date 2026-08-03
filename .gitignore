@@ -1,0 +1,10 @@
+# san pham render va cache trung gian
+build/
+out/
+
+# font tai ve khi do thu (ban chinh thuc nam trong assets/fonts)
+research/fonts/
+research/font-test-*.png
+
+__pycache__/
+*.pyc
