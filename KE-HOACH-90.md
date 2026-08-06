@@ -31,7 +31,7 @@ có mùa thật chứ không phải một khuôn lặp 90 lần.
 
 | Việc | Vì sao chặn | Chặn mùa nào |
 |---|---|---|
-| Cài postgres + redis trong WSL2 | sqlite không có MVCC, không có gap lock, không có autovacuum, không có eviction policy. 15 chủ đề mạnh nhất nằm ở đó | 1, 2, 4 |
+| Cài postgres + redis trong WSL2 → [CAI-DAT-WSL.md](CAI-DAT-WSL.md) | sqlite không có MVCC, không có gap lock, không có autovacuum, không có eviction policy. 15 chủ đề mạnh nhất nằm ở đó | 1, 2, 4 |
 | Cài docker trong WSL2 | OOMKilled, cgroup throttling, SIGTERM đều không dựng lại được bằng process thường | 6 |
 | `npm install react react-test-renderer` | đếm số lần render là cách duy nhất đo được bug re-render | 5 |
 | Loại cảnh `code` cho theme `bench` | mùa 3 không có cảnh nào để chiếu hai đoạn code | 3 |
