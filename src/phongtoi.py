@@ -11,14 +11,15 @@ Thay the theme brutalist. Bon dieu phai chua, va cach chua:
   chuyen dong cung  -> easing expo.out 500-700ms, he lo bang mask truot len,
                        chuyen canh bang dai mau quet qua thay cho cat tho.
 """
-import math
-
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 
 import sketch as sk
+import typo
 from style import H, W, clamp, font, s
 from timing import B
+from typo import (expo_out, glow, headline, mono, ttext, track_w,  # noqa: F401
+                  wrap_track)
 
 # ---------------------------------------------------- chuyen canh: dai mau quet
 FADE = 0.0            # khong mo dan ve nen; theme nay tu ve dai quet
@@ -64,13 +65,6 @@ def domain(sp, doc_domain=None):
     return DOMAINS.get(key, DOMAINS[DEFAULT_DOMAIN])
 
 
-# --------------------------------------------------------------------- easing
-def expo_out(p):
-    """Bat dau rat nhanh roi ha rat cham. Day la nhip cua theme nay."""
-    p = clamp(p)
-    return 1.0 if p >= 1 else 1 - math.pow(2, -10 * p)
-
-
 # ------------------------------------------------------------------ nen + hat
 _bg = None
 
@@ -100,145 +94,10 @@ def background():
     return _bg
 
 
-def glow(base, box, col, radius=70, strength=95):
-    """Vet sang toa quanh phan tu tieu diem.
-
-    Blur o 1/4 kich thuoc roi phong lai: nhanh hon blur truc tiep khoang 16 lan
-    ma mat thuong khong phan biet duoc voi vet sang mem.
-    """
-    x0, y0, x1, y1 = box
-    pad = radius * 2
-    w = int(s(x1 - x0 + pad * 2) / 4)
-    h = int(s(y1 - y0 + pad * 2) / 4)
-    if w < 4 or h < 4:
-        return
-    small = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    ImageDraw.Draw(small).rectangle(
-        [int(s(pad) / 4), int(s(pad) / 4), w - int(s(pad) / 4),
-         h - int(s(pad) / 4)], fill=col + (strength,))
-    small = small.filter(ImageFilter.GaussianBlur(max(1, int(s(radius) / 4))))
-    base.alpha_composite(small.resize(
-        (int(s(x1 - x0 + pad * 2)), int(s(y1 - y0 + pad * 2))), Image.BILINEAR),
-        (int(s(x0 - pad)), int(s(y0 - pad))))
-
-
-# ----------------------------------------------------------------------- chu
-def adv(txt, f):
-    """Be rong thuc (advance), khac bbox: bbox cua dau cach la rong."""
-    return f.getlength(txt) / s(1)
-
-
-def track_w(txt, f, track):
-    return sum(adv(c, f) for c in txt) + track * max(0, len(txt) - 1)
-
-
-def ttext(base, txt, f, fill, y, x=None, cx=None, track=0.0, p=1.0,
-          reveal="mask", rise=20):
-    """Chu co tracking, he lo bang mask truot len.
-
-    PIL khong ho tro tracking nen phai ve tung ky tu. reveal="mask": chu truot
-    len tu duoi trong khi bi cat boi mot cua so co dinh -> giong chu duoc day
-    vao cho, muot hon nhieu so voi mo dan.
-    """
-    if p <= 0 or not txt:
-        return 0.0
-    total = track_w(txt, f, track)
-    _, oy, th = _tm(txt, f)
-    lx = (cx - total / 2) if cx is not None else (x or 0)
-    e = expo_out(p)
-
-    pad = s(30)
-    layer = Image.new("RGBA", (int(s(total)) + pad * 2, int(s(th)) + pad * 2),
-                      (0, 0, 0, 0))
-    ld = ImageDraw.Draw(layer)
-    cur = pad
-    for c in txt:
-        ld.text((cur, pad - s(oy)), c, font=f, fill=fill + (255,))
-        cur += int(s(adv(c, f)))
-
-    if reveal == "mask" and e < 1.0:
-        dy = int((1 - e) * s(rise))
-        alpha = layer.getchannel("A").point(lambda v: int(v * min(1.0, e * 1.6)))
-        layer.putalpha(alpha)
-        mask = Image.new("L", layer.size, 0)
-        ImageDraw.Draw(mask).rectangle([0, pad - s(4), layer.size[0],
-                                        pad + int(s(th)) + s(6)], fill=255)
-        layer.putalpha(Image.composite(layer.getchannel("A"), mask, mask))
-        base.alpha_composite(layer, (int(s(lx)) - pad, int(s(y)) - pad + dy))
-    else:
-        base.alpha_composite(layer, (int(s(lx)) - pad, int(s(y)) - pad))
-    return th
-
-
 def _tm(txt, f):
-    """(offset_y, cao_thuc) - PIL dat dinh khung dong tai y, khong phai dinh muc."""
-    oy, th = sk.text_metrics(txt, f)
+    """(offset_y, offset_y, cao_thuc) - bien the 3 gia tri, chi theme nay dung."""
+    oy, th = typo.tm(txt, f)
     return oy, oy, th
-
-
-def mono(base, txt, xy, col, p=1.0, size=26, track=4.0, wght=600):
-    """Nhan mono nho, tracking rong. Tang thong tin phu lam day khung."""
-    f = font("mono", size)
-    try:
-        f.set_variation_by_axes([wght])
-    except Exception:
-        pass
-    return ttext(base, txt, f, col, xy[1], x=xy[0], track=track, p=p, rise=10)
-
-
-def _wrap_greedy(txt, f, max_w, track):
-    """Ngat dong tham lam: nhoi day dong tren roi xuong dong."""
-    words = txt.split()
-    if not words:
-        return []
-    lines, cur = [], words[0]
-    for w_ in words[1:]:
-        cand = cur + " " + w_
-        if track_w(cand, f, track) <= max_w:
-            cur = cand
-        else:
-            lines.append(cur)
-            cur = w_
-    lines.append(cur)
-    return lines
-
-
-def wrap_track(txt, f, max_w, track):
-    """Ngat dong CAN BANG, co tinh ca tracking.
-
-    Tim nhi phan be rong NHO NHAT ma van ra dung so dong -> cac dong deu nhau,
-    khong de chu mo coi. Vong tim PHAI goi ban tham lam, khong duoc goi lai
-    chinh no: goi de quy thi moi buoc lai sinh mot vong tim moi, chi phi bung
-    no ham mu (loi nay tung lam mot frame ton 60 giay).
-    """
-    lines = _wrap_greedy(txt, f, max_w, track)
-    n = len(lines)
-    if n < 2:
-        return lines
-    lo, hi, best = 1, int(max_w), lines
-    while lo < hi:
-        mid = (lo + hi) // 2
-        c2 = _wrap_greedy(txt, f, mid, track)
-        if len(c2) <= n and all(track_w(l, f, track) <= max_w for l in c2):
-            best, hi = c2, mid
-        else:
-            lo = mid + 1
-    return best
-
-
-def headline(txt, max_w, max_h, size=104, min_size=64, track=-2.5, role="grot_black"):
-    """Tieu de type-as-hero: uu tien NGAT DONG o co lon, chi thu nho khi qua cao."""
-    sz = size
-    while sz > min_size:
-        f = font(role, sz)
-        lines = wrap_track(txt, f, max_w, track)
-        lh = sk.text_size("Ăgjqy", f)[1] * 1.16
-        if lh * len(lines) <= max_h:
-            return f, lines, lh
-        sz -= 4
-    f = font(role, min_size)
-    lines = wrap_track(txt, f, max_w, track)
-    return f, lines, sk.text_size("Ăgjqy", f)[1] * 1.16
 
 
 def panel(base, box, p=1.0, focus=False, accent=None, fill=None):
