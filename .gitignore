@@ -8,3 +8,7 @@ research/font-test-*.png
 
 __pycache__/
 *.pyc
+
+# --- node: bench-js chi de DO, khong phai san pham. Cai lai bang npm i.
+bench-js/node_modules/
+bench-js/package-lock.json
