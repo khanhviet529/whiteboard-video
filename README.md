@@ -159,17 +159,48 @@ Chọn bằng `engine:` ở đầu screenplay, hoặc ghi đè từ CLI.
 # edge (mặc định)
 python src/render.py screenplays/cache-stale.yaml
 
-# omnivoice — `--voice` là BẮT BUỘC. Screenplay khai `voice: female` cho
-# edge-tts, omnivoice không có tên giọng đó nên không truyền thì dừng ngay
-# (kèm dòng lỗi ghi rõ phải gõ gì).
-python src/render.py screenplays/cache-stale.yaml \
-    --engine omnivoice --voice namtre_v3 --style camhung --tts-mode lien
+# omnivoice — screenplay tự khai đủ bộ nên dòng lệnh chỉ cần một cờ
+python src/render.py screenplays/cache-stale.yaml --engine omnivoice
 # -> out/cache-stale-omnivoice.mp4   (tên có hậu tố để không ghi đè bản edge)
+```
+
+```yaml
+# ...và trong screenplay:
+omni_voice: namtre_v3    # ten giong clone. `voice:` la cua edge-tts, khac han
+style: camhung           # preset, khong phai sac thai - xem muc duoi
+mode: tach               # nhanh DUY NHAT co vong thu lai
+speed: 1.03
+pause_scale: 0.70
 ```
 
 Xem giọng và sắc thái có thật: `D:\omnivoice-test\say.ps1 --list`. Tên giọng
 **không** tự do — `namtre_va` không tồn tại, có `namtre_v2` / `namtre_v3` /
 `nam_tre`.
+
+### ⚠ `style` và `mode` không phải tuỳ chọn thẩm mỹ
+
+Đây là bẫy đắt nhất đã va phải trong dự án này. Nghe tên thì `camhung` giống một
+sắc thái giọng và `lien`/`tach` giống một đánh đổi tốc độ, nên rất dễ bỏ qua.
+Thực tế cả hai là **cơ chế kiểm soát chất lượng**:
+
+```python
+"camhung": dict(
+    speed=1.03, pause_scale=0.85,
+    gen={"guidance_scale": 2.3, "class_temperature": 0.5},
+    contour=True, pitch_method="none", retry=2, mode="tach",
+),
+"tunhien": dict(speed=0.97, pause_scale=1.0, gen={}),   # khong co gi
+```
+
+`retry=2` chỉ có tác dụng trong nhánh `tach`: mỗi câu sinh riêng, đo cao tần, câu
+nào thấp bất thường so với trung vị thì sinh lại và giữ bản tốt nhất. Nhánh
+`lien` sinh cả đoạn một phát rồi lấy nguyên, **không kiểm tra gì**.
+
+Hậu quả khi quên: video vẫn ra, vẫn nghe được, không có một dòng cảnh báo nào,
+chỉ là nhiều sạn hơn hẳn. Đo được trên cùng một screenplay là 6 lỗ chết ≥300ms
+so với 1, tức gấp chín lần trên mỗi phút.
+
+Vì vậy ba khoá đó khai trong screenplay chứ không để trên dòng lệnh.
 
 ### `mode: lien` hay `tach` — chênh nhau 2,4 lần
 
@@ -181,9 +212,9 @@ Xem giọng và sắc thái có thật: `D:\omnivoice-test\say.ps1 --list`. Tên
 | `camhung` + `--tts-mode lien` | 2,64s | 59s | **22,4** |
 | `camhung` + `lien` + `--num-step 4` | 2,62s | 37s | 14,1 |
 
-`tach` tách từng câu rồi sinh riêng, nên chi phí cố định nhân với số câu.
-`lien` sinh cả đoạn một lần — nhanh hơn **và** audio gọn hơn vì bỏ khoảng nghỉ
-dài giữa câu. Đổi lại mất cái ngắt nghỉ đều đặn mà `tach` tạo ra.
+`tach` tách từng câu rồi sinh riêng, nên chi phí cố định nhân với số câu. `lien`
+nhanh hơn 2,4 lần, nhưng cái giá là mất vòng thử lại ở mục trên. Chỉ dùng `lien`
+khi đang thử nhanh một câu chữ, đừng dùng cho bản cuối.
 
 ### Vì sao phải gom cả video vào một lần gọi
 

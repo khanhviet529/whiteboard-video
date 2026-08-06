@@ -77,7 +77,11 @@ def config(doc):
     # Bat o day chu khong de say.py bao, va cang khong tu thay bang giong mac
     # dinh: thay ngam thi doi luon KHOA CACHE, nen lan render sau se sinh lai
     # het ma khong ai hieu vi sao.
-    v = doc.get("voice", OMNI_DEFAULT_VOICE)
+    # `omni_voice:` de screenplay khai duoc CA HAI engine cung luc: `voice:` cho
+    # edge, `omni_voice:` cho omnivoice. Khong co no thi giong omnivoice chi
+    # song tren dong lenh, va mot lan quen `--voice` la ra mot video khac han -
+    # da mat mot luot render vi dung chuyen do.
+    v = doc.get("omni_voice") or doc.get("voice", OMNI_DEFAULT_VOICE)
     if v in ("female", "male", "nu", "nam"):
         raise SystemExit(
             f"screenplay khai `voice: {v}` - do la ten giong cua edge-tts, "

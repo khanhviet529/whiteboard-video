@@ -34,6 +34,17 @@ rate: "+16%"
 
 # Xem VIET-KICH-BAN.md muc "cau hinh va cache" - phai khai o day, sua trong
 # speak.py khong co tac dung vi khong vao khoa cache.
+# --- bo cau hinh omnivoice, khai o day chu KHONG de tren dong lenh -----------
+# `camhung` khong phai mot "sac thai giong" ma la preset da tinh chinh: contour
+# bat, retry=2, guidance_scale 2.3, class_temperature 0.5. `mode: tach` moi co
+# nhanh thu lai - nhanh `lien` sinh mot phat va lay nguyen, khong kiem tra gi.
+#
+# De hai khoa nay tren dong lenh thi mot lan quen la ra video khac han, va da
+# mat mot luot render vi dung chuyen do. Xem VIET-KICH-BAN.md.
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+
 pause_scale: 0.70
 speed: 1.03
 pre_pad: 0.35

@@ -47,6 +47,17 @@ rate: "+16%"      # nhip TikTok; +6% ra video dai gan 3 phut
 # pause_scale  0,85 -> 0,70: video 102,7s van con 39% im lang. Do duoc toc do
 #              DOC gan y ban goc (4,95 so 5,03 khoi am/giay) nen cam giac cham
 #              den tu khoang nghi, khong tu speed - dung don la ha cai nay.
+# --- bo cau hinh omnivoice, khai o day chu KHONG de tren dong lenh -----------
+# `camhung` khong phai mot "sac thai giong" ma la preset da tinh chinh: contour
+# bat, retry=2, guidance_scale 2.3, class_temperature 0.5. `mode: tach` moi co
+# nhanh thu lai - nhanh `lien` sinh mot phat va lay nguyen, khong kiem tra gi.
+#
+# De hai khoa nay tren dong lenh thi mot lan quen la ra video khac han, va da
+# mat mot luot render vi dung chuyen do. Xem VIET-KICH-BAN.md.
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+
 pause_scale: 0.70
 speed: 1.03
 
