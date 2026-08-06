@@ -1,0 +1,898 @@
+"""Theme BENCH - "ban thi nghiem": so do dat duoi dong ho do, co so chay that.
+
+Khac `phongtoi` o CHO NHIN, khong chi o mau:
+
+  phongtoi                        bench
+  ------------------------------  ------------------------------------------
+  chu can le trai, khoi lon       KHUNG CO DINH day khung: rail thuong, chip
+  noi dung chi o nua tren         chuong, tieu de, the phu de, dong chan
+  nen xanh dem + ke ngang         nen gan den + luoi CHAM + bloom tim mo
+  panel to dac, vien 2px          net manh + NGOAC GOC kieu khung ngam
+  hinh minh hoa tinh              DONG HO DO chay that: gia tri cache/db doi
+                                  theo dau doc, bo dem "khach thay gia sai"
+  chuyen canh: bong quet ngang    tan mem RIENG dai noi dung, rail va dong chan
+                                  dung yen -> giong doi trang cung mot ban do
+
+Y tuong dan dat: nguoi xem khong doc bieu do, ho DOC SO. Mot con so dang nhay
+giu mat lau hon bat ky mui ten nao. Vi vay moi canh mo phong deu phai co it
+nhat mot o so lien tuc doi gia tri (xem `sc_gantt`).
+"""
+import numpy as np
+from PIL import Image, ImageDraw
+
+import sketch as sk
+import typo
+from style import H, W, clamp, ease_in_out, font, s
+from timing import B
+from typo import expo_out, glow, mono, ttext, track_w, wrap_track
+
+# ------------------------------------------------ chuyen canh: tan mem noi dung
+FADE = 0.0          # render.py khong tron them: theme tu lo cu tan
+DISSOLVE = 0.42     # dai hon cu quet cu (0,30) - cham hon thi de nhin hon
+WIPE_OUT = DISSOLVE  # render.py doc hang so nay de khong chup stills luc dang tan
+
+# ------------------------------------------------------------------- bang mau
+BG = (9, 9, 12)           # gan den, khong xanh - de tach khoi phongtoi
+SURF = (18, 18, 23)
+EDGE = (50, 50, 60)
+EDGE_HI = (78, 78, 92)
+FG = (240, 242, 246)
+MUTED = (152, 154, 164)
+DIM = (96, 98, 108)
+DOTS = (26, 26, 33)       # mau luoi cham DA TRON san voi nen
+
+HOT = (255, 82, 48)       # cam-do: cai sai, tieu diem  (mau tieu de cua mau)
+OK = (58, 219, 138)       # xanh la: dung
+COOL = (88, 168, 255)     # xanh duong: luong chinh
+VIOLET = (170, 132, 255)  # tim: luong phu / request khac
+GOLD = (250, 196, 60)     # vang: moc thoi gian
+
+ACCENTS = {"hot": HOT, "ok": OK, "cool": COOL, "violet": VIOLET, "gold": GOLD,
+           "fg": FG, "muted": MUTED, "edge": EDGE}
+
+STATES = {"ok": OK, "bad": HOT, "stale": MUTED, "empty": DIM, "warn": GOLD}
+
+
+def acc_of(name, fallback=HOT):
+    if isinstance(name, (tuple, list)):
+        return tuple(name)
+    return ACCENTS.get((name or "").lower(), fallback)
+
+
+# --------------------------------------------------------------------- bo cuc
+MARGIN = 60
+CX = W // 2
+CONTENT_W = W - MARGIN * 2          # 960
+
+RAIL_Y = 62                          # dong chu mono tren cung
+RULE_Y = 116                         # ke ngang duoi rail
+CHIP_Y = 150                         # chip chuong, cao 48
+CHIP_H = 48
+HEAD_Y = 244                         # tieu de canh
+HEAD_MAX_H = 190
+STAGE_TOP = 470                      # san dien
+STAGE_BOTTOM = 1296
+NOTE_Y = 1332                        # the phu de
+NOTE_MAX_H = 168
+FOOT_Y = 1524                        # dong chan; duoi 1570 la vung TikTok phu UI
+
+STAGE_H = STAGE_BOTTOM - STAGE_TOP
+STAGE_CY = (STAGE_TOP + STAGE_BOTTOM) / 2
+
+
+# ------------------------------------------------------------------------ nen
+_bg = None
+
+
+def background():
+    """Nen gan den + luoi cham + bloom tim mo + hat nhieu. Ve MOT lan roi cache.
+
+    Luoi CHAM (khong phai ke ngang nhu phongtoi) va vet bloom la hai thu lam
+    khung hinh co chat lieu ma khong hut mat khoi noi dung. Ca hai phai nuong
+    vao nen: ve lai moi frame thi vua cham vua nhay.
+    """
+    global _bg
+    if _bg is not None:
+        return _bg
+    img = Image.new("RGBA", (s(W), s(H)), BG + (255,))
+    d = ImageDraw.Draw(img)
+    r = max(1, s(1.2))
+    for y in range(RULE_Y + 40, FOOT_Y + 20, 46):
+        for x in range(MARGIN, W - MARGIN + 1, 46):
+            d.ellipse([s(x) - r, s(y) - r, s(x) + r, s(y) + r],
+                      fill=DOTS + (255,))
+
+    a = np.array(img.convert("RGB")).astype(np.float32)
+    hh, ww = a.shape[:2]
+    yy, xx = np.mgrid[0:hh, 0:ww].astype(np.float32)
+    # bloom elip quanh san dien - sang o giua, tat han o bien
+    nx = (xx / ww - 0.5) / 0.62
+    ny = (yy / hh - 0.44) / 0.40
+    fall = np.clip(1.0 - (nx * nx + ny * ny), 0.0, 1.0) ** 2.1
+    for i, tint in enumerate((30.0, 20.0, 52.0)):   # tim lanh
+        a[:, :, i] += fall * tint
+    rng = np.random.default_rng(7)
+    a += rng.normal(0, 5.5, (hh, ww, 1))
+    _bg = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA")
+    return _bg
+
+
+# ------------------------------------------------------------- primitive khung
+def card(base, box, p=1.0, fill=SURF, border=EDGE, radius=14, lit=None,
+         width=2):
+    """The noi dung: bo goc, net manh. `lit` = mau vet sang neu la tieu diem."""
+    if p <= 0:
+        return
+    e = expo_out(p)
+    x0, y0, x1, y1 = box
+    cy = (y0 + y1) / 2
+    k = 0.965 + 0.035 * e
+    y0, y1 = cy + (y0 - cy) * k, cy + (y1 - cy) * k
+    if lit:
+        glow(base, (x0, y0, x1, y1), lit, 60, int(66 * e))
+    ImageDraw.Draw(base).rounded_rectangle(
+        [s(x0), s(y0), s(x1), s(y1)], radius=s(radius),
+        fill=fill + (255,) if fill else None,
+        outline=border + (255,), width=s(width))
+
+
+def brackets(base, box, col, p=1.0, size=30, width=3):
+    """Bon goc kieu khung ngam. Dau hieu nhan dien cua theme nay.
+
+    Dung thay cho vien kin: khung ngam goi y "dang do", con vien kin goi y
+    "mot cai hop". Ca video la mot ban do nen phai ra chat do.
+    """
+    if p <= 0:
+        return
+    e = expo_out(p)
+    x0, y0, x1, y1 = box
+    L = size * e
+    if L < 1:
+        return
+    d = ImageDraw.Draw(base)
+    w = s(width)
+    for cx_, cy_, sx, sy in ((x0, y0, 1, 1), (x1, y0, -1, 1),
+                             (x0, y1, 1, -1), (x1, y1, -1, -1)):
+        d.line([s(cx_), s(cy_), s(cx_ + L * sx), s(cy_)], fill=col + (255,),
+               width=w)
+        d.line([s(cx_), s(cy_), s(cx_), s(cy_ + L * sy)], fill=col + (255,),
+               width=w)
+
+
+def hline(base, y, col=EDGE, x0=MARGIN, x1=W - MARGIN, p=1.0, width=2):
+    if p <= 0:
+        return
+    e = expo_out(p)
+    ImageDraw.Draw(base).line(
+        [s(x0), s(y), s(x0 + (x1 - x0) * e), s(y)], fill=col + (255,),
+        width=s(width))
+
+
+def bar(base, box, col, p=1.0, radius=8, grow="x"):
+    """Thanh dac moc ra theo p - dung cho lane, thanh tien do."""
+    if p <= 0:
+        return
+    e = expo_out(p) if grow == "x" else clamp(p)
+    x0, y0, x1, y1 = box
+    x1 = x0 + (x1 - x0) * e
+    if x1 - x0 < 2:
+        return
+    ImageDraw.Draw(base).rounded_rectangle(
+        [s(x0), s(y0), s(x1), s(y1)], radius=s(radius), fill=col + (255,))
+
+
+def fit_one(role, txt, max_w, size, min_size=30, track=-1.5, step=2):
+    """Thu nho cho vua MOT dong. Dung cho o so - so khong duoc ngat dong."""
+    sz = size
+    f = font(role, sz)
+    while sz > min_size and track_w(txt, f, track) > max_w:
+        sz -= step
+        f = font(role, sz)
+    return f
+
+
+def headline_fit(txt, max_w, max_h, size, min_size, track=-1.6, role="grot"):
+    return typo.headline(txt, max_w, max_h, size, min_size, track, role)
+
+
+# ------------------------------------------------------- khung co dinh moi canh
+def chapters(doc):
+    """Ten chuong -> so thu tu, dem theo lan xuat hien dau tien trong doc."""
+    out, n = {}, 0
+    for sp in (doc or {}).get("scenes", []):
+        ch = sp.get("chapter")
+        if ch and ch not in out:
+            n += 1
+            out[ch] = n
+    return out
+
+
+def chrome(b, sp, doc, acc, chmap, first=False):
+    """Rail tren + chip chuong + tieu de canh. Ba thu nay co o MOI canh.
+
+    Day la diem khac lon nhat so voi phongtoi: khung hinh luon co bo khung, nen
+    mat nguoi xem biet dang o dau trong video. Phia phongtoi de trong ba phan
+    tu khung nen moi canh trong nhu mot slide roi.
+
+    Rail chi chay hieu ung o canh DAU TIEN (`first`), tu canh hai tro di ve dac
+    ngay. Ly do: cu tan cuoi canh khong tan rail, nen neu canh sau lai cho rail
+    mo dan tu 0 thi moi diem cat co mot cu sut sang cua rail - dung thu ma cu
+    tan nay sinh ra de tranh. Do dac la thu phai dung yen thi moi ra "cung mot
+    ban do".
+    """
+    brand = (doc or {}).get("brand")
+    tag = (doc or {}).get("tag")
+
+    def fn_rail(base, d, p):
+        q = p if first else 1.0
+        if brand:
+            mono(base, brand, (MARGIN, RAIL_Y), acc, q, 24, 5.0, 700)
+        if tag:
+            f = typo.mono_font(22, 400)
+            ttext(base, tag, f, DIM, RAIL_Y + 2,
+                  x=W - MARGIN - track_w(tag, f, 3.0), track=3.0, p=q, rise=8)
+        hline(base, RULE_Y, EDGE, MARGIN, W - MARGIN, min(1.0, q * 1.4))
+    b.add(fn_rail, dur=0.34, wait=0.0, at=0.0)
+
+    ch = sp.get("chapter")
+    if ch:
+        label = f"{chmap.get(ch, 1):02d} · {ch}"
+        cf = typo.mono_font(24, 700)
+        cw = track_w(label, cf, 4.0) + 96
+
+        def fn_chip(base, d, p):
+            card(base, (MARGIN, CHIP_Y, MARGIN + cw, CHIP_Y + CHIP_H), p,
+                 fill=SURF, border=EDGE, radius=CHIP_H // 2, width=2)
+            if p > 0.3:
+                q = (p - 0.3) / 0.7
+                r = 7
+                ccy = CHIP_Y + CHIP_H / 2
+                ImageDraw.Draw(base).ellipse(
+                    [s(MARGIN + 30 - r), s(ccy - r), s(MARGIN + 30 + r),
+                     s(ccy + r)], fill=acc + (255,))
+                oy, th = typo.tm(label, cf)
+                ttext(base, label, cf, FG, ccy - th / 2, x=MARGIN + 54,
+                      track=4.0, p=q, rise=8)
+        b.add(fn_chip, dur=0.36, wait=0.0, at=0.10)
+
+    head = sp.get("head")
+    if head:
+        f, lines, lh = headline_fit(head, CONTENT_W - 10, HEAD_MAX_H, 68, 46,
+                                    -1.4, "grot")
+
+        def fn_head(base, d, p):
+            for i, ln in enumerate(lines):
+                lp = clamp((p - i * 0.14) * 1.5)
+                if lp > 0:
+                    ttext(base, ln, f, FG, HEAD_Y + i * lh, x=MARGIN,
+                          track=-1.4, p=lp, rise=22)
+        b.add(fn_head, dur=0.5, wait=0.0, at=0.22)
+
+
+def note(b, txt, acc, at=0.26):
+    """The phu de duoi san dien: vach mau ben trai + chu trong the bo goc.
+
+    Chon co chu lon nhat ma ca khoi con vua NOTE_MAX_H. Khong bao gio cat bot
+    cau: phu de bi cat thi nguoi xem tat tieng se mat noi dung.
+    """
+    if not txt:
+        return
+    for size in (32, 30, 28, 26, 24):
+        f = font("grot_med", size)
+        lines = sk.wrap(txt, f, CONTENT_W - 96)
+        lh = sk.line_height(f, 1.34)
+        if lh * len(lines) + 44 <= NOTE_MAX_H:
+            break
+    hgt = lh * len(lines) + 44
+    box = (MARGIN, NOTE_Y, W - MARGIN, NOTE_Y + hgt)
+
+    def fn(base, d, p):
+        card(base, box, min(1.0, p * 1.5), fill=SURF, border=EDGE, radius=12)
+        if p > 0.15:
+            bar(base, (MARGIN + 2, NOTE_Y + 12, MARGIN + 8, NOTE_Y + hgt - 12),
+                acc, 1.0, radius=3)
+            for i, ln in enumerate(lines):
+                lp = clamp((p - 0.15 - i * 0.09) * 1.8)
+                if lp > 0:
+                    ttext(base, ln, f, MUTED, NOTE_Y + 22 + i * lh,
+                          x=MARGIN + 34, p=lp, rise=10)
+    b.add(fn, dur=0.55, wait=0.0, at=at)
+
+
+def footer(b, doc, at=0.5, first=False):
+    """Dong chan. Cung la do dac nhu rail: chi chay hieu ung o canh dau tien."""
+    txt = (doc or {}).get("footer")
+    if not txt:
+        return
+    f = typo.mono_font(22, 400)
+
+    def fn(base, d, p):
+        ttext(base, txt, f, DIM, FOOT_Y, cx=CX, track=3.5,
+              p=p if first else 1.0, rise=8)
+    # Tu canh hai tro di phai xep tu MOC 0. Ve dac ngay thoi chua du: phan tu
+    # nao chua toi `at` thi render.py bo qua han (p <= 0), nen dong chan se biet
+    # mat 0,46s dau moi canh - dung cai sut sang ma cu tan can tranh.
+    b.add(fn, dur=0.5, wait=0.0, at=at if first else 0.0)
+
+
+def dissolve(b):
+    """Cuoi canh: tan NOI DUNG ve nen, GIU nguyen rail va dong chan.
+
+    Ban dau cho la mot man che truot doc co vach sang mau accent dan duong. Sai:
+    moi diem cat co HAI vach (mot khi ra canh, mot khi vao canh) luot het khung
+    trong ~0,56s, lai dung `expo_out` nen phong rat nhanh o doan dau. Mot vach
+    sang manh keo nhanh qua vong mat 12 lan trong hai phut la nhuc mat that, va
+    no khong nói thêm điều gì về nội dung.
+
+    Cach nay thay bang mot cu tan mem, va chi tan DAI NOI DUNG: rail chu mono
+    tren cung va dong chan o duoi dung yen suot video. Nho vay hai canh noi nhau
+    giong nhu doi trang trong cung mot ban do - do la cu chuyen canh cua
+    `video_template/6.mp4`, va la ly do no trong "chuyen nghiep" chu khong phai
+    vi hieu ung phuc tap hon.
+
+    Dung ease_in_out (khong phai expo): hai dau cham, giua nhanh - mat khong bi
+    giat o thoi diem bat dau.
+    """
+    y0, y1 = CHIP_Y - 26, NOTE_Y + NOTE_MAX_H + 10
+
+    def fn_out(base, d, p):
+        a = ease_in_out(p)
+        if a <= 0.002:
+            return
+        # cat dung dai noi dung tu NEN da cache roi phu len voi do mo tang dan:
+        # tan ve chinh cai nen do (luoi cham + bloom), khong phai ve mau phang
+        band = background().crop((0, int(s(y0)), int(s(W)), int(s(y1))))
+        if a < 1.0:
+            band.putalpha(int(255 * a))
+        base.alpha_composite(band, (0, int(s(y0))))
+    b.add(fn_out, dur=DISSOLVE, wait=0.0, at=max(0.1, b.dur - DISSOLVE))
+
+
+# ============================================================== CAC LOAI CANH
+def sc_probe(b, sp, acc):
+    """Console that: lenh o trai, ket qua o phai, dong sai to do.
+
+    Day la canh mo dau manh nhat cho dan mid-level: ho doc duoc ba dong nay
+    nhanh hon bat ky loi giai thich nao, va tu thay ngay cho vo ly.
+    """
+    rows = sp["lines"]
+    hh = 68
+    rowh = 86
+    pad = 30
+    hgt = hh + rowh * len(rows) + pad
+    y0 = STAGE_CY - hgt / 2
+    box = (MARGIN, y0, W - MARGIN, y0 + hgt)
+    cf = typo.mono_font(sp.get("code_size", 34), 500)
+    of = typo.mono_font(sp.get("code_size", 34) - 2, 700)
+    bad_any = any((r.get("state") or "") == "bad" for r in rows)
+
+    def fn_card(base, d, p):
+        card(base, box, p, fill=SURF, border=EDGE, radius=14,
+             lit=HOT if bad_any else None)
+        if p > 0.3:
+            q = (p - 0.3) / 0.7
+            hline(base, y0 + hh, EDGE, MARGIN + 1, W - MARGIN - 1, q)
+            mono(base, sp.get("heading", "SHELL"), (MARGIN + 30, y0 + 22),
+                 MUTED, q, 24, 4.5)
+            if sp.get("status"):
+                st = sp["status"]
+                f = typo.mono_font(24, 700)
+                ttext(base, st, f, acc, y0 + 22,
+                      x=W - MARGIN - 30 - track_w(st, f, 3.5), track=3.5, p=q,
+                      rise=8)
+    b.add(fn_card, dur=0.5, wait=0.34)
+
+    for i, r in enumerate(rows):
+        ry = y0 + hh + pad / 2 + i * rowh
+        state = (r.get("state") or "").lower()
+        ocol = STATES.get(state, MUTED)
+        is_bad = state == "bad"
+
+        def fn(base, d, p, r=r, ry=ry, ocol=ocol, is_bad=is_bad):
+            e = expo_out(p)
+            cy = ry + rowh / 2
+            if is_bad:
+                glow(base, (MARGIN + 14, ry + 6, W - MARGIN - 14,
+                            ry + rowh - 6), HOT, 44, int(52 * e))
+                bar(base, (MARGIN + 14, ry + 10, MARGIN + 19, ry + rowh - 10),
+                    HOT, 1.0, radius=3)
+            oy, th = typo.tm(r["cmd"], cf)
+            mono(base, "$", (MARGIN + 34, cy - 15), DIM, min(1.0, p * 2), 26,
+                 0, 700)
+            ttext(base, r["cmd"], cf, FG if not is_bad else FG, cy - th / 2,
+                  x=MARGIN + 66, p=p, rise=12)
+            out = r.get("out")
+            if out and p > 0.45:
+                q = (p - 0.45) / 0.55
+                ow = track_w(out, of, 1.5)
+                ttext(base, out, of, ocol, cy - typo.tm(out, of)[1] / 2,
+                      x=W - MARGIN - 34 - ow, track=1.5, p=q, rise=10)
+        b.add(fn, dur=0.46, wait=0.3)
+
+    if sp.get("verdict"):
+        _verdict(b, sp["verdict"], box[3] + 74, HOT)
+
+
+def sc_statement(b, sp, acc):
+    """Mot cau dap vao mat, dat trong khung ngam, can giua.
+
+    Can GIUA la co y: phongtoi can le trai het, nen chi rieng viec can giua da
+    doi hoan toan cam giac bo cuc.
+    """
+    col = acc_of(sp.get("color"), acc)
+    f, lines, lh = typo.headline(sp["value"], CONTENT_W - 120, 520,
+                                 sp.get("size", 128), 68, -2.5, "slab_black")
+    total = lh * len(lines)
+    label = sp.get("label")
+    sub = sp.get("sub")
+    sub_h = 96 if sub else 0
+    lab_h = 62 if label else 0
+    blk = total + sub_h + lab_h
+    y0 = STAGE_CY - blk / 2
+    ytxt = y0 + lab_h
+    gw = max(track_w(l, f, -2.5) for l in lines)
+    fbox = (CX - gw / 2 - 54, ytxt - 40, CX + gw / 2 + 54, ytxt + total + 34)
+
+    if label:
+        def fn_l(base, d, p):
+            lf = typo.mono_font(26, 700)
+            ttext(base, label, lf, col, y0, cx=CX, track=5.0, p=p, rise=10)
+        b.add(fn_l, dur=0.36, wait=0.22)
+
+    def fn_g(base, d, p):
+        glow(base, (CX - gw / 2, ytxt + 12, CX + gw / 2, ytxt + total - 12),
+             col, 84, int(44 * expo_out(p)))
+        brackets(base, fbox, col, p, 40, 4)
+    b.add(fn_g, dur=0.55, wait=0.2)
+
+    for i, ln in enumerate(lines):
+        def fn(base, d, p, ln=ln, i=i):
+            ttext(base, ln, f, FG, ytxt + i * lh, cx=CX, track=-2.5, p=p,
+                  rise=28)
+        b.add(fn, dur=0.5, wait=0.26)
+
+    if sp.get("strike"):
+        def fn_s(base, d, p):
+            e = expo_out(p)
+            yy = ytxt + total / 2
+            ImageDraw.Draw(base).line(
+                [s(CX - gw / 2 - 10), s(yy), s(CX - gw / 2 - 10 + (gw + 20) * e),
+                 s(yy)], fill=HOT + (255,), width=s(7))
+        b.add(fn_s, dur=0.4, wait=0.24)
+
+    if sub:
+        sf = font("grot_med", 38)
+        slines = wrap_track(sub, sf, CONTENT_W - 140, 0)
+
+        def fn_sub(base, d, p):
+            hline(base, ytxt + total + 40, EDGE, CX - 120, CX + 120,
+                  min(1.0, p * 2))
+            for i, ln in enumerate(slines):
+                lp = clamp((p - i * 0.12) * 1.6)
+                if lp > 0:
+                    ttext(base, ln, sf, MUTED, ytxt + total + 66 + i * 50,
+                          cx=CX, p=lp, rise=14)
+        b.add(fn_sub, dur=0.5, wait=0.26)
+
+
+def sc_list(b, sp, acc):
+    """Danh sach co so trong o vuong nho. Dong tieu diem to mau accent."""
+    items = sp["items"]
+    n = len(items)
+    tsize = {1: 60, 2: 54, 3: 48, 4: 44}.get(n, 38)
+    tf = font("grot", tsize)
+    rows = []
+    for it in items:
+        txt = it if isinstance(it, str) else it["text"]
+        meta = {} if isinstance(it, str) else it
+        rows.append((wrap_track(txt, tf, CONTENT_W - 140, -1.0), meta))
+    lh = sk.text_size("Ăgjqy", tf)[1] * 1.24
+    heights = [lh * len(l) + 66 for l, _ in rows]
+    total = sum(heights)
+    y = STAGE_CY - total / 2
+    ys, a = [], y
+    for h_ in heights:
+        ys.append(a)
+        a += h_
+
+    for i, ((lines, meta), yy) in enumerate(zip(rows, ys)):
+        is_f = bool(meta.get("focus"))
+        col = acc_of(meta.get("color"), acc) if is_f else EDGE_HI
+
+        def fn(base, d, p, i=i, lines=lines, yy=yy, is_f=is_f, col=col):
+            e = expo_out(p)
+            nb = (MARGIN, yy + 16, MARGIN + 54, yy + 70)
+            if is_f:
+                glow(base, nb, col, 40, int(70 * e))
+            card(base, nb, min(1.0, p * 1.6), fill=SURF if not is_f else col,
+                 border=col, radius=8, width=2)
+            nf = typo.mono_font(26, 700)
+            oy, th = typo.tm(f"{i+1:02d}", nf)
+            ttext(base, f"{i+1:02d}", nf, BG if is_f else MUTED,
+                  (nb[1] + nb[3]) / 2 - th / 2, cx=(nb[0] + nb[2]) / 2,
+                  track=1.5, p=min(1.0, p * 1.6), rise=8)
+            for j, ln in enumerate(lines):
+                lp = clamp((p - j * 0.1) * 1.5)
+                if lp > 0:
+                    ttext(base, ln, tf, FG if is_f else MUTED,
+                          yy + 12 + j * lh, x=MARGIN + 92, track=-1.0, p=lp,
+                          rise=16)
+        b.add(fn, dur=0.5, wait=0.3)
+
+
+def sc_rule(b, sp, acc):
+    """The quy tac: so lon trong khung ngam, cau quy tac, ghi chu nho."""
+    col = acc_of(sp.get("color"), acc)
+    num = str(sp.get("n", "01"))
+    bf, blines, blh = typo.headline(sp["body"], CONTENT_W - 150, 320, 74, 48,
+                                    -1.6, "grot_black")
+    sfz = font("grot_med", 32)
+    slines = sk.wrap(sp.get("small", ""), sfz, CONTENT_W - 170) \
+        if sp.get("small") else []
+    slh = sk.line_height(sfz, 1.36)
+
+    head_h = 118
+    inner = blh * len(blines) + ((slh * len(slines) + 34) if slines else 0) + 92
+    hgt = head_h + inner
+    y0 = STAGE_CY - hgt / 2
+    box = (MARGIN, y0, W - MARGIN, y0 + hgt)
+
+    def fn_c(base, d, p):
+        card(base, box, p, fill=SURF, border=col, radius=16, lit=col)
+    b.add(fn_c, dur=0.5, wait=0.3)
+
+    def fn_h(base, d, p):
+        # khung ngoac phai NONG hon chu so, khong thi net ngoac cat qua chu
+        nf = font("slab_black", 72)
+        nw = track_w(num, nf, -2)
+        nh = typo.tm(num, nf)[1]
+        ccy = y0 + head_h / 2
+        nb = (MARGIN + 28, ccy - nh / 2 - 20, MARGIN + 28 + nw + 40,
+              ccy + nh / 2 + 20)
+        brackets(base, nb, col, min(1.0, p * 1.8), 22, 4)
+        ttext(base, num, nf, col, ccy - nh / 2, cx=(nb[0] + nb[2]) / 2,
+              track=-2, p=p, rise=16)
+        if p > 0.35:
+            q = (p - 0.35) / 0.65
+            mono(base, sp.get("kicker", "QUY TẮC"), (nb[2] + 30, ccy - 13),
+                 MUTED, q, 26, 5.0)
+        hline(base, y0 + head_h, EDGE, MARGIN + 1, W - MARGIN - 1,
+              clamp(p * 1.2))
+    b.add(fn_h, dur=0.5, wait=0.3)
+
+    def fn_b(base, d, p):
+        for i, ln in enumerate(blines):
+            lp = clamp((p - i * 0.12) * 1.5)
+            if lp > 0:
+                ttext(base, ln, bf, FG, y0 + head_h + 40 + i * blh,
+                      x=MARGIN + 34, track=-1.6, p=lp, rise=20)
+    b.add(fn_b, dur=0.55, wait=0.3)
+
+    if slines:
+        ytop = y0 + head_h + 40 + blh * len(blines) + 34
+
+        def fn_s(base, d, p):
+            hline(base, ytop - 18, EDGE, MARGIN + 34, W - MARGIN - 34,
+                  min(1.0, p * 2))
+            for i, ln in enumerate(slines):
+                lp = clamp((p - 0.18 - i * 0.1) * 1.7)
+                if lp > 0:
+                    ttext(base, ln, sfz, DIM, ytop + i * slh, x=MARGIN + 34,
+                          p=lp, rise=12)
+        b.add(fn_s, dur=0.5, wait=0.26)
+
+
+def sc_counters(b, sp, acc):
+    """Day o so trong khung ngam - chu ky hinh anh cua theme.
+
+    Dung khi muon cho thay MOT gia tri khong doi qua nhieu moc thoi gian: ba o
+    giong nhau canh nhau noi len dieu do nhanh hon mot cau giai thich.
+    """
+    items = sp["items"]
+    n = len(items)
+    gap = 26
+    bw = (CONTENT_W - gap * (n - 1)) / n
+    bh = sp.get("box_h", 260)
+    y0 = STAGE_CY - bh / 2
+
+    for i, it in enumerate(items):
+        x0 = MARGIN + i * (bw + gap)
+        col = acc_of(it.get("color"), acc)
+        box = (x0, y0, x0 + bw, y0 + bh)
+        val = str(it["value"])
+
+        def fn(base, d, p, box=box, it=it, col=col, val=val):
+            e = expo_out(p)
+            glow(base, box, col, 56, int(40 * e))
+            card(base, box, p, fill=SURF, border=EDGE, radius=12)
+            brackets(base, (box[0] + 12, box[1] + 12, box[2] - 12,
+                            box[3] - 12), col, p, 26, 3)
+            if p > 0.3:
+                q = (p - 0.3) / 0.7
+                bcx = (box[0] + box[2]) / 2
+                if it.get("top"):
+                    tf = typo.mono_font(22, 700)
+                    ttext(base, it["top"], tf, MUTED, box[1] + 44, cx=bcx,
+                          track=3.5, p=q, rise=10)
+                vf = fit_one("grot_black", val, bw - 76, sp.get("size", 66), 34)
+                oy, th = typo.tm(val, vf)
+                ttext(base, val, vf, col, (box[1] + box[3]) / 2 - th / 2 - 14,
+                      cx=bcx, track=-1.5, p=q, rise=18)
+                if it.get("label"):
+                    lf = typo.mono_font(22, 500)
+                    ttext(base, it["label"], lf, MUTED, box[3] - 62, cx=bcx,
+                          track=3.0, p=q, rise=10)
+        b.add(fn, dur=0.5, wait=0.28)
+
+    if sp.get("verdict"):
+        _verdict(b, sp["verdict"], y0 + bh + 76, HOT)
+
+
+def sc_ask(b, sp, acc):
+    """Canh chot: cau hoi ve chinh he thong cua nguoi xem."""
+    f, lines, lh = typo.headline(sp["text"], CONTENT_W - 130, 460,
+                                 sp.get("size", 104), 62, -2.2, "slab_black")
+    total = lh * len(lines)
+    hint = sp.get("hint")
+    hgt = total + (120 if hint else 0)
+    y0 = STAGE_CY - hgt / 2
+    fbox = (MARGIN + 20, y0 - 56, W - MARGIN - 20, y0 + total + 46)
+
+    def fn_f(base, d, p):
+        glow(base, fbox, acc, 80, int(38 * expo_out(p)))
+        brackets(base, fbox, acc, p, 46, 4)
+    b.add(fn_f, dur=0.55, wait=0.26)
+
+    for i, ln in enumerate(lines):
+        def fn(base, d, p, ln=ln, i=i):
+            ttext(base, ln, f, FG, y0 + i * lh, cx=CX, track=-2.2, p=p,
+                  rise=26)
+        b.add(fn, dur=0.52, wait=0.28)
+
+    if hint:
+        hf = typo.mono_font(30, 500)
+
+        def fn_h(base, d, p):
+            # DUOI khung ngoac, khong phai trong: dat trong thi net ngoac duoi
+            # chay ngang qua chu
+            ttext(base, hint, hf, acc, fbox[3] + 42, cx=CX, track=2.0, p=p,
+                  rise=14)
+        b.add(fn_h, dur=0.5, wait=0.26)
+
+
+# ------------------------------------------------------------------- MO PHONG
+def _state_at(steps, p):
+    """Buoc dang co hieu luc tai thoi diem p (buoc cuoi cung da qua `at`)."""
+    cur = steps[0]
+    for st in steps:
+        if p >= float(st.get("at", 0.0)):
+            cur = st
+    return cur
+
+
+def _step_label(base, txt, sx, sw, by, ann_y, lcol, x1, lane_h):
+    """Ten buoc: uu tien dat TRONG thanh, thu nho dan cho vua.
+
+    Chua vua o co nho nhat thi day xuong hang nhan tran ngay duoi duong ray -
+    KHONG bao gio dat len phia tren, cho do la cua ten lane.
+    """
+    for sz in (26, 24, 22, 20):
+        tf = typo.mono_font(sz, 700)
+        if track_w(txt, tf, 1.2) <= sw - 28:
+            ttext(base, txt, tf, BG, by + lane_h / 2 - typo.tm(txt, tf)[1] / 2,
+                  x=sx + 14, track=1.2)
+            return
+    tf = typo.mono_font(21, 700)
+    tw = track_w(txt, tf, 1.2)
+    ttext(base, txt, tf, lcol, ann_y, x=min(sx, x1 - tw), track=1.2)
+
+
+def sc_gantt(b, sp, acc):
+    """MO PHONG ⭐ - Gantt hai luong + DONG HO DO chay that.
+
+    Khac `race` cua phongtoi o mot diem quyet dinh: o day co hang o so phia
+    tren, va gia tri trong do DOI theo dau doc. Nguoi xem khong phai suy ra
+    "vay luc nay cache dang giu gi" - no hien ra thanh chu. Chinh cho nay bien
+    mot bieu do thanh mot thi nghiem.
+
+    Lich phai LIEN MACH: bat ky khoang nao khong co gi doi la mat nguoi xem.
+    """
+    lanes = sp["lanes"][:2]
+    readouts = sp.get("readout", [])
+    ruler = sp.get("ruler", [])
+    coll = sp.get("verdict_at")
+    counter = sp.get("counter")
+    # cau ket cua lan chay DUNG phai la mau xanh, khong phai do - neu de do het
+    # thi hai lan mo phong nhin y nhau va mat het y nghia doi chieu
+    vcol = acc_of(sp.get("verdict_color"), HOT)
+
+    # --- hang o so
+    ro_h = 186 if readouts else 0
+    ro_y = STAGE_TOP + 6
+    nro = max(1, len(readouts) + (1 if counter else 0))
+    ro_gap = 22
+    ro_w = (CONTENT_W - ro_gap * (nro - 1)) / nro
+
+    # --- lane. Moi lane co BA hang: ten lane / duong ray / hang nhan tran.
+    # Hang nhan tran la cho dat ten buoc khi thanh qua ngan de chua chu ben
+    # trong. Thieu hang nay thi nhan buoc de len ten lane - bug da tung xay ra.
+    lane_top = ro_y + ro_h + 46
+    label_h, lane_h, ann_h, lane_gap = 42, 106, 34, 26
+    block = label_h + lane_h + ann_h
+    lanes_h = len(lanes) * block + (len(lanes) - 1) * lane_gap
+    ruler_y = lane_top + lanes_h + 18
+    x0, x1 = MARGIN, W - MARGIN
+
+    def fn(base, d, p):
+        dd = ImageDraw.Draw(base)
+        head = x0 + (x1 - x0) * clamp(p)
+
+        # ---------- o so: gia tri doi theo dau doc
+        for i, ro in enumerate(readouts):
+            bx = MARGIN + i * (ro_w + ro_gap)
+            box = (bx, ro_y, bx + ro_w, ro_y + ro_h)
+            st = _state_at(ro["steps"], p)
+            col = STATES.get((st.get("state") or "").lower(), FG)
+            fresh = clamp(1.0 - (p - float(st.get("at", 0.0))) / 0.07)
+            if fresh > 0:
+                glow(base, box, col, 54, int(74 * fresh))
+            card(base, box, 1.0, fill=SURF, border=EDGE, radius=12)
+            brackets(base, (box[0] + 10, box[1] + 10, box[2] - 10,
+                            box[3] - 10), col if fresh > 0 else EDGE_HI, 1.0,
+                     24, 3)
+            bcx = (box[0] + box[2]) / 2
+            kf = typo.mono_font(22, 700)
+            ttext(base, ro["key"], kf, MUTED, box[1] + 28, cx=bcx, track=4.0)
+            val = str(st.get("value", ""))
+            vf = fit_one("grot_black", val, ro_w - 60, 62, 30)
+            oy, th = typo.tm(val, vf)
+            ttext(base, val, vf, col, (box[1] + box[3]) / 2 - th / 2 + 14,
+                  cx=bcx, track=-1.5)
+            if st.get("note"):
+                nf = typo.mono_font(20, 500)
+                ttext(base, st["note"], nf, DIM, box[3] - 40, cx=bcx,
+                      track=2.5)
+
+        # ---------- bo dem: so khach da nhin thay gia sai
+        if counter:
+            bx = MARGIN + len(readouts) * (ro_w + ro_gap)
+            box = (bx, ro_y, bx + ro_w, ro_y + ro_h)
+            start = float(counter.get("from", 0.0))
+            val = 0
+            if p >= start:
+                val = int((p - start) * float(counter.get("rate", 40)))
+            col = HOT if val else DIM
+            if val:
+                glow(base, box, HOT, 58, 46)
+            card(base, box, 1.0, fill=SURF, border=EDGE, radius=12)
+            brackets(base, (box[0] + 10, box[1] + 10, box[2] - 10,
+                            box[3] - 10), col, 1.0, 24, 3)
+            bcx = (box[0] + box[2]) / 2
+            kf = typo.mono_font(22, 700)
+            ttext(base, counter.get("key", "ĐÃ ĐỌC SAI"), kf, MUTED,
+                  box[1] + 28, cx=bcx, track=4.0)
+            sval = str(val)
+            vf = fit_one("grot_black", sval, ro_w - 60, 78, 40)
+            oy, th = typo.tm(sval, vf)
+            ttext(base, sval, vf, col, (box[1] + box[3]) / 2 - th / 2 + 14,
+                  cx=bcx, track=-1.5)
+            if counter.get("label"):
+                lf = typo.mono_font(20, 500)
+                ttext(base, counter["label"], lf, DIM, box[3] - 40, cx=bcx,
+                      track=2.5)
+
+        # ---------- lane
+        geom = []
+        for li, lane in enumerate(lanes):
+            ly = lane_top + li * (block + lane_gap)
+            by = ly + label_h
+            lcol = acc_of(lane.get("color"), acc)
+            geom.append((lane, ly, by, lcol))
+            ImageDraw.Draw(base).rounded_rectangle(
+                [s(x0), s(by), s(x1), s(by + lane_h)], radius=s(10),
+                fill=SURF + (255,), outline=EDGE + (255,), width=s(2))
+            for step in lane.get("steps", []):
+                sx = x0 + (x1 - x0) * float(step["at"])
+                sw = (x1 - x0) * float(step.get("w", 0.16))
+                if head < sx:
+                    continue
+                grow = clamp((head - sx) / max(sw, 1e-6))
+                fill = HOT if step.get("bad") else lcol
+                if step.get("bad") and grow > 0.2:
+                    glow(base, (sx, by + 6, sx + sw * grow, by + lane_h - 6),
+                         HOT, 40, 54)
+                bar(base, (sx, by + 8, sx + sw * grow, by + lane_h - 8), fill,
+                    1.0, radius=8, grow="none")
+
+        # dau doc: chi quet trong vung duong ray, khong cat ngang nhan
+        for _, _, by, _ in geom:
+            dd.line([s(head), s(by - 14), s(head), s(by + lane_h + 14)],
+                    fill=FG + (255,), width=s(3))
+        dd.line([s(head), s(geom[0][2] - 14), s(head),
+                 s(geom[-1][2] + lane_h + 14)], fill=EDGE_HI + (255,),
+                width=s(2))
+
+        # chu luon ve sau cung -> khong bi thanh mau de len
+        for lane, ly, by, lcol in geom:
+            mono(base, lane["label"], (x0 + 4, ly + 6), MUTED, 1.0, 23, 3.5)
+            for step in lane.get("steps", []):
+                sx = x0 + (x1 - x0) * float(step["at"])
+                sw = (x1 - x0) * float(step.get("w", 0.16))
+                if head < sx:
+                    continue
+                if clamp((head - sx) / max(sw, 1e-6)) < 0.96:
+                    continue
+                _step_label(base, step["text"], sx, sw, by,
+                            ann_y=by + lane_h + 6, lcol=lcol, x1=x1,
+                            lane_h=lane_h)
+
+        # ---------- thuoc thoi gian
+        if ruler:
+            dd.line([s(x0), s(ruler_y), s(x1), s(ruler_y)],
+                    fill=EDGE + (255,), width=s(2))
+            for i, lab in enumerate(ruler):
+                tx = x0 + (x1 - x0) * (i / max(1, len(ruler) - 1))
+                dd.line([s(tx), s(ruler_y), s(tx), s(ruler_y + 12)],
+                        fill=EDGE_HI + (255,), width=s(2))
+                lf = typo.mono_font(20, 500)
+                ttext(base, lab, lf, DIM, ruler_y + 22,
+                      cx=min(max(tx, x0 + 24), x1 - 24), track=2.0)
+
+        # ---------- cau ket khi da chay het
+        if coll and p >= float(coll):
+            q = clamp((p - float(coll)) / 0.10)
+            cy = ruler_y + 70
+            # PHAI tu thu nho: mot dong cau ket dai hon khung thi bi cat mat
+            # chu cuoi, va cau ket bi cat thi ca canh mo phong mat cho chot.
+            cf, lines, clh = typo.headline(sp.get("verdict", ""),
+                                           CONTENT_W - 40, 96, 74, 44, -2,
+                                           "slab_black")
+            glow(base, (MARGIN, cy, W - MARGIN, cy + 84), vcol, 70, int(70 * q))
+            for i, ln in enumerate(lines[:1]):
+                ttext(base, ln, cf, vcol, cy + i * clh, cx=CX, track=-2, p=q,
+                      rise=20)
+    b.add(fn, dur=max(2.0, b.dur * 0.80), wait=b.dur)
+
+
+def _verdict(b, txt, y, col, size=76, wait=0.3):
+    """Cau ket can giua + ke ngang. Tu keo len neu sap tran vao the phu de."""
+    f, lines, lh = typo.headline(txt, CONTENT_W - 40, 220, size, 48, -2.0,
+                                 "slab_black")
+    h = lh * len(lines)
+    if y + h > NOTE_Y - 46:
+        y = NOTE_Y - 46 - h
+
+    def fn(base, d, p):
+        hline(base, y - 32, EDGE, CX - 150, CX + 150, min(1.0, p * 2))
+        for i, ln in enumerate(lines):
+            lp = clamp((p - i * 0.12) * 1.5)
+            ttext(base, ln, f, col, y + i * lh, cx=CX, track=-2.0, p=lp,
+                  rise=20)
+    b.add(fn, dur=0.55, wait=wait)
+
+
+BUILDERS = {
+    "probe": sc_probe, "statement": sc_statement, "list": sc_list,
+    "rule": sc_rule, "counters": sc_counters, "ask": sc_ask,
+    # --- mo phong
+    "gantt": sc_gantt,
+}
+
+
+def build(sp, dur, doc=None):
+    kind = sp.get("scene")
+    if kind not in BUILDERS:
+        raise ValueError(f"theme bench khong co loai canh {kind!r}. "
+                         f"Co: {', '.join(sorted(BUILDERS))}")
+    acc = acc_of(sp.get("accent") or (doc or {}).get("accent"), HOT)
+    scenes = (doc or {}).get("scenes") or []
+    first = bool(scenes) and scenes[0] is sp   # so sanh dinh danh, khong so noi dung
+    b = B(dur, pre=0.66)          # chua cho khung co dinh chay truoc noi dung
+    chrome(b, sp, doc, acc, chapters(doc), first)
+    BUILDERS[kind](b, sp, acc)
+    b.finish()
+    note(b, sp.get("caption"), acc, at=0.28)
+    footer(b, doc, at=0.46, first=first)
+    # cu tan phai them CUOI CUNG: phan tu ve theo thu tu, no can nam tren het
+    dissolve(b)
+    return b.els
