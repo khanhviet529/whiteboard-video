@@ -105,6 +105,46 @@ def measure(path):
                 tail=(tail / whole - 1) * 100 if whole > 0 else 0.0)
 
 
+OMNI_TEST = r"D:\omnivoice-test"
+
+
+def _in_contour(cands, cfg):
+    """In he so toc do ma `contour_for()` se ap cho TUNG CAU cua moi phuong an.
+
+    Ly do phai co: `contour_for` chay theo VI TRI cau trong loi doc, khong theo
+    noi dung. Cau cuoi bi ha con x0,95 de "ket chac chan". Nghia la thu mot cau
+    DUNG MOT MINH thi no chay x0,98, con chinh cau do nam cuoi mot loi doc ba cau
+    thi chay x0,95 - lech 3,2%, du de tai nghe ra.
+
+    Da vap dung loi do: nguoi dung bao mot cau nghe khong ro trong video, thu
+    rieng cau do thi thay on, va ket luan sai la loi tai cach dien dat. Bang nay
+    de lan sau nhin thay ngay phuong an nao dang nam o vi tri bi ha toc.
+
+    Muon thu DUNG dieu kien cua video thi dan CA LOI DOC cua canh vao mot dong,
+    dung dan moi mot cau.
+    """
+    if cfg.get("engine") != "omnivoice":
+        return
+    try:
+        sys.path.insert(0, OMNI_TEST)
+        import speak
+        import vitext
+    except Exception as e:
+        print(f"  (khong doc duoc contour: {type(e).__name__})\n")
+        return
+    base = float(cfg.get("speed", 1.0))
+    print("  he so toc do theo VI TRI cau (contour_for):")
+    for i, t in enumerate(cands, 1):
+        cau = vitext.prepare(t)
+        phan = []
+        for j, c in enumerate(cau):
+            _, sp = speak.contour_for(c, j, len(cau))
+            dau = "*" if sp < 0.99 else " "
+            phan.append(f"{dau}{base * sp:.3f}")
+        print(f"   {i:2}  {len(cau)} cau  " + " ".join(phan))
+    print("      (* = cau bi ha toc; cau CUOI luon x0,95)\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("file", help="file txt, moi dong mot phuong an")
@@ -132,6 +172,7 @@ def main():
 
     print(f"cau hinh: {cfg}")
     print(f"{len(cands)} phuong an, gom vao MOT lan goi model\n")
+    _in_contour(cands, cfg)
     cache = os.path.join(BUILD, "tts")
     tts.prefetch(cands, cache, cfg)
 

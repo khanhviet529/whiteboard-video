@@ -18,6 +18,13 @@ chủ đề, và README để biết các loại cảnh.
 | Soi cảnh mô phỏng | `python research/sim_strip.py gantt <f> 1` | ~1 phút |
 | **Nghe thử một cảnh** | `python src/render.py <f> ... --audio-only --scenes 8` | 2–7 phút |
 | Thử nhiều cách diễn đạt | `python src/thu_cau.py build/thu_cau.txt ...` | ~6 phút cho 5 phương án |
+
+Dán **cả lời đọc của cảnh** vào một dòng của `thu_cau.txt`, đừng dán từng câu lẻ.
+`contour_for()` áp hệ số theo **vị trí câu**, nên một câu đứng một mình chạy ×0,98
+còn chính câu đó nằm cuối lời đọc ba câu thì chạy ×0,95. Đã kết luận sai một lần
+vì thử câu lẻ: người dùng báo một câu nghe không rõ trong video, thử riêng thì
+thấy ổn, và suýt đổ lỗi cho cách diễn đạt. `thu_cau.py` giờ in sẵn bảng hệ số đó.
+
 | Render đầy đủ | `python src/render.py <f> ... -j 10` | ~12 phút (edge) / ~40 phút (omnivoice) |
 | Dò sạn trong bản đã render | `python D:/omnivoice-test/soi_san.py out/<f>.mp4` | tức thì |
 
@@ -35,6 +42,8 @@ riêng**, nên mỗi câu tự quyết mọi thứ và không có ngữ cảnh t
 
 | Bẫy | Bằng chứng đo được | Cách tránh |
 |---|---|---|
+| **Câu nặng nhất đặt ở CUỐI narration** | `contour_for()` hạ tốc câu cuối xuống ×0,95 để "kết chắc chắn". Với `speed: 1.03` thì câu cuối chạy 0,978 còn các câu giữa chạy 1,030 — chậm hơn 5,3%, đủ để tai nghe ra là "bị nhấn và chậm". Người dùng đã chỉ ra đúng hai chỗ, và cả hai đều là câu cuối cảnh | Đặt câu mang thông tin nặng nhất ở **giữa**, rồi thêm một câu kết dài trên 25 ký tự để nó nhận hệ số hạ tốc thay |
+| **Số đứng trần ở cuối mệnh đề** | `"dâng lên bảy mươi trong khi..."` — số là thông tin mới, đứng cuối mệnh đề chính, không có danh từ đơn vị theo sau. Nó nhận trọng âm tiêu điểm, mà tiếng Việt lại kéo dài âm tiết cuối trước ranh giới ngữ điệu, nên hai hiệu ứng rơi trúng một chỗ. Người nghe còn tự điền tiếp thành "bảy mươi **phần trăm**" vì cảnh trước có nói "phần trăm" | Luôn cho số một đơn vị: `"bảy mươi request"`. Đo được khối dài nhất giảm từ 3,12 xuống 2,74 lần trung vị |
 | **Câu ngắn ở CUỐI narration** | `"Bộ đếm đứng ở không."` (20 ký tự) cho 2,63 khối âm/giây, thấp nhất trong cảnh; 6 âm tiết chỉ tách được 4 khối | Gộp vào câu trước. `contour_for()` hạ hệ số tốc độ câu cuối xuống 0,978, cộng với vị trí cuối cụm là chỗ cao tần sụt mạnh nhất |
 | **Từ 4 câu ngắn trở lên trong một cảnh** | Cảnh 1 có 4/5 câu dưới 25 ký tự, sinh ra 1,04 giây im lặng trong cảnh ~8 giây | Gộp bớt. Mỗi dấu chấm là một lần gọi model kèm một khoảng nghỉ |
 | **Viết tắt trần** (`API`, `TTL`) | `TTL` bị nén thành mảnh 0,12 giây; `"Luôn đặt TTL."` cho 0,58s/4 âm tiết = 6,9 âm tiết/giây | Viết phiên âm vào `narration`, giữ chữ gốc ở `caption`. `vitext.ABBR` không có viết tắt IT nào |
