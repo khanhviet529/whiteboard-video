@@ -283,6 +283,30 @@ def check_yaml_cat(o, out, path="doc"):
             check_yaml_cat(x, out, f"{path}[{i}]")
 
 
+# Nhung khoa duoc theme ve THANG ra man hinh duoi dang chu. YAML doc `504` ra
+# int va `2.0` ra float, roi ham do be ngang chu no ngay giua luc render - tuc
+# la sau khi da tra tien cho ca vong tong hop giong noi.
+KHOA_CHU = ("status", "value", "text", "head", "verdict", "vs", "tag", "n",
+            "cap_label", "depth_key", "counter_key", "chip", "miss_tag")
+
+
+def check_kieu_chu(sp, idx, out):
+    def soi(o, path):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in KHOA_CHU and isinstance(v, (int, float, bool)):
+                    out.append(("LOI", f"canh {idx}",
+                                f"`{path}{k}: {v}` bị YAML đọc thành số chứ "
+                                f"không phải chữ, render sẽ dừng giữa chừng — "
+                                f"bọc nháy: `{k}: \"{v}\"`"))
+                elif isinstance(v, (dict, list)):
+                    soi(v, f"{path}{k}.")
+        elif isinstance(o, list):
+            for i, x in enumerate(o):
+                soi(x, f"{path}[{i}].")
+    soi(sp, "")
+
+
 def check_queue(sp, idx, out):
     """Duong cong phai DI THEO MOT HUONG va phai cat qua nguong.
 
@@ -362,6 +386,8 @@ def check(doc):
             check_queue(sp, i, out)
         elif bench and sp.get("scene") == "topology":
             check_topology(sp, i, out)
+        if bench:
+            check_kieu_chu(sp, i, out)
         check_caption(sp, i, out)
         check_narration(sp, i, out, engine)
     return out

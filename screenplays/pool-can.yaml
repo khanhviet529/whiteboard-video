@@ -1,0 +1,184 @@
+# TUYEN 1 - SU CO PRODUCTION, nhung trieu chung nghe VO LY theo huong nguoc lai
+# hai screenplay truoc: khong phai "cai gi do cham" ma "moi bang do deu sach ma
+# van hong".
+#
+# Day cung la screenplay dau tien dung `queue` va `topology`, hai loai canh mo
+# phong moi. Ly do chon chu de nay: no la mot trong rat it co che tra loi duoc
+# CA HAI cau hoi cung luc.
+#   - "O DAU" -> request chet o tang POOL, khong bao gio toi DATABASE. Chinh cai
+#     tang no khong toi moi giai thich duoc vi sao bang do database sach bong.
+#   - "BAO NHIEU THEO THOI GIAN" -> hang doi dang len 70 trong khi chi co 10 cho.
+#
+# MOI CON SO do bang repro/pool_ket_noi_can.py tren chinh may nay:
+#   pool 10 ket noi, 120 request toi trong 3 giay (40 request/giay)
+#   moi request giu ket noi 810ms, trong do database lam viec 10ms
+#   39/120 timeout = 32,5% | cho giua 2095ms, p95 2986ms | dinh hang doi 70
+#
+# Script dung sleep that nen moi luot lech vai phan tram. MOI con so tren
+# deu lay tu DUNG MOT luot chay - khong nhat moi cho mot con so.
+#   database dung 1,1% suc trong suot 7,5 giay
+#   curve o canh 6 chinh la chuoi script in ra, khong lam tron
+#
+# Thong luong 12/giay o canh 6 la SUY RA: 10 ket noi chia 0,81 giay moi luot.
+# Do duoc trung binh ca luot chay la 10,8/giay vi co doan rut hang.
+
+title: Database rảnh 99%, API vẫn timeout
+theme: bench
+accent: hot
+domain: be
+brand: HIỆN TRƯỜNG · HỒ SƠ 10
+tag: hạ tầng · mô phỏng
+footer: MỘT CÚ GỌI MẠNG TRONG TRANSACTION  ·  GIỮ KẾT NỐI GẤP 81 LẦN
+voice: female
+rate: "+16%"
+
+# Xem VIET-KICH-BAN.md muc "cau hinh va cache" - phai khai o day, sua trong
+# speak.py khong co tac dung vi khong vao khoa cache.
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  # Tinh huong quen, dong cuoi vo ly. Hai dong dau la trieu chung binh thuong,
+  # dong thu ba moi la cho lam nguoi xem dung lai: neu database ranh nhu vay
+  # thi cai gi dang hong?
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: 504 hàng loạt. Database rảnh.
+    narration: Ây pi ai thanh toán trả về năm không bốn cho gần một phần ba số request. Bạn mở bảng đo database lên xem, và nó đang dùng đúng một phẩy một phần trăm sức.
+    caption: 1/3 request lỗi. Database dùng 1,1% sức.
+    heading: curl · grafana
+    status: "504"     # PHAI co nhay: khong thi YAML tra ve int, xem lint.py
+    lines:
+      - { cmd: "POST /api/checkout", out: "504",     state: bad }
+      - { cmd: "request lỗi",        out: "39/120",  state: bad }
+      - { cmd: "database cpu",       out: "1.1%",    state: ok }
+    verdict: MỌI BẢNG ĐO ĐỀU SẠCH
+
+  # ================================================================ NHIP 2
+  # Hau qua, va vi sao no khong duoc sua: phan xa dau tien la scale database,
+  # ma scale database thi khong dong toi nguyen nhan.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Nâng database lên gấp đôi.
+    narration: Phản xạ đầu tiên là nâng database lên gấp đôi. Tiền server tăng gấp đôi, còn tỉ lệ lỗi thì đứng yên, vì thứ đang cạn không nằm trong database.
+    caption: Nâng database gấp đôi. Tỉ lệ lỗi đứng yên.
+    value: NÂNG GẤP ĐÔI, LỖI KHÔNG GIẢM
+    size: 104
+    sub: Vì thứ cạn không nằm ở đó
+
+  # ================================================================ NHIP 3
+  # Goi mo cho it ai soi. CO Y chua noi "pool" o day - do la ten thu pham, de
+  # danh cho nhip goi ten. O day chi noi mot phep so sanh khong ai ngo.
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Giữ lâu hơn dùng 81 lần.
+    narration: Đo lại một request thì thấy thế này. Database chỉ thật sự làm việc mười mili giây, nhưng kết nối bị giữ tám trăm mười mili giây, tức lâu hơn tám mươi mốt lần.
+    caption: Database làm 10ms. Kết nối bị giữ 810ms.
+    vs: NHƯNG KẾT NỐI THÌ
+    box_h: 300
+    items:
+      - label: DATABASE THẬT SỰ LÀM VIỆC
+        value: 10 MS
+        note: begin, select, update, commit
+        color: ok
+      - label: KẾT NỐI BỊ GIỮ NGUYÊN
+        value: 810 MS
+        note: lâu hơn 81 lần
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết vì sao mọi bảng đo đều sạch mà hệ thống vẫn hỏng, và một quy tắc chặn được nó. Giờ đi lại đường đi của một request.
+    caption: Vì sao bảng đo sạch mà vẫn hỏng, và cách chặn.
+    items:
+      - text: Chỗ request chết mà không bảng đo nào nhìn thấy.
+        focus: true
+      - text: Một quy tắc về thứ được phép nằm trong transaction.
+
+  # ================================================================ DEMO 1
+  # `topology` tra loi cau O DAU. Toan bo suc manh cua canh nay nam o tang cuoi
+  # cung - tang goi tin KHONG toi. Do la ly do bang do database sach bong, va la
+  # dieu khong loai canh nao khac ke duoc.
+  - scene: topology
+    chapter: QUAY CHẬM
+    head: Request chết ở tầng nào.
+    narration: Request đi qua nginx, vào ứng dụng, rồi dừng lại ở chỗ xin một kết nối. Có mười kết nối dùng chung, gọi là pool. Hết mười cái đó thì request thứ mười một đứng chờ ngay tại đây, và database không hề biết có ai vừa gõ cửa.
+    caption: Request dừng ở chỗ xin kết nối, không tới được database.
+    packet: MỘT REQUEST THANH TOÁN
+    from: 0
+    to: 3
+    miss_tag: KHÔNG HỀ BẬN
+    nodes:
+      - { name: NGƯỜI DÙNG, sub: "40 request mỗi giây", tag: "120", color: cool }
+      - { name: NGINX, sub: "chuyển tiếp hết", tag: "120", color: cool }
+      - { name: ỨNG DỤNG, sub: "nhận hết rồi xếp hàng", tag: "120", color: gold }
+      - { name: POOL KẾT NỐI, sub: "10 kết nối dùng chung", tag: "10", color: hot }
+      - { name: DATABASE, sub: "cpu 1,1 phần trăm" }
+    verdict_at: 0.93
+    verdict: CHẾT TRƯỚC KHI TỚI NƠI
+
+  # ================================================================ DEMO 2
+  # `queue` tra loi cau BAO NHIEU THEO THOI GIAN. Duong cong nay la so do that,
+  # dan thang tu repro/pool_ket_noi_can.py.
+  #
+  # `cho_phep_xuong` bat vi duong cong CO doan di xuong, va doan do co that: hang
+  # rut khi ngung gui request chu khong phai khi he thong khoe len. Cat bo doan
+  # do de duong chi di len cho dep la sua so lieu, khong lam.
+  - scene: queue
+    chapter: QUAY CHẬM
+    head: 70 request chờ, 10 chỗ ngồi.
+    narration: Đây là số request đang xếp hàng chờ kết nối, đo trong bảy giây. Hàng dâng lên bảy mươi trong khi chỉ có mười chỗ, và nó chỉ rút xuống lúc bạn ngừng gửi request chứ không phải lúc hệ thống khoẻ lại.
+    caption: Hàng dâng lên 70. Chỗ ngồi có 10.
+    inbox: { label: TỚI, value: "40/giây", color: cool }
+    outbox: { label: XONG, value: "12/giây", color: hot }
+    depth_key: ĐANG XẾP HÀNG
+    capacity: 10
+    cap_label: SỐ KẾT NỐI CÓ
+    ymax: 80
+    cho_phep_xuong: true
+    curve: [0, 8, 18, 34, 41, 50, 65, 70, 65, 59, 43, 25, 8]
+    marks: ["0", "2 giây", "4 giây", "6 giây"]
+    chip: SỐ REQUEST ĐANG CHỜ MỘT KẾT NỐI
+    verdict_at: 0.9
+    verdict: 39 REQUEST BỎ CUỘC
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là một cú gọi ây pi ai bên ngoài nằm bên trong transaction. Suốt cả cú gọi đó database ngồi không, nhưng kết nối thì không ai được đụng vào.
+    caption: Một cú gọi mạng nằm bên trong transaction.
+    label: THỦ PHẠM
+    value: GỌI MẠNG BÊN TRONG TRANSACTION
+    size: 100
+    sub: Database rảnh, kết nối vẫn bị khoá
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Đọc, ghi, rồi thả ra.
+    narration: Quy tắc chỉ có một câu. Trong transaction chỉ được đọc và ghi database, mọi cú gọi ra ngoài phải đẩy sang hàng đợi nền và làm sau khi đã thả kết nối.
+    caption: Trong transaction chỉ đọc và ghi. Gọi mạng thì để sau.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Không cú gọi mạng nào được nằm trong transaction.
+    small: Dấu hiệu phát hiện sớm — đo thời gian giữ kết nối, không phải thời gian chạy câu truy vấn. Hai con số này chênh nhau bao nhiêu lần chính là mức độ rủi ro.
+
+  # ================================================================ CAU HOI
+  # Cau hoi kiem tra co che chu khong phai tra cuu: tra loi duoc nghia la da
+  # hieu vi sao hai con so do khac nhau. Xem VIET-KICH-BAN.md.
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Hệ thống của bạn đang đo thời gian chạy câu truy vấn, hay đo thời gian giữ kết nối? Trả lời giúp tôi ở phần bình luận.
+    caption: Bạn đang đo cái nào trong hai cái đó?
+    text: BẠN ĐO THỜI GIAN CHẠY, HAY THỜI GIAN GIỮ?
+    size: 84
+    hint: hai con số này chênh nhau bao nhiêu lần?

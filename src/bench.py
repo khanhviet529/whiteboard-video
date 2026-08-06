@@ -375,7 +375,11 @@ def sc_probe(b, sp, acc):
             mono(base, sp.get("heading", "SHELL"), (MARGIN + 30, y0 + 22),
                  MUTED, q, 24, 4.5)
             if sp.get("status"):
-                st = sp["status"]
+                # `status: 504` khong co nhay thi YAML tra ve int va track_w()
+                # no ngay. Ep kieu o day chu khong bat nguoi viet nho quy tac -
+                # `status: 200 OK` thi la chuoi, `status: 504` thi la so, khac
+                # nhau o mot ky tu ma nguoi viet khong the doan duoc.
+                st = str(sp["status"])
                 f = typo.mono_font(24, 700)
                 ttext(base, st, f, acc, y0 + 22,
                       x=W - MARGIN - 30 - track_w(st, f, 3.5), track=3.5, p=q,
@@ -915,10 +919,14 @@ def sc_compare(b, sp, acc):
             ttext(base, val, vf, col, (box[1] + box[3]) / 2 - th / 2 + 6,
                   x=box[0] + 30, track=-2, p=q, rise=20)
             if it.get("note"):
+                # Ngoac goc chiem o goc duoi phai mot vung 28x28 tinh tu diem
+                # inset 12, tuc x >= box[2]-40 va y >= box[3]-40. Nhan phai lui
+                # ra ngoai vung do, khong thi chu cham vao ngoac va nhin nhu bi
+                # cat mat mot doan.
                 nf = typo.mono_font(24, 500)
                 nw = track_w(it["note"], nf, 2.5)
-                ttext(base, it["note"], nf, DIM, box[3] - 46,
-                      x=box[2] - 30 - nw, track=2.5, p=q)
+                ttext(base, it["note"], nf, DIM, box[3] - 70,
+                      x=box[2] - 56 - nw, track=2.5, p=q)
             if xau:
                 # gach ngang qua gia tri: "ve nay la cai sai"
                 yy = (box[1] + box[3]) / 2 + 10
@@ -934,8 +942,10 @@ def sc_compare(b, sp, acc):
     def fn_v(base, d, p):
         e = expo_out(p)
         dd = ImageDraw.Draw(base)
-        dd.line([s(CX), s(boxes[0][3] + 14), s(CX),
-                 s(boxes[0][3] + 14 + (mid - boxes[0][3] - 20) * e)],
+        # Ke phai dung TREN chu, khong chay xuyen qua no. `mid - 16` la dinh
+        # khung dong chu nen ke chi duoc keo toi mid - 34.
+        y_ke = boxes[0][3] + 16
+        dd.line([s(CX), s(y_ke), s(CX), s(y_ke + (mid - 34 - y_ke) * e)],
                 fill=EDGE_HI + (255,), width=s(3))
         if p > 0.5 and sp.get("vs"):
             f = typo.mono_font(26, 700)
@@ -1174,7 +1184,7 @@ def sc_queue(b, sp, acc):
                         fill=HOT + (170,), width=s(2))
                 x += step
             lb = sp.get("cap_label", "NGƯỠNG")
-            mono(base, f"{lb} {_num_vi(cap)}", (ax0 + 8, ycap - 32), HOT, q, 20,
+            mono(base, f"{lb} {_num_vi(cap)}", (ax0 + 8, ycap - 42), HOT, q, 20,
                  3.0)
 
         # --- mien duoi duong cong. Lay mau day 4px mot de khi cat theo nguong
@@ -1212,6 +1222,24 @@ def sc_queue(b, sp, acc):
                 dd.line([s(a), s(bb), s(c), s(e)], fill=lc + (255,), width=s(4))
             dd.ellipse([s(xcur - 9), s(yof(cur) - 9), s(xcur + 9),
                         s(yof(cur) + 9)], fill=dcol + (255,))
+
+        # --- moc DINH, dung yen sau khi duong cong di qua.
+        #
+        # O so chi hien gia tri HIEN TAI, nen khung cuoi cua mot duong cong co
+        # rut xuong lai bao "9" trong khi ca canh noi ve dinh 70. Nguoi xem dung
+        # hinh o giay cuoi se doc nham. Moc nay o lai de hai con so cung co mat.
+        i_dinh = max(range(n), key=lambda k: curve[k])
+        p_dinh = i_dinh / (n - 1)
+        if gp >= p_dinh and n > 1:
+            qd = clamp((gp - p_dinh) / 0.08)
+            xd = ax0 + (ax1 - ax0) * p_dinh
+            yd = yof(curve[i_dinh])
+            dd.ellipse([s(xd - 11), s(yd - 11), s(xd + 11), s(yd + 11)],
+                       outline=HOT + (255,), width=s(3))
+            df = typo.mono_font(22, 700)
+            lb = f"ĐỈNH {_num_vi(curve[i_dinh])}"
+            ttext(base, lb, df, HOT, yd - 52,
+                  cx=min(max(xd, ax0 + 80), ax1 - 80), track=3.0, p=qd)
 
         # --- nhan truc x
         marks = sp.get("marks") or []

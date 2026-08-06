@@ -3,8 +3,18 @@
 # Chi doi noi dung YAML, chay lai render.py la ra video moi.
 #
 # Ngan hon cache-stale.yaml (8 canh) - dung lam ban mau cho dinh dang ~60 giay.
+#
+# MOI CON SO do bang repro/n_cong_1_truy_van.py tren chinh may nay:
+#   149 cau = 1 (danh sach don) + 20 (khach) + 20 (nhom hang) + 108 (dong hang)
+#   eager load: 2 cau, cung ket qua (script co assert doi chieu)
+#   thoi gian chay trong sqlite: 0,4ms cho ca 149 cau
+#   voi do tre 25ms moi lan di ve: 3,73 giay so voi 0,05 giay
+#
+# Do tre 25ms la THAM SO chu khong phai so do duoc - sqlite chay cung tien trinh
+# nen do tre bang khong. Vi vay muc do tre duoc ghi thang len man hinh o canh 3,
+# khong giau trong loi doc. Xem Y-TUONG.md, Cua 1.
 
-title: 20 dòng dữ liệu, 143 câu truy vấn
+title: 20 đơn hàng, 149 câu truy vấn
 theme: bench
 accent: hot
 brand: HIỆN TRƯỜNG · HỒ SƠ 08
@@ -30,18 +40,21 @@ scenes:
   # ---- NHIP 1: tinh huong quen, dong cuoi vo ly ---------------------------
   - scene: probe
     chapter: HIỆN TRƯỜNG
-    head: API trả 200. Và mất 4 giây.
+    head: API trả 200. Và mất 3,7 giây.
     # `API`/`OK` phien am, `caption` giu chu goc. Gop cau cuoi 19 ky tu vao cau
     # truoc: cau ngan o cuoi bi contour ha toc con 0,978 va nam o cho cao tan
     # sut manh nhat. Xem VIET-KICH-BAN.md.
-    narration: Trang danh sách đơn hàng chỉ có hai mươi dòng. Ây pi ai trả về hai trăm ô kê, nhưng mất bốn giây.
-    caption: Hai mươi dòng dữ liệu. Bốn giây.
+    #
+    # CO Y khong lo so 149 o day. No la cu lat bai o canh 5; noi truoc thi canh
+    # mo phong chi con la minh hoa cho mot cau da noi roi.
+    narration: Trang danh sách đơn hàng chỉ có hai mươi đơn. Ây pi ai trả về hai trăm ô kê, nhưng mất ba phẩy bảy giây.
+    caption: Hai mươi đơn hàng. Ba phẩy bảy giây.
     heading: curl · rails log
     status: 200 OK
     lines:
       - { cmd: "GET /api/orders?limit=20", out: "200 OK", state: ok }
-      - { cmd: "rows returned",            out: "20",     state: ok }
-      - { cmd: "total time",               out: "4.2s",   state: bad }
+      - { cmd: "đơn trả về",               out: "20",     state: ok }
+      - { cmd: "tổng thời gian",           out: "3.73s",  state: bad }
     verdict: KHÔNG MỘT LỖI NÀO
 
   # ---- NHIP 2: hau qua, vi sao no khong duoc sua --------------------------
@@ -55,15 +68,27 @@ scenes:
     sub: Nên nó đi qua hết code review
 
   # ---- NHIP 3: goi mo, chua dat ten benh ---------------------------------
-  - scene: statement
+  # Truoc day la canh `statement` thu ba, va ba con so tren man hinh khong khop
+  # nhau: 143 cau, moi cau 3ms, tong 4,2 giay - nhan ra la 0,43 giay. Chay that
+  # (repro/n_cong_1_truy_van.py) thi thay phan thieu nam o dau, va cho do la mot
+  # phep SO SANH hai ve chu khong phai mot cau khang dinh. Doi sang `compare`
+  # vua sua duoc so hoc, vua ha ty le `statement` tu 38% xuong 25%.
+  - scene: compare
     chapter: HIỆN TRƯỜNG
     head: Database không hề chậm.
-    narration: Và database không hề chậm. Mỗi câu truy vấn chỉ mất ba mili giây. Vấn đề là số lượng câu, không phải tốc độ từng câu.
-    caption: Mỗi câu chỉ 3ms. Vấn đề là số lượng câu.
-    label: CHỖ ÍT AI SOI
-    value: 3 MS MỘT CÂU
-    size: 132
-    sub: Nhân với bao nhiêu câu?
+    narration: Chạy thật thì cả trăm câu đó chỉ tốn bốn phần mười mili giây bên trong database. Thứ ngốn hết thời gian là từng ấy lần đi về qua mạng.
+    caption: 0,4ms chạy trong database. Phần còn lại là đi về.
+    vs: TRONG KHI ĐÓ
+    box_h: 300     # cao hon mac dinh 250: canh nay khong co verdict nen con cho
+    items:
+      - label: CHẠY THẬT TRONG DATABASE
+        value: 0,4 MS
+        note: đo bằng sqlite, cả 149 câu
+        color: ok
+      - label: NGƯỜI DÙNG NGỒI CHỜ
+        value: 3,73 S
+        note: 149 lần đi về × 25 mili giây
+        color: hot
 
   # ---- NHIP 4 + 5: nguoi xem duoc gi, roi vao demo -----------------------
   - scene: list
@@ -76,28 +101,28 @@ scenes:
         focus: true
       - text: Một dòng eager load, và khi nào nó không đủ.
 
-  # ---- MO PHONG: bo dem chay len moi la thu giai thich --------------------
+  # ---- MO PHONG: 149 o hien het tren man hinh ---------------------------
   - scene: multiply
     chapter: QUAY CHẬM
-    head: Một câu, rồi một trăm bốn ba câu.
-    # DOI tu `gantt` sang `multiply`. `gantt` tra loi cau "KHI NAO" - hai viec
+    head: Một câu, rồi một trăm bốn chín câu.
+    # DUNG `multiply` chu khong `gantt`. `gantt` tra loi cau "KHI NAO" - hai viec
     # chong len nhau theo thoi gian. Nhung N+1 khong noi ve thoi gian ma ve SO
     # LUONG bung ra, nen ep vao hai lane ngang la ke sai chuyen: nguoi xem phai
     # DOC con so "con 140 cau" thay vi NHIN THAY no.
     #
-    # O luoi dau tien mau xanh (cau hop le), 142 o con lai mau do (thua) - ty le
-    # 1 tren 142 hien ra ngay, khong can mot loi giai thich nao.
-    narration: Một câu đầu tiên lấy hai mươi đơn. Rồi vòng lặp bắt đầu. Mỗi đơn, ô a em lặng lẽ gửi thêm một câu để lấy tên khách. Hai mươi đơn thành hai mươi câu. Rồi trang sau, rồi trang sau nữa, cứ thế nhân lên.
+    # O luoi dau tien mau xanh (cau hop le), 148 o con lai mau do (thua) - ty le
+    # 1 tren 148 hien ra ngay, khong can mot loi giai thich nao.
+    narration: Một câu đầu tiên lấy hai mươi đơn. Rồi vòng lặp bắt đầu. Mỗi đơn, ô a em lặng lẽ gửi thêm một câu để lấy tên khách, một câu nữa lấy danh sách hàng, rồi một câu cho từng dòng hàng, cứ thế nhân lên.
     caption: Mỗi vòng lặp lặng lẽ thêm một câu truy vấn.
     source:
       label: CÂU ĐẦU TIÊN
       text: SELECT * FROM orders LIMIT 20
     counter_key: CÂU SQL
-    count: 143
+    count: 149
     cols: 12
     chip: MỖI Ô LÀ MỘT CÂU SELECT NỮA
     verdict_at: 0.92
-    verdict: MỘT TRANG, 143 CÂU
+    verdict: MỘT TRANG, 149 CÂU
 
   # ---- THU PHAM: mot cau ------------------------------------------------
   - scene: statement
@@ -115,8 +140,8 @@ scenes:
     chapter: CHẶN
     accent: ok
     head: Nói trước là sẽ cần.
-    narration: Sửa bằng eager load. Bạn nói trước với ô a em là sẽ cần tên khách, nó gộp thành một câu. Dấu hiệu phát hiện sớm là log có cùng một câu lặp lại liên tiếp.
-    caption: Log có cùng một câu lặp lại liên tiếp là dấu hiệu.
+    narration: Sửa bằng eager load. Bạn nói trước với ô a em là sẽ cần tên khách và danh sách hàng, một trăm bốn chín câu gộp còn hai. Dấu hiệu phát hiện sớm là log có cùng một câu lặp lại liên tiếp.
+    caption: 149 câu gộp còn 2. Log lặp lại là dấu hiệu.
     n: "01"
     kicker: QUY TẮC
     color: ok
