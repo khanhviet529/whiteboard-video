@@ -2,6 +2,7 @@
 
     python research/sim_strip.py topology
     python research/sim_strip.py race
+    python research/sim_strip.py gantt cache-stale.yaml 2   # canh gantt THU HAI
 
 Canh mo phong khong danh gia duoc bang mot anh tinh - phai xem vat the di toi
 dau va node nao sang len theo thu tu nao.
@@ -21,15 +22,17 @@ from style import H, W  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KIND = sys.argv[1] if len(sys.argv) > 1 else "topology"
 SCREEN = sys.argv[2] if len(sys.argv) > 2 else "double-charge.yaml"
+NTH = int(sys.argv[3]) if len(sys.argv) > 3 else 1   # canh thu may cung loai
 
 doc = yaml.safe_load(open(os.path.join(ROOT, "screenplays", SCREEN),
                           encoding="utf-8"))
 R.use_theme(doc.get("theme", "phongtoi"))
 THEME = R.THEME
 
-sp = next((x for x in doc["scenes"] if x["scene"] == KIND), None)
-if sp is None:
-    sys.exit(f"screenplay khong co canh {KIND!r}")
+same = [x for x in doc["scenes"] if x["scene"] == KIND]
+if len(same) < NTH:
+    sys.exit(f"screenplay chi co {len(same)} canh {KIND!r}, khong co canh #{NTH}")
+sp = same[NTH - 1]
 DUR = float(sp.get("min_duration", 11))
 els = THEME.build(sp, DUR, doc)
 bg = THEME.background()
@@ -45,6 +48,6 @@ for i, frac in enumerate(MOMENTS):
     sheet.paste(img.convert("RGB").resize((TW, TH), Image.LANCZOS), (i * TW, LAB))
     d.text((i * TW + 8, 7), f"t = {t:.1f}s", fill="#EEE", font=f)
 
-out = os.path.join(ROOT, "build", f"{KIND}-strip.png")
+out = os.path.join(ROOT, "build", f"{KIND}-{NTH}-strip.png")
 sheet.save(out)
 print(out, sheet.size)

@@ -1,6 +1,9 @@
 """Xuat dai anh cua rieng cu chuyen canh, de kiem tra truoc khi render full.
 
-Render full mat ~12 phut nen phai soi cu quet bang anh tinh truoc.
+    python research/wipe_strip.py                      # double-charge (phongtoi)
+    python research/wipe_strip.py cache-stale.yaml     # bench
+
+Render full mat vai phut nen phai soi cu quet bang anh tinh truoc.
 """
 import os
 import sys
@@ -15,7 +18,8 @@ import render as R  # noqa: E402
 from style import H, W  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-doc = yaml.safe_load(open(os.path.join(ROOT, "screenplays", "double-charge.yaml"),
+SCREEN = sys.argv[1] if len(sys.argv) > 1 else "double-charge.yaml"
+doc = yaml.safe_load(open(os.path.join(ROOT, "screenplays", SCREEN),
                           encoding="utf-8"))
 R.use_theme(doc.get("theme", "phongtoi"))
 THEME = R.THEME
@@ -38,6 +42,7 @@ for i, frac in enumerate(MOMENTS):
     tag = "VAO" if frac < 0.5 else "RA"
     d.text((i * TW + 8, 7), f"{tag}  t={t:.2f}s", fill="#EEE", font=f)
 
-out = os.path.join(ROOT, "build", "wipe-strip.png")
+out = os.path.join(ROOT, "build",
+                   f"wipe-strip-{os.path.splitext(SCREEN)[0]}.png")
 sheet.save(out)
 print(out, sheet.size)
