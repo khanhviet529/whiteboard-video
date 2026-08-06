@@ -29,8 +29,9 @@ frame cần những trường khác. Chạy screenplay cũ với `--theme bench`
 ngay chứ không render ra hình sai:
 
 ```
-ValueError: theme bench khong co loai canh 'compare'.
-            Co: ask, counters, gantt, list, probe, rule, statement
+ValueError: theme bench khong co loai canh 'bigstat'.
+            Co: ask, compare, counters, gantt, list, multiply, probe,
+                queue, rule, statement, topology
 ```
 
 ### `bench` khác `phongtoi` ở đâu
@@ -125,6 +126,7 @@ python research/contact_sheet.py
 #  ô số đổi lúc nào, có giây nào không có gì chuyển động hay không)
 python research/sim_strip.py gantt cache-stale.yaml 1   # cảnh gantt thứ nhất
 python research/sim_strip.py gantt cache-stale.yaml 2   # cảnh gantt thứ hai
+python research/sim_strip.py multiply n-plus-one.yaml 1 # loại nào cũng soi được
 
 # dải kiểm tra cú chuyển cảnh
 python research/wipe_strip.py cache-stale.yaml
@@ -238,9 +240,8 @@ scenes:
 `caption` (phụ đề dưới) mặc định lấy luôn `narration`; ghi đè nếu muốn khác.
 `chips` vẽ dãy nhãn tiến độ ở góc trên phải: `- { label: THỨ TỰ, color: blue, done: true }`
 
-### 7 loại cảnh của theme `bench`
+### 12 loại cảnh của theme `bench`
 
-Screenplay [cache-stale.yaml](screenplays/cache-stale.yaml) dùng đủ cả bảy.
 Mọi cảnh nhận thêm ba trường chung: `chapter` (tên chương, tự đánh số theo lần
 xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` (`hot` `ok` `cool`
 `violet` `gold`).
@@ -252,8 +253,22 @@ xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` 
 | `list` | Danh sách có số trong ô vuông nhỏ | `items[{text,focus,color}]` |
 | `rule` | Thẻ quy tắc: số lớn trong ngoặc góc + câu quy tắc + ghi chú | `n`, `kicker`, `body`, `small`, `color` |
 | `counters` | Dãy ô số cạnh nhau — cho thấy một giá trị **không đổi** qua nhiều mốc | `items[{value,label,top,color}]`, `box_h`, `verdict` |
+| `compare` | Hai ô xếp dọc, có gạch nối `vs` ở giữa | `a{}`, `b{}`, `vs`, `bad`, `note` |
 | `ask` | Cảnh chốt: câu hỏi về hệ thống của chính người xem | `text`, `size`, `hint` |
-| `gantt` ⭐ | **Mô phỏng**: hai luồng theo thời gian + ô số chạy thật + bộ đếm | `lanes`, `readout`, `counter`, `ruler`, `verdict_at`, `verdict`, `verdict_color` |
+
+### Bốn cảnh mô phỏng ⭐ — chọn theo CÂU HỎI, đừng chọn theo thói quen
+
+Đây là chỗ tool ăn đứt slide, và cũng là chỗ dễ làm video nhìn giống nhau nhất.
+Ba screenplay đầu tiên đều mở `probe > statement > statement > list > gantt` chỉ
+vì `gantt` là loại mô phỏng duy nhất có sẵn lúc đó. Mỗi loại trả lời **một** câu
+hỏi khác nhau — hỏi trước xem cảnh của bạn đang trả lời câu nào:
+
+| `scene` | Trả lời câu | Hình dạng | Trường chính |
+|---|---|---|---|
+| `gantt` | **KHI NÀO** — hai việc chồng lên nhau theo thời gian | hai đường ray ngang, đầu đọc chạy qua | `lanes`, `readout`, `counter`, `ruler`, `verdict_at` |
+| `multiply` | **BAO NHIÊU CÁI** — một thành rất nhiều | ô nguồn + lưới ô đầy dần + bộ đếm | `source{label,text}`, `count`, `cols`, `counter_key`, `chip` |
+| `queue` | **BAO NHIÊU THEO THỜI GIAN** — dồn ứ, không rút xuống | biểu đồ miền, cắt màu tại ngưỡng | `curve[]`, `capacity`, `ymax`, `marks[]`, `inbox{}`, `outbox{}` |
+| `topology` | **Ở ĐÂU** — tầng nào có, tầng nào không | các tầng xếp dọc, gói tin chạy dọc sống | `nodes[{name,sub,tag,color}]`, `from`, `to`, `miss_tag`, `packet` |
 
 Trong `gantt`:
 
@@ -263,6 +278,23 @@ Trong `gantt`:
   thì bộ đếm **đứng ở 0** — đó là cách cho thấy lần chạy đúng không hại ai.
 - `lanes[].steps[].w` phải **đủ rộng để chứa tên bước bên trong thanh**. Hẹp hơn
   thì tên bước bị đẩy xuống hàng nhãn tràn, đọc kém hơn nhiều.
+
+Trong `multiply`: ô đầu tiên **luôn xanh**, các ô còn lại đỏ — tỷ lệ 1 trên
+N hiện ra mà không cần một lời giải thích nào. Ô tự co lại cho đủ `count`; chỉ
+khi co xuống dưới 11px mới cắt và ghi `+N nữa`.
+
+Trong `queue`: `curve` là danh sách số **đo được**, khai thẳng, không nội suy từ
+công thức — công thức thì dễ viên số cho đẹp. Phần đường cong nằm dưới `capacity`
+tô xanh, phần vượt lên tô đỏ; khoảnh khắc cắt ngưỡng là điểm đáng nhớ duy nhất
+của cảnh nên `capacity` phải thấp hơn đỉnh (linter bắt).
+
+Trong `topology`: gói tin chạy từ tầng `from` tới tầng `to`. **Những tầng nó
+không tới mới là nội dung** — chúng bị mờ đi và đeo nhãn `miss_tag`. Tối đa 6
+tầng; nhiều hơn thì mỗi thẻ hụt dưới 110px và tên tầng dính vào dòng phụ.
+
+> Tên cảnh không duy nhất giữa các theme: `phongtoi` cũng có `topology` và
+> `compare` nhưng schema khác hẳn. `lint.py` vì thế chỉ chạy kiểm tra của `bench`
+> khi `theme: bench`.
 
 ### ⚠ `gantt` KHÔNG mô phỏng gì — nó vẽ đúng cái bạn khai
 
@@ -329,7 +361,7 @@ src/
 ├── typo.py      chữ có tracking + vệt sáng — dùng chung cho hai theme tối
 ├── timing.py    bộ đếm nhịp dùng chung: xếp phần tử + chuẩn hoá theo lời nói
 ├── lint.py      kiểm screenplay trước khi render — nhắm vào cảnh mô phỏng
-├── bench.py     THEME chính: bàn thí nghiệm + 7 loại cảnh (kèm mô phỏng gantt)
+├── bench.py     THEME chính: bàn thí nghiệm + 12 loại cảnh (4 cảnh mô phỏng)
 ├── phongtoi.py  THEME nền tối + 13 loại cảnh (kèm 2 mô phỏng)
 ├── brutal.py    THEME brutalist
 ├── scenes.py    THEME whiteboard

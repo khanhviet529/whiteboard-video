@@ -1,0 +1,210 @@
+# TUYEN 2 - HIEU NHAM PHO BIEN (xem Y-TUONG.md). Khac hai screenplay truoc, deu
+# la tuyen "su co production".
+#
+# Hinh dang hook cua tuyen nay khac: khong mo bang trieu chung vo ly ma bang
+#   "Ban tin X. Dung chin phan muoi truong hop. Day la phan con lai."
+# Cang thang den tu cam giac "toi tuong toi biet", khong phai "tao cung tung dinh".
+#
+# MOI CON SO trong screenplay nay do duoc bang repro/async_khong_phai_song_song.py
+# tren chinh may nay, khong co so nao chon cho dep:
+#   CPU tuan tu 0,70s | CPU async 0,66s (1,07x) | CPU nhieu tien trinh 0,41s (1,74x)
+#   I/O tuan tu 2,00s | I/O async 0,50s (3,97x)
+#
+# Hai canh mo phong dung CHUNG bo cuc, chi doi so lane - de nguoi xem doi chieu
+# bang mat: mot lane dan viec vao nhau, hai lane chay that su cung luc.
+#
+# Chu "async": narration doc "bat dong bo", chi gioi thieu chu "async" MOT lan o
+# canh 1. Ly do o VIET-KICH-BAN.md - tu tieng Anh tran bi model doan cach doc, va
+# doan khac nhau o moi cau vi mode `tach` sinh tung cau rieng.
+
+title: async không phải song song
+theme: bench
+accent: hot
+domain: be
+brand: HIỆN TRƯỜNG · HỒ SƠ 09
+tag: async · mô phỏng
+footer: MỘT LUỒNG ĐAN VIỆC  ·  KHÔNG PHẢI NHIỀU LUỒNG CHẠY CÙNG
+voice: female
+rate: "+16%"
+
+# Xem VIET-KICH-BAN.md muc "cau hinh va cache" - phai khai o day, sua trong
+# speak.py khong co tac dung vi khong vao khoa cache.
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  # Tinh huong quen: da them async ma khong nhanh hon. So do that.
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Thêm async. Không nhanh hơn.
+    narration: Bạn thêm bất đồng bộ, hay async, vào bốn việc tính toán nặng. Chạy lại thì nhanh hơn được đúng bốn phần trăm giây.
+    caption: Bốn việc, thêm async, nhanh hơn 0,04 giây.
+    heading: python · 4 việc CPU
+    status: 1.07x
+    lines:
+      - { cmd: "tuần tự",        out: "0.70s", state: ok }
+      - { cmd: "asyncio.gather", out: "0.66s", state: bad }
+    verdict: GẦN NHƯ KHÔNG ĐỔI
+
+  # ================================================================ NHIP 2
+  # Hau qua: vi sao hieu nham nay song dai. Async nhanh THAT o cho khac, nen
+  # nguoi ta suy rong ra moi cho.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Vì có lúc nó nhanh thật.
+    narration: Với việc chờ mạng thì bất đồng bộ nhanh gấp gần bốn lần, đo được luôn. Nên ai cũng tin nó luôn làm code chạy nhanh hơn.
+    caption: Với việc chờ mạng thì nó nhanh gấp bốn lần thật.
+    value: ĐÚNG VỚI I/O NÊN AI CŨNG TIN
+    size: 108
+    sub: Chín phần mười trường hợp bạn gặp đều là I/O
+
+  # ================================================================ NHIP 3
+  # Goi mo cho it ai soi. CO Y chua noi "mot luong" - do la ten benh, de danh
+  # cho nhip thu pham.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Khác biệt không nằm ở async.
+    narration: Khác biệt nằm ở chỗ khác. Việc chờ mạng có một chỗ dừng lại, còn việc tính toán thì chạy một mạch từ đầu đến cuối.
+    caption: Việc chờ có chỗ dừng. Việc tính thì không.
+    label: CHỖ ÍT AI SOI
+    value: CÓ CHỖ DỪNG KHÔNG?
+    size: 118
+    sub: Toàn bộ câu chuyện nằm ở câu hỏi đó
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết khi nào bất đồng bộ giúp được và khi nào không, cùng thứ phải dùng thay cho nó. Giờ xem bốn việc đó chạy thế nào.
+    caption: Khi nào nó giúp, khi nào không, và dùng gì thay.
+    items:
+      - text: Khi nào async giúp được, khi nào nó không giúp gì.
+        focus: true
+      - text: Thứ phải dùng thay khi việc là tính toán.
+
+  # ================================================================ DEMO 1
+  # Mot lane, bon viec noi tiep. Day la hinh anh cua "dan vao nhau".
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: Bốn việc tính toán, có async.
+    narration: Đây là bốn việc đó khi có bất đồng bộ. Chỉ có một luồng, nên việc một chạy xong mới tới việc hai. Không có hai việc nào chồng lên nhau, và tổng thời gian vẫn là cộng dồn cả bốn.
+    caption: Một luồng. Việc này xong mới tới việc kia.
+    ruler: ["0", "0.2s", "0.4s", "0.7s"]
+    lanes:
+      - label: LUỒNG DUY NHẤT
+        color: cool
+        steps:
+          - { at: 0.02, w: 0.22, text: "việc 1" }
+          - { at: 0.26, w: 0.22, text: "việc 2" }
+          - { at: 0.50, w: 0.22, text: "việc 3" }
+          - { at: 0.74, w: 0.24, text: "việc 4", bad: true }
+      - label: KHÔNG CÓ LUỒNG THỨ HAI
+        color: violet
+        steps: []
+    readout:
+      - key: SỐ LUỒNG
+        steps:
+          - { at: 0.00, value: "1", state: bad, note: "async không tạo thêm" }
+      - key: THỜI GIAN
+        steps:
+          - { at: 0.00, value: "0.00s", state: ok,   note: "bắt đầu" }
+          - { at: 0.50, value: "0.35s", state: warn, note: "mới xong hai việc" }
+          - { at: 0.98, value: "0.66s", state: bad,  note: "cộng dồn cả bốn" }
+    counter:
+      key: VIỆC XONG
+      from: 0.24
+      rate: 5.4
+      label: từng cái một
+    verdict_at: 0.98
+    verdict: ĐAN NHAU, KHÔNG CÙNG LÚC
+
+  # ================================================================ DEMO 2
+  # CUNG bo cuc, chi khac: hai lane chay that su cung luc.
+  - scene: gantt
+    chapter: QUAY CHẬM
+    accent: ok
+    head: Cũng bốn việc đó, hai tiến trình.
+    narration: Giờ vẫn bốn việc đó nhưng chia cho hai tiến trình. Hai việc bắt đầu cùng một lúc trên hai nhân khác nhau, nên tổng thời gian còn bốn mươi mốt phần trăm giây.
+    caption: Hai việc bắt đầu cùng lúc trên hai nhân.
+    ruler: ["0", "0.2s", "0.4s", "0.7s"]
+    lanes:
+      - label: TIẾN TRÌNH 1
+        color: cool
+        steps:
+          - { at: 0.02, w: 0.26, text: "việc 1" }
+          - { at: 0.30, w: 0.26, text: "việc 3" }
+      - label: TIẾN TRÌNH 2
+        color: violet
+        steps:
+          - { at: 0.02, w: 0.26, text: "việc 2" }
+          - { at: 0.30, w: 0.26, text: "việc 4" }
+    readout:
+      - key: SỐ LUỒNG
+        steps:
+          - { at: 0.00, value: "2", state: ok, note: "hai nhân thật" }
+      - key: THỜI GIAN
+        steps:
+          - { at: 0.00, value: "0.00s", state: ok, note: "bắt đầu" }
+          - { at: 0.30, value: "0.20s", state: ok, note: "xong hai việc" }
+          - { at: 0.60, value: "0.41s", state: ok, note: "xong cả bốn" }
+    counter:
+      key: VIỆC XONG
+      from: 0.28
+      rate: 12.0
+      label: hai cái một lúc
+    verdict_at: 0.62
+    verdict_color: ok
+    verdict: NHANH HƠN 1,74 LẦN
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Bất đồng bộ không tạo thêm luồng nào cả. Nó chỉ cho phép một luồng bỏ dở việc đang chờ để làm việc khác, rồi quay lại. Không có chỗ chờ thì không có gì để bỏ dở.
+    caption: Nó cho một luồng nhường lượt, không tạo thêm luồng.
+    label: THỦ PHẠM
+    value: NHƯỜNG LƯỢT, KHÔNG PHẢI CHẠY CÙNG LÚC
+    size: 96
+    sub: Vẫn đúng một luồng từ đầu tới cuối
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Nhìn vào chỗ code dừng lại.
+    narration: Quy tắc chỉ có một câu. Chỗ nào code dừng lại chờ thì dùng bất đồng bộ, chỗ nào code tính liên tục thì phải chia ra nhiều tiến trình.
+    caption: Chỗ chờ thì async. Chỗ tính thì tiến trình.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Async cho chỗ CHỜ. Tiến trình cho chỗ TÍNH.
+    small: Đọc mạng, đọc đĩa, gọi API, truy vấn database đều là chỗ chờ. Nén ảnh, tính toán, xử lý chuỗi lớn đều là chỗ tính.
+
+  # ================================================================ NOI THAT
+  # Async khong he vo dung - va so do chung minh dieu do manh hon moi loi bien ho.
+  - scene: probe
+    chapter: CÒN LẠI
+    accent: ok
+    head: Đúng chỗ thì nó rất mạnh.
+    narration: Nói cho công bằng. Cũng bốn việc đó nhưng là chờ mạng, thì bất đồng bộ rút từ hai giây xuống nửa giây, tức gần bốn lần, đúng bằng số việc.
+    caption: Bốn việc chờ mạng, từ hai giây xuống nửa giây.
+    heading: python · 4 việc chờ mạng
+    status: 3.97x
+    lines:
+      - { cmd: "tuần tự",        out: "2.00s", state: bad }
+      - { cmd: "asyncio.gather", out: "0.50s", state: ok }
+    verdict: BỐN LẦN CHỜ GỘP LÀM MỘT
+
+  # ================================================================ CAU HOI
+  # Cau hoi kiem tra co che, khong phai tra cuu. Xem VIET-KICH-BAN.md.
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Nếu bạn thêm bất đồng bộ vào một hàm nén ảnh, thì nó nhanh lên hay chậm đi? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã hiểu cơ chế.
+    text: THÊM ASYNC VÀO HÀM NÉN ẢNH THÌ SAO?
+    size: 92
+    hint: trả lời được là bạn đã hiểu cơ chế

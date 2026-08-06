@@ -74,6 +74,60 @@ caption:   ...                       # caption giữ nguyên chữ TTL
 | Quên `pre_pad` / `post_pad` | Mặc định 0,45 + 0,85 = 1,3 giây **mỗi điểm cắt**. Video 13 cảnh mất 15,6 giây chỉ để im lặng, đo được là 24% thời lượng | Khai `pre_pad: 0.35` và `post_pad: 0.55` |
 | `caption` để trống | Nó mặc định lấy luôn `narration`, mà thẻ phụ đề chỉ vừa ~3 dòng ở cỡ 24px | Viết `caption` riêng, ngắn hơn `narration` |
 | Dấu `:` theo sau dấu cách trong scalar YAML | Vỡ file, `ScannerError` | Bỏ dấu hai chấm hoặc bọc nháy |
+| **Dấu phẩy trong giá trị của flow style `{ ... }`** | **Không báo lỗi.** Dấu phẩy là dấu tách, nên `{ note: nhanh hơn 1,07 lần }` cho ra `{'note': 'nhanh hơn 1', '07 lần': None}` — file vẫn parse, vẫn render, chỉ mất nửa câu trên màn hình | Bọc giá trị bằng nháy. `lint.py` bắt được: bất kỳ khoá nào có giá trị rỗng đều bị báo LỖI |
+
+---
+
+## Bẫy lớn nhất: ba video nhìn giống hệt nhau
+
+Đo trên ba screenplay đầu tiên, trước khi có thêm loại cảnh:
+
+- cả ba mở đúng một chuỗi `probe > statement > statement > list > gantt`
+- `statement` chiếm **32%** tổng số cảnh
+- ba loại cảnh chiếm **65%** tổng số cảnh
+
+Nguyên nhân không phải lười. Nó là hệ quả của hai thứ: khung HOOK 5 NHỊP được
+ánh xạ **máy móc** một nhịp thành một cảnh, và `gantt` từng là loại mô phỏng
+**duy nhất** nên mọi cơ chế đều bị ép vào hai đường ray ngang — kể cả những cơ
+chế chẳng liên quan gì tới thời gian.
+
+Cách tránh: trước khi chọn loại cảnh, viết ra **câu hỏi** mà cảnh đó trả lời.
+
+| Cảnh đang trả lời câu | Dùng | Ép sai vào `gantt` thì thành |
+|---|---|---|
+| KHI NÀO — hai việc chồng lên nhau | `gantt` | — |
+| BAO NHIÊU CÁI — một thành rất nhiều | `multiply` | người xem phải **đọc** con số "còn 140 câu" thay vì **nhìn thấy** nó |
+| BAO NHIÊU THEO THỜI GIAN — dồn ứ | `queue` | hai thanh ngang không kể được "lên mà không xuống" |
+| Ở ĐÂU — tầng nào có, tầng nào không | `topology` | mất hẳn phần quan trọng nhất: những tầng gói tin **không** tới |
+
+`n-plus-one.yaml` từng mắc đúng lỗi này: N+1 nói về **số lượng** bung ra, không
+phải hai việc chồng thời gian, nhưng vẫn dùng `gantt`. Đổi sang `multiply` thì
+143 ô hiện lên hết trên màn hình, ô đầu tiên xanh và 142 ô sau đỏ — tỷ lệ 1 trên
+142 đọc được trong nửa giây, không cần một lời giải thích nào.
+
+Hai điều nữa về sự đơn điệu:
+
+- `statement` là loại dễ viết nhất nên tay tự trôi về đó. Đo hiện tại:
+  `async-song-song` 30%, `cache-stale` 31%, `n-plus-one` 38%. Cả ba đều cao hơn
+  mức nên có — nhắm về **một phần tư**, và mỗi lần định viết `statement` thứ ba
+  thì hỏi lại xem cảnh đó có phải một `compare` hay `counters` bị nén không.
+- Hai cảnh mô phỏng trong cùng một video thì hoặc **giống hệt bố cục** (để đối
+  chiếu bằng mắt, như hai `gantt` của `async-song-song.yaml`), hoặc **khác hẳn
+  loại**. Giống lờ mờ là tệ nhất — mắt tưởng đang so sánh nhưng không so được.
+
+---
+
+## Bẫy khi viết cảnh mô phỏng mới
+
+| Bẫy | Cách tránh |
+|---|---|
+| `queue` có đoạn đường cong đi xuống | Cả cảnh chỉ nói được một điều: dồn lên và không rút. Đường có lên có xuống là hình đang phủ định lời đọc. `lint.py` bắt |
+| `queue` đặt `capacity` cao hơn đỉnh | Ngưỡng không bao giờ bị vượt nên mất khoảnh khắc đáng nhớ duy nhất của cảnh |
+| `queue` khai `curve` bằng công thức | Công thức thì dễ viên số cho đẹp. Khai số **đo được**, viết script trong `repro/` |
+| `topology` cho gói tin đi qua hết mọi tầng | Nội dung của cảnh nằm ở những tầng nó **không** tới. Đi hết thì chỉ còn một danh sách |
+| `topology` quá 6 tầng | Mỗi thẻ hụt dưới 110px, tên tầng dính vào dòng phụ. Gộp bớt hoặc tách hai cảnh |
+| `multiply` đặt `accent: hot` rồi tưởng ô đầu đổi màu theo | Ô đầu **luôn** xanh, cố định trong code — nếu không thì nó trùng màu với 142 ô kia và mất sạch ý |
+| Đặt tên cảnh trùng theme khác | `phongtoi` cũng có `topology` và `compare` nhưng schema khác hẳn. `lint.py` chỉ chạy kiểm tra `bench` khi `theme: bench` |
 
 ---
 

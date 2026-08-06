@@ -252,12 +252,116 @@ def check_narration(sp, idx, out, engine):
                     f"gọi model kèm một khoảng nghỉ, cả cảnh sẽ nghe rời rạc"))
 
 
+def check_yaml_cat(o, out, path="doc"):
+    """Bat gia tri bi dau phay cat doi trong flow style `{ ... }`.
+
+    Trong `{a: 1, b: 2}` thi dau phay la DAU TACH. Nen mot gia tri khong boc nhay
+    ma co dau phay se bi cat lam doi, va YAML KHONG BAO LOI:
+
+        { note: nhanh hơn 1,07 lần }  ->  {'note': 'nhanh hơn 1', '07 lần': None}
+
+    Nguy hon bay dau ':' (bay do lam vo file nen thay ngay). Cai nay file van
+    parse duoc, van render duoc, chi la mat mot nua cau tren man hinh.
+
+    Dau hieu chac chan: mot khoa co gia tri None. Khong co truong hop hop le nao
+    trong schema nay dat khoa rong.
+
+    KHONG dung cach tach chuoi theo dau phay de tim - `at: [0.5, 0.00]` la mang,
+    dau phay o do hop le, va cach do bao nham het cac dong nhu vay.
+    """
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if v is None:
+                out.append(("LOI", path,
+                            f"khoá `{k}` không có giá trị — gần như chắc chắn là "
+                            f"một giá trị chứa dấu phẩy bị cắt trong `{{ ... }}`; "
+                            f"bọc giá trị đó bằng dấu nháy"))
+            else:
+                check_yaml_cat(v, out, f"{path}.{k}")
+    elif isinstance(o, list):
+        for i, x in enumerate(o):
+            check_yaml_cat(x, out, f"{path}[{i}]")
+
+
+def check_queue(sp, idx, out):
+    """Duong cong phai DI THEO MOT HUONG va phai cat qua nguong.
+
+    Ca canh nay chi noi duoc mot dieu: hang doi day len va khong rut xuong. Neu
+    duong cong co doan di xuong thi hinh anh dang phu dinh chinh loi doc.
+    """
+    c = [float(x) for x in sp.get("curve") or []]
+    if len(c) < 3:
+        out.append(("LOI", f"canh {idx}", "`queue` can `curve` it nhat 3 mốc"))
+        return
+    xuong = [i for i in range(1, len(c)) if c[i] < c[i - 1] - 1e-9]
+    if xuong and not sp.get("cho_phep_xuong"):
+        out.append(("CANH BAO", f"canh {idx}",
+                    f"`curve` đi xuống ở mốc {xuong[0]} ({c[xuong[0] - 1]:g} → "
+                    f"{c[xuong[0]]:g}). Cảnh `queue` để kể chuyện dồn ứ; muốn "
+                    f"vẽ đường có lên có xuống thì đặt `cho_phep_xuong: true`"))
+    cap = sp.get("capacity")
+    if cap and max(c) <= float(cap):
+        out.append(("CANH BAO", f"canh {idx}",
+                    f"`capacity` {cap} cao hơn đỉnh đường cong {max(c):g} — "
+                    f"ngưỡng không bao giờ bị vượt nên mất khoảnh khắc đáng "
+                    f"nhớ duy nhất của cảnh"))
+    ymax = sp.get("ymax")
+    if ymax and max(c) > float(ymax):
+        out.append(("LOI", f"canh {idx}",
+                    f"`ymax` {ymax} nhỏ hơn đỉnh đường cong {max(c):g} — đỉnh "
+                    f"sẽ bị cắt cụt ở mép trên biểu đồ"))
+    marks = sp.get("marks") or []
+    if len(marks) == 1:
+        out.append(("CANH BAO", f"canh {idx}",
+                    "`marks` chỉ có một mốc nên trục thời gian không nói gì"))
+
+
+def check_topology(sp, idx, out):
+    """`from`/`to` phai nam trong danh sach, va phai co tang KHONG toi duoc."""
+    nodes = sp.get("nodes") or []
+    n = len(nodes)
+    if n < 2:
+        out.append(("LOI", f"canh {idx}", "`topology` cần ít nhất 2 `nodes`"))
+        return
+    if n > 6:
+        out.append(("CANH BAO", f"canh {idx}",
+                    f"{n} tầng trên sân diễn cao 826px — mỗi thẻ còn dưới 110px, "
+                    f"tên tầng sẽ dính vào dòng phụ. Gộp bớt hoặc tách hai cảnh"))
+    i_from = int(sp.get("from", 0))
+    i_to = int(sp.get("to", n - 1))
+    for ten, v in (("from", i_from), ("to", i_to)):
+        if not 0 <= v < n:
+            out.append(("LOI", f"canh {idx}",
+                        f"`{ten}: {v}` nằm ngoài danh sách {n} tầng (0..{n - 1})"))
+    if i_from == i_to:
+        out.append(("LOI", f"canh {idx}",
+                    "`from` trùng `to` nên gói tin không đi đâu cả"))
+    for k, nd in enumerate(nodes):
+        if not nd.get("name"):
+            out.append(("LOI", f"canh {idx}", f"tầng {k} thiếu `name`"))
+    if 0 <= i_from < n and 0 <= i_to < n:
+        ngoai = n - (abs(i_to - i_from) + 1)
+        if ngoai == 0 and sp.get("miss_tag"):
+            out.append(("CANH BAO", f"canh {idx}",
+                        "gói tin đi qua hết mọi tầng nên `miss_tag` không bao "
+                        "giờ hiện — bỏ nó đi hoặc thu hẹp `from`/`to`"))
+
+
 def check(doc):
     out = []
+    check_yaml_cat(doc, out)
     engine = doc.get("engine", "edge")
+    # Ten canh KHONG duy nhat giua cac theme: `phongtoi` cung co `topology` va
+    # `compare` nhung schema khac han (nodes co toa do `at`, co `packets`). Chay
+    # kiem tra cua bench len file phongtoi thi bao loi hang loat va sai het.
+    bench = doc.get("theme") == "bench"
     for i, sp in enumerate(doc.get("scenes", []), 1):
-        if sp.get("scene") == "gantt":
+        if bench and sp.get("scene") == "gantt":
             check_gantt(sp, i, out)
+        elif bench and sp.get("scene") == "queue":
+            check_queue(sp, i, out)
+        elif bench and sp.get("scene") == "topology":
+            check_topology(sp, i, out)
         check_caption(sp, i, out)
         check_narration(sp, i, out, engine)
     return out
