@@ -1,5 +1,18 @@
 # Bàn giao — tool dựng video whiteboard animation tiếng Việt
 
+> **Cập nhật 2026-08-04.** File này giữ bối cảnh giai đoạn đầu (theme
+> `whiteboard`, phân tích video tham chiếu). Trạng thái hiện tại khác nhiều:
+> theme chính giờ là **`bench`**, và công thức mở đầu là **HOOK 5 NHỊP**. Đọc
+> [README.md](README.md) và [CONG-THUC.md](CONG-THUC.md) trước, file này sau.
+>
+> Ba điểm trong file này **đã lỗi thời**:
+> - Đường dẫn Python `D:\Downloads\Python311` không còn. Máy hiện tại dùng
+>   `py` (Python 3.14) trên PATH; `pillow numpy pyyaml edge-tts imageio-ffmpeg`
+>   đã cài. ffmpeg lấy từ `imageio_ffmpeg.get_ffmpeg_exe()`.
+> - Vị trí repo giờ là `D:\Project\whiteboard-video`, không phải `E:\`.
+> - Remotion đã bỏ, không dùng. Toàn bộ render bằng PIL + numpy, không có Node.
+>   Nên phần "giấy phép Remotion" ở mục 5 không còn liên quan.
+
 > File này thay cho việc "chuyển đoạn chat". Lịch sử hội thoại không di chuyển được
 > giữa các thư mục dự án, nên toàn bộ **quyết định đã chốt** và **kết quả đã đo được**
 > nằm ở đây. Phiên Claude Code mới mở tại `E:\whiteboard-video` đọc file này là đủ

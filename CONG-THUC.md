@@ -93,6 +93,71 @@ Hỏi về hệ thống của chính họ, không hỏi ý kiến chung chung.
 
 ---
 
+---
+
+## Biến thể mở đầu: HOOK 5 NHỊP
+
+Khung 7 nhịp ở trên mở bằng *triệu chứng* rồi đi luôn vào loại nghi phạm. Biến
+thể này thay ba nhịp đầu bằng **năm nhịp mở đầu** — cùng tinh thần điều tra,
+nhưng nói thẳng với người xem rằng họ sẽ nhận được gì, trước khi vào mô phỏng.
+Dùng khi muốn tăng lượt lưu chứ không chỉ lượt xem hết.
+
+Screenplay mẫu: [cache-stale.yaml](screenplays/cache-stale.yaml) (theme `bench`).
+
+| Nhịp | Nhiệm vụ | Loại cảnh | Ví dụ |
+|---|---|---|---|
+| 1 | **Tình huống quen** — một lỗi thật, cụ thể, nghe vô lý | `probe` | ba dòng shell: `DEL` OK, `UPDATE` 1 row, `GET` → vẫn số cũ |
+| 2 | **Hậu quả / chỗ khó chịu** — vì sao nó *không* được sửa | `statement` | "xoá lần hai thì đúng" → nên không ai điều tra tiếp |
+| 3 | **Gợi mở nguyên nhân thật** — chỉ ra chỗ ít ai soi, **chưa đặt tên** | `statement` | "ba mili giây giữa hai lệnh, không log nào ghi lại" |
+| 4 | **Người xem đạt được gì** — đúng hai dòng, không hứa quá | `list` | thứ tự đúng của hai lệnh + vì sao vẫn cần TTL |
+| 5 | **Vào demo ngay** — câu cuối của nhịp 4, không thành cảnh riêng | → `gantt` | "giờ quay chậm ba mili giây đó" |
+
+Bốn quy tắc bắt buộc, thiếu một là hỏng:
+
+1. **Không mở bằng lời chào.** "Xin chào mọi người, hôm nay chúng ta sẽ học…"
+   là bốn giây chết ở đúng chỗ đắt nhất của video. Nhịp 1 phải là *lỗi*.
+2. **Nhịp 1 phải là một lỗi tái dựng được**, không phải một khái niệm. Ba dòng
+   shell thật mạnh hơn mọi câu mô tả, vì mid-level đọc chúng nhanh hơn đọc chữ.
+3. **Nhịp 3 không được đặt tên bệnh.** Chỉ ra *chỗ* ("ba mili giây giữa hai
+   lệnh") chứ không gọi tên ("race condition khi invalidate cache"). Gọi tên ở
+   giây thứ mười là mất sạch lý do ở lại.
+4. **Nhịp 4 không được hứa sai.** Viết "TTL chặn cái sai sống mãi" thì đúng;
+   viết "một dòng config hết bug" thì sai, và mid-level phát hiện ngay. Video
+   này còn dành riêng một cảnh để **thừa nhận chưa đạt 100%** — đó là chỗ lấy
+   được lòng tin, không phải chỗ mất.
+
+Đo lại sau khi viết: nhịp 1 tới nhịp 3 phải xong trong khoảng **20–25 giây**.
+Dài hơn thì cắt chữ, đừng cắt nhịp.
+
+### Hai lần mô phỏng, giữ nguyên bố cục
+
+`cache-stale.yaml` chạy `gantt` **hai lần**: lần một sai thứ tự (bộ đếm "khách
+đọc sai" chạy lên 8), lần hai đúng thứ tự (**bộ đếm đứng ở 0**). Hai cảnh dùng y
+nguyên bố cục, y nguyên bề rộng thanh, chỉ đổi thứ tự hai lệnh của lane trên.
+
+Đó là toàn bộ mẹo: **giữ nguyên bố cục thì người xem đối chiếu được bằng mắt**,
+không cần một câu giải thích nào. Đổi bố cục ở lần hai là mất sạch tác dụng —
+lúc đó hai cảnh chỉ còn là hai hình khác nhau.
+
+### Số đo thật của `cache-stale.yaml`
+
+Đo từ log render, không phải ước lượng:
+
+| | Giây | % video |
+|---|---|---|
+| Tổng | 120,9 | 100% |
+| Hook (cảnh 1–4) | 33,1 | 27% |
+| *trong đó nhịp 1–3* | *25,0* | — |
+| Hai cảnh mô phỏng | 28,4 | **23%** |
+| Cảnh dài nhất (`gantt` #1) | 15,4 | — |
+
+Mô phỏng 23% là **dưới** mức 35–40% mà công thức nhắm. Đổi lại, hai cảnh đó vẫn
+là hai cảnh dài nhất video (15,4s và 13,0s so với 7–10s của các cảnh khác) và
+không có giây chết nào. Muốn kéo lên 35% thì **viết thêm lời đọc** cho hai cảnh
+đó — đừng nâng `min_duration`, vì nâng thì đầu đọc quét chậm hơn nhưng im lặng.
+
+---
+
 ## Lỗi thường gặp
 
 | Lỗi | Hậu quả | Cách sửa |
@@ -103,6 +168,9 @@ Hỏi về hệ thống của chính họ, không hỏi ý kiến chung chung.
 | Ba quy tắc ở nhịp 6 | Không nhớ nổi cái nào | Chọn một, bỏ hai |
 | Triệu chứng bịa cho kêu | Mid-level phát hiện ngay, mất uy tín cả kênh | Chỉ dùng sự cố thật hoặc dựng lại được |
 | Số liệu bịa | Như trên, nhưng nặng hơn | Đo thật hoặc bỏ số |
+| Mở bằng lời chào | Mất 4 giây đắt nhất của video | Nhịp 1 phải là *lỗi*, xem HOOK 5 NHỊP |
+| Hứa "hết bug mãi mãi" | Mất uy tín, và không đúng | Nói rõ giới hạn, dành hẳn 1 cảnh thừa nhận chưa 100% |
+| Mô phỏng lần hai đổi bố cục | Người xem không đối chiếu được | Giữ y nguyên bố cục, chỉ đổi biến số |
 
 ---
 
@@ -116,6 +184,25 @@ Hỏi về hệ thống của chính họ, không hỏi ý kiến chung chung.
 # NHỊP 5 — gọi tên thủ phạm, một câu
 # NHỊP 6 — một quy tắc chặn + một chỉ số phát hiện sớm
 # NHỊP 7 — câu hỏi về hệ thống của người xem
+```
+
+Mẫu điền cho biến thể HOOK 5 NHỊP (theme `bench`):
+
+```yaml
+# NHỊP 1 — probe:      lỗi thật, 3 dòng shell, dòng cuối vô lý
+# NHỊP 2 — statement:  hậu quả — vì sao lỗi này KHÔNG được sửa
+# NHỊP 3 — statement:  chỗ ít ai soi, CHƯA đặt tên bệnh
+# NHỊP 4 — list:       đúng 2 dòng người xem sẽ đạt được
+# NHỊP 5 —             câu cuối của narration nhịp 4, dẫn thẳng vào gantt
+# ---- MÔ PHỎNG 1 — gantt: chạy SAI, bộ đếm hậu quả chạy lên
+# ---- statement:    gọi tên thủ phạm, một câu
+# ---- rule 01:      quy tắc chặn
+# ---- MÔ PHỎNG 2 — gantt: chạy ĐÚNG, cùng bố cục, bộ đếm đứng ở 0
+# ---- probe:        đường hỏng còn lại (lệnh mất trong im lặng)
+# ---- counters:     cái sai không tự hết qua 1 giờ / 1 ngày / 1 tuần
+# ---- rule 02:      lưới cuối
+# ---- statement:    thừa nhận chưa 100%
+# ---- ask:          câu hỏi về hệ thống của chính người xem
 ```
 
 ---
@@ -134,15 +221,22 @@ Dùng chung thư viện mô phỏng với định dạng chính nên không tố
 
 Nhịp 4 sống nhờ những scene này. Mỗi cái viết một lần, mọi screenplay sau gọi lại.
 
-| Scene | Trả lời câu | Cho thấy điều gì | Dùng cho mảng |
-|---|---|---|---|
-| `topology` ✅ | **Ở ĐÂU** | Các tầng hệ thống thành khối, request là chấm tròn bay giữa chúng | Tất cả |
-| `race` ✅ | **KHI NÀO** | Hai luồng song song, đan và chồng lấn theo thời gian | BE, Database |
-| `queue` | BAO NHIÊU | Hàng đợi đầy lên rồi rút xuống | Hạ tầng, BE |
-| `multiply` | BAO NHIÊU | Bộ đếm nhân lên ngoài tầm kiểm soát | Database (N+1), FE (re-render) |
-| `expire` | BAO LÂU | Đồng hồ đếm ngược và dữ liệu hỏng khi hết hạn | Database, BE |
+| Scene | Theme | Trả lời câu | Cho thấy điều gì | Dùng cho mảng |
+|---|---|---|---|---|
+| `gantt` ✅ | `bench` | **KHI NÀO + ĐANG GIỮ GÌ** | Hai luồng theo thời gian **cộng ô số đổi giá trị theo đầu đọc** và bộ đếm hậu quả | BE, Database |
+| `counters` ✅ | `bench` | BAO LÂU | Dãy ô số cạnh nhau: cùng một giá trị sai qua nhiều mốc thời gian | Database, BE |
+| `topology` ✅ | `phongtoi` | **Ở ĐÂU** | Các tầng hệ thống thành khối, request là chấm tròn bay giữa chúng | Tất cả |
+| `race` ✅ | `phongtoi` | **KHI NÀO** | Hai luồng song song, đan và chồng lấn theo thời gian | BE, Database |
+| `queue` | — | BAO NHIÊU | Hàng đợi đầy lên rồi rút xuống | Hạ tầng, BE |
+| `multiply` | — | BAO NHIÊU | Bộ đếm nhân lên ngoài tầm kiểm soát | Database (N+1), FE (re-render) |
 
 ✅ = đã dựng xong.
+
+**`gantt` hơn `race` ở đúng một điểm, và đó là điểm quyết định:** nó có hàng ô số
+phía trên, giá trị trong đó đổi theo đầu đọc. Người xem không phải tự suy ra "vậy
+lúc này cache đang giữ gì" — nó hiện ra thành chữ. Chính chỗ đó biến một biểu đồ
+thành một thí nghiệm. Thêm bộ đếm hậu quả ("khách đọc sai: 8") thì người xem có
+một con số để nhớ và để kể lại.
 
 **Hai scene mô phỏng đầu bổ sung cho nhau, không thay thế nhau.** `topology` cho
 thấy đường đi và ai sinh ra lỗi; `race` cho thấy hai việc chồng lấn thời gian ra
