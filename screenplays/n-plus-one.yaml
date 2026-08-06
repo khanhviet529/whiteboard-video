@@ -116,6 +116,12 @@ scenes:
   - scene: multiply
     chapter: QUAY CHẬM
     head: Một câu, rồi một trăm bốn chín câu.
+    # MO DAU: khong bat dau loi doc bang "Mot cau". Am tiet dau bi nen con
+    # 88ms trong khi trung vi cua chinh cau do la 112ms; "Danh" giu duoc
+    # 197ms. Ca 13 loi doc cua cache-stale (ban da duyet) deu mo bang am
+    # tiet ket bang nguyen am hoac phu am mui, khong cai nao ket bang phu
+    # am tac. Xem VIET-KICH-BAN.md.
+    #
     # DUNG `multiply` chu khong `gantt`. `gantt` tra loi cau "KHI NAO" - hai viec
     # chong len nhau theo thoi gian. Nhung N+1 khong noi ve thoi gian ma ve SO
     # LUONG bung ra, nen ep vao hai lane ngang la ke sai chuyen: nguoi xem phai
@@ -123,7 +129,7 @@ scenes:
     #
     # O luoi dau tien mau xanh (cau hop le), 148 o con lai mau do (thua) - ty le
     # 1 tren 148 hien ra ngay, khong can mot loi giai thich nao.
-    narration: Một câu đầu tiên lấy hai mươi đơn. Rồi vòng lặp bắt đầu. Mỗi đơn, ô a em lặng lẽ gửi thêm một câu để lấy tên khách, một câu nữa lấy danh sách hàng, rồi một câu cho từng dòng hàng, cứ thế nhân lên.
+    narration: Danh sách này bắt đầu bằng đúng một câu truy vấn. Rồi vòng lặp bắt đầu. Mỗi đơn, ô a em lặng lẽ gửi thêm một câu để lấy tên khách, một câu nữa lấy danh sách hàng, rồi một câu cho từng dòng hàng, cứ thế nhân lên. Hai mươi đơn trên một trang thành một trăm bốn chín câu truy vấn.
     caption: Mỗi vòng lặp lặng lẽ thêm một câu truy vấn.
     source:
       label: CÂU ĐẦU TIÊN
