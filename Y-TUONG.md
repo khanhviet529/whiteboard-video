@@ -1,5 +1,9 @@
 # Kho ý tưởng nội dung
 
+> Lịch 90 số đã chốt nằm ở [KE-HOACH-90.md](KE-HOACH-90.md). File này giữ
+> phần **lý lẽ**: bốn tuyến nội dung, hai cửa lọc, và vì sao một ý tưởng bị
+> loại. Chọn chủ đề mới thì đọc file này trước, rồi thêm dòng vào kế hoạch.
+
 Bảng chọn chủ đề. Xem [CONG-THUC.md](CONG-THUC.md) để biết khung nhịp và quy tắc viết.
 
 ## Bốn tuyến nội dung
