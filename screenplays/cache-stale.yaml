@@ -1,0 +1,352 @@
+# Chu de: da xoa cache roi ma API van tra gia cu.
+# Cung TUYEN NOI DUNG voi reference/source-video.mp4 (cache invalidation),
+# nhung trinh bay khac han: theme `bench`, va mo dau bang HOOK 5 nhip thay cho
+# loi dan "day la mot cau hoi phong van".
+#
+# Cong thuc mo dau (nhip 1-4 nam o 4 canh dau, nhip 5 la cau cuoi canh 04):
+#   1. Tinh huong quen         -> canh 01  probe: ba dong lenh, dong cuoi vo ly
+#   2. Hau qua / cho kho chiu  -> canh 02  bug tu het nen khong ai dieu tra
+#   3. Goi mo nguyen nhan that -> canh 03  "3 mili giay khong co trong log"
+#   4. Nguoi xem duoc gi       -> canh 04  hai gach dau dong, khong hua hen qua
+#   5. Vao demo ngay           -> canh 05  gantt: quay cham dung 3ms do
+#
+# KHONG canh nao dat `min_duration`. Truoc day canh 05/08 dat 15 va 13 giay -
+# vua voi giong edge, nhung giong omnivoice doc gon hon nhieu nen khung cung do
+# de lai 3,9-4,9 giay IM LANG o cuoi dung hai canh quan trong nhat. De thoi
+# luong tu chay theo audio thi doi giong bao nhieu lan cung khong ho.
+#
+# Doi lai nhip mo phong ngan hon muc 35-40% ma CONG-THUC.md nham. Muon dai ra
+# thi VIET THEM loi doc cho hai canh do - dung dong cung khung, vi dong cung
+# khung chi lam dau doc quet cham hon roi dung im.
+#
+# Hai lan mo phong dung CHUNG bo cuc, chi doi thu tu hai lenh, nen nguoi xem
+# doi chieu duoc bang mat ma khong can mot cau giai thich nao.
+
+title: Xoá cache rồi vẫn ra giá cũ
+theme: bench
+accent: hot
+brand: HIỆN TRƯỜNG · HỒ SƠ 07
+tag: cache · mô phỏng
+footer: XOÁ CACHE TRƯỚC KHI GHI  ·  GIÁ CŨ SỐNG HẾT TTL
+voice: female
+rate: "+16%"      # nhip TikTok; +6% ra video dai gan 3 phut
+
+# --- ba khoa duoi chi co tac dung khi chay `--engine omnivoice` -------------
+# PHAI khai o day chu khong sua trong speak.py: `tts.config()` dua chung vao
+# KHOA CACHE, con sua trong STYLES thi khoa khong doi -> render sau dung lai
+# audio cu va thay doi khong co tac dung nao.
+#
+# pause_scale  0,85 thay vi 1,05: sau khi sua loi chen im lang trong speak.py,
+#              muc 1,05 cho video 105,7s voi 50,1% la im lang - nghe cham.
+# speed        GIU 1,03 cua style camhung. Da thu 0,97 vi nguoi dung bao "doc
+#              hoi nhanh" nhung SAI: `contour_for()` nhan them he so tung cau
+#              (cau ket 0,95), nen 0,97 lam cau ket chay 0,92 - nhan nha bet
+#              han. Nguyen nhan that cua "doc nhanh" la cac cau ngan bi don
+#              (do duoc 6,9 am tiet/giay), da sua bang cach gop cau.
+#              Khai ro chu khong bo trong: gia tri nay vao KHOA CACHE.
+# pause_scale  0,85 -> 0,70: video 102,7s van con 39% im lang. Do duoc toc do
+#              DOC gan y ban goc (4,95 so 5,03 khoi am/giay) nen cam giac cham
+#              den tu khoang nghi, khong tu speed - dung don la ha cai nay.
+pause_scale: 0.70
+speed: 1.03
+
+# Im lang moi diem cat. Mac dinh 0,45 + 0,85 = 1,3s, nhan 12 diem cat la 15,6s
+# chi de im lang - do duoc 24% thoi luong video ban v3. Ha xuong 0,90s tong.
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  # Tinh huong quen. Ba dong that, dong thu ba vo ly. Chua he lo nguyen nhan.
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Xoá cache rồi. Vẫn ra giá cũ.
+    # `narration` viet PHIEN AM, `caption` giu chu viet tat hien tren man hinh.
+    # Bat buoc phai lam vay: `vitext.ABBR` chi co don vi (%, km, kg) va tien to
+    # hanh chinh, KHONG co viet tat IT nao - "API" di thang vao model dang tho
+    # nen no doc thanh mot am tiet tieng Viet. Bang phien am `TECH_SAY` co that
+    # nhung nam trong lecture.py, nhanh `giangvien.py`, khong voi toi duoc tu
+    # render.py -> tts.py -> say.py -> speak.py.
+    #
+    # GOP tu 5 cau xuong 3.
+    #
+    # Truoc day toi CO Y giu 5 cau ngan vi do la nhip staccato cua hook, va
+    # edge-tts doc chung binh thuong. Sai voi engine omnivoice: mode `tach` sinh
+    # TUNG CAU mot lan goi model rieng cong mot khoang nghi, nen 5 dau cham
+    # trong ~8 giay cho 1,04 giay im lang va khong co ngu dieu vat qua - nghe
+    # thanh "doc tung chu". Cung van ban, hai engine ra hai nhip khac han.
+    #
+    # Luu y ve cache: khoa tinh tren TOAN BO narration cua canh, khong phai tung
+    # cau (`tts._wav_path(text=narration)`). Nen vua doi mot chu la ca canh sinh
+    # lai het - giu vai cau nguyen van de "bao toan ban doc dung" cua chung la
+    # vo nghia. Da doi thi gop cho triet de.
+    #
+    # Con 3 cau, deu >=26 ky tu nen khong dinh he so ×0,85 cho cau ngan.
+    # Im lang chen giam tu 1,04s xuong 0,59s.
+    narration: Bạn xoá cache, Redis trả ô kê. Bạn ghi giá mới, một dòng. Gọi ây pi ai thì vẫn ra giá cũ.
+    caption: Xoá thành công. Ghi thành công. API vẫn trả số cũ.
+    heading: redis-cli · psql · curl
+    status: 0 ERROR
+    lines:
+      - { cmd: "DEL product:42",                    out: "OK",     state: ok }
+      - { cmd: "UPDATE products SET price=120000",  out: "1 row",  state: ok }
+      - { cmd: "GET /api/products/42",              out: "100000", state: bad }
+    verdict: KHÔNG MỘT DÒNG LỖI NÀO
+
+  # ================================================================ NHIP 2
+  # Hau qua that: bug tu het nen khong ai dieu tra tiep. Day moi la cho kho
+  # chiu, khong phai ban than con so sai.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Xoá lần hai thì đúng.
+    narration: Bạn xoá lại lần nữa, lần này đúng. Nên bạn cho là mạng chậm rồi đi làm việc khác.
+    caption: Nó không tự hết. Nó chỉ đang chờ đúng nhịp để lặp lại.
+    value: BUG TỰ HẾT LÀ BUG CHƯA HẾT
+    size: 116
+    sub: Xoá lần hai đúng nên không ai điều tra tiếp
+
+  # ================================================================ NHIP 3
+  # Goi mo nguyen nhan that. Chi ra cho it ai soi, va CO Y khong dat ten benh:
+  # dat ten o day la mat sach cang thang cua ca video.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Nguyên nhân không nằm ở lệnh DEL.
+    narration: Vấn đề không ở lệnh xoá. Nó ở ba mili giây giữa hai lệnh của bạn, và không log nào ghi lại.
+    caption: Vấn đề nằm ở ba mili giây giữa hai lệnh của bạn.
+    label: CHỖ ÍT AI SOI
+    value: 3 MILI GIÂY
+    size: 150
+    sub: Không log nào ghi lại khoảng này
+
+  # ================================================================ NHIP 4 + 5
+  # Nguoi xem duoc gi: hai dong, dung tu chinh xac. Khong hua "het bug mai mai"
+  # vi khong dung. Cau cuoi narration la nhip 5 - day thang vao demo.
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    # TTL da doi vao GIUA cau. De cuoi cau thi OmniVoice nen no thanh mot manh
+    # 0,12s (do duoc) - ba chu cai khong the doc ro trong 120ms. Cuoi cau cung la
+    # cho cao tan sut manh nhat. `caption` giu nguyen chu hien tren man hinh.
+    # LAN DAU noi TTL trong ca video -> gioi thieu luon nghia, cac canh sau dung
+    # thang. Hai dau phay cung chia menh de cho model, ma theo README cua
+    # omnivoice-test thi day la don bay manh nhat cho nhip ngat nghi.
+    narration: Bạn sẽ biết thứ tự đúng của hai lệnh, và vì sao ti ti eo, tức thời gian sống của cache, vẫn là thứ phải có. Giờ quay chậm ba mili giây đó.
+    caption: Hai thứ. Rồi quay chậm ba mili giây kia lại.
+    items:
+      - text: Thứ tự đúng của UPDATE và DEL, và vì sao đảo lại là sai.
+        focus: true
+      - text: Vì sao vẫn phải đặt TTL kể cả khi đã xoá đúng.
+
+  # ================================================================ DEMO 1 ⭐
+  # Nhip dai nhat cua video. Cho THAY co che, khong ke lai co che.
+  # Hai o so tren cung doi gia tri theo dau doc; bo dem chay len khi cache bat
+  # dau tra sai. Lich phai lien mach - ho mot khoang la mat nguoi xem.
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: Quay chậm 3 mili giây đó.
+    # KHONG dat `min_duration`. Da tung dat 15 giay - hop voi giong edge (audio
+    # 14,1s) nhung giong omnivoice doc gon hon nhieu (9,7-10,7s), nen khung 15
+    # giay de lai 3,9-4,9 giay IM LANG o cuoi dung canh quan trong nhat video.
+    # De thoi luong tu chay theo audio thi khong bao gio ho, doi lai nhip mo
+    # phong ngan hon - muon dai ra thi VIET THEM loi doc, dung dong cung khung.
+    narration: Của bạn ở trên, một request chỉ đọc ở dưới. Bạn xoá cache. Cache rỗng. Request kia vào, không thấy cache nên xuống database. Nhưng bạn chưa ghi xong. Nó đọc giá cũ, rồi nạp chính giá cũ đó vào cache.
+    caption: Nó đọc giá cũ, rồi nạp chính giá cũ đó vào cache.
+    ruler: ["0", "1ms", "2ms", "3ms"]
+    # Be rong thanh (`w`) phai du chua ten buoc BEN TRONG thanh. Hep hon thi
+    # ten buoc bi day xuong hang nhan tran, doc kem hon nhieu.
+    lanes:
+      - label: REQUEST CỦA BẠN
+        color: cool
+        steps:
+          - { at: 0.02, w: 0.16, text: "DEL cache" }
+          - { at: 0.72, w: 0.24, text: "UPDATE giá mới" }
+      - label: REQUEST KHÁC · CHỈ ĐỌC
+        color: violet
+        steps:
+          - { at: 0.20, w: 0.16, text: "GET cache" }
+          - { at: 0.38, w: 0.20, text: "SELECT từ DB" }
+          # day moi la buoc gay bug: nap lai dung gia cu vao cache
+          - { at: 0.60, w: 0.24, text: "GHI LẠI GIÁ CŨ", bad: true }
+    readout:
+      - key: CACHE
+        steps:
+          - { at: 0.00, value: "100.000", state: stale, note: "giá cũ" }
+          - { at: 0.19, value: "TRỐNG",   state: empty, note: "vừa bị xoá" }
+          - { at: 0.84, value: "100.000", state: bad,   note: "bị nạp lại" }
+      - key: DATABASE
+        steps:
+          - { at: 0.00, value: "100.000", state: stale, note: "chưa ghi" }
+          - { at: 0.96, value: "120.000", state: ok,    note: "giá mới" }
+    counter:
+      key: KHÁCH ĐỌC SAI
+      from: 0.84
+      rate: 55
+      label: không ai xoá nữa
+    verdict_at: 0.965
+    verdict: CACHE ĐANG GIỮ GIÁ SAI
+
+  # ================================================================ THU PHAM
+  # Goi ten. Mot cau, khong giai thich them - mo phong da giai thich xong.
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm không phải lệnh xoá. Lệnh xoá chạy đúng. Là một request khác nạp lại giá cũ.
+    caption: Một request khác nạp lại giá cũ, trong lúc bạn chưa ghi xong.
+    label: THỦ PHẠM
+    value: MỘT REQUEST KHÁC NẠP LẠI GIÁ CŨ
+    size: 108
+    sub: Không phải DEL thất bại
+
+  # ================================================================ QUY TAC 1
+  - scene: rule
+    chapter: CHẶN
+    accent: cool
+    head: Đổi thứ tự hai dòng.
+    # luu y: dau ":" theo sau bang cach trong lam vo scalar YAML -> dung dau "."
+    # Gop hai cau ngan lai, cung ly do nhu canh 11: cum o day tung la cum TUT
+    # NANG NHAT trong ca video ban v3 (-93,6%, hang 1/74).
+    narration: Quy tắc một, chỉ là đổi thứ tự hai dòng. Ghi database trước, xoá cache sau.
+    caption: Ghi database trước. Xoá cache sau.
+    n: "01"
+    kicker: QUY TẮC
+    color: cool
+    body: Ghi database trước. Xoá cache sau.
+    small: Đảo lại thì khoảng hở kia không còn chỗ để gây hại — request chen vào chỉ có thể đọc được giá mới.
+
+  # ================================================================ DEMO 2 ⭐
+  # Cung bo cuc, cung hai request, CHI doi thu tu. Nho giu nguyen bo cuc nen
+  # nguoi xem doi chieu duoc bang mat. Bo dem dung o 0 - do la ca phan thuong.
+  - scene: gantt
+    chapter: CHẶN
+    accent: ok
+    head: Cũng hai request đó, đổi thứ tự.
+    # Cung ly do nhu canh 05: khong dong cung khung, de audio quyet dinh.
+    # Gop "Bộ đếm đứng ở không." (20 ky tu) vao cau truoc. Do duoc: cau do chi
+    # 2,63 khoi am/giay - thap nhat trong 4 cau cua canh - va 6 am tiet chi tach
+    # duoc 4 khoi, tuc cac am dinh vao nhau. Cung pattern voi "Quy tắc một." va
+    # "Luôn đặt TTL.": cau ngan + la cau CUOI nen contour ha toc con 0,978 + nam
+    # o vi tri cuoi cum la cho cao tan sut manh nhat.
+    narration: Cũng hai request đó, chỉ đổi thứ tự. Bạn ghi database trước, rồi mới xoá cache. Request kia xuống database, và lần này nó chỉ đọc được giá mới, nên bộ đếm khách đọc sai đứng ở không.
+    caption: Lần này request kia chỉ có thể đọc được giá mới.
+    ruler: ["0", "1ms", "2ms", "3ms"]
+    # Giu Y NGUYEN bo cuc va be rong thanh cua canh 05, chi doi thu tu hai
+    # lenh cua lane tren. Doi bo cuc o day la mat kha nang doi chieu bang mat.
+    lanes:
+      - label: REQUEST CỦA BẠN
+        color: cool
+        steps:
+          # w=0.22 thieu 0.0004 de chua chu ben trong -> src/lint.py bat duoc
+          - { at: 0.02, w: 0.24, text: "UPDATE giá mới" }
+          - { at: 0.26, w: 0.16, text: "DEL cache" }
+      - label: REQUEST KHÁC · CHỈ ĐỌC
+        color: violet
+        steps:
+          - { at: 0.42, w: 0.16, text: "GET cache" }
+          - { at: 0.58, w: 0.20, text: "SELECT từ DB" }
+          - { at: 0.78, w: 0.19, text: "GHI GIÁ MỚI" }
+    readout:
+      - key: CACHE
+        steps:
+          - { at: 0.00, value: "100.000", state: stale, note: "giá cũ" }
+          - { at: 0.42, value: "TRỐNG",   state: empty, note: "vừa bị xoá" }
+          - { at: 0.97, value: "120.000", state: ok,    note: "đúng giá" }
+      - key: DATABASE
+        steps:
+          - { at: 0.00, value: "100.000", state: stale, note: "chưa ghi" }
+          - { at: 0.24, value: "120.000", state: ok,    note: "giá mới" }
+    counter:
+      key: KHÁCH ĐỌC SAI
+      from: 9.0          # khong bao gio chay -> bo dem dung o 0, do la phan thuong
+      rate: 0
+      label: không một ai
+    verdict_at: 0.975
+    verdict_color: ok
+    verdict: CACHE KHỚP DATABASE
+
+  # ================================================================ TANG 2
+  # Dung thu tu roi van con mot duong hong: lenh xoa bien mat trong im lang.
+  - scene: probe
+    chapter: CHẶN
+    head: Còn khi lệnh xoá biến mất?
+    # "timeout" ma lai ghi "0 ERROR" la tu mau thuan: timeout thi client CO bao.
+    # Cho dung la loi bi NUOT vi goi kieu ban-roi-quen, nen nhan phai noi vay.
+    narration: Nhưng lệnh xoá vẫn có thể mất. Redis timeout, worker chết giữa hai lệnh. Và code thì gọi kiểu bắn rồi quên, nên không ai bắt lỗi đó.
+    caption: Gọi kiểu bắn rồi quên, nên lỗi bị nuốt luôn.
+    heading: worker · redis
+    status: KHÔNG AI BẮT
+    lines:
+      - { cmd: "UPDATE products SET price=120000", out: "1 row",   state: ok }
+      - { cmd: "DEL product:42",                   out: "timeout", state: bad }
+      - { cmd: "GET /api/products/42",             out: "100000",  state: bad }
+    verdict: GỌI XONG KHÔNG AI KIỂM
+
+  # Ba o giong nhau canh nhau noi len "no khong tu het" nhanh hon mot cau giai
+  # thich. Day la chu ky hinh anh cua theme bench.
+  - scene: counters
+    chapter: CHẶN
+    head: Không có TTL thì nó ở đó mãi.
+    narration: Cache giữ nguyên số cũ đó. Một giờ. Một ngày. Một tuần. Thường thì khách thấy trước bạn.
+    caption: Cho tới khi có người tình cờ sửa lại đúng bản ghi đó.
+    items:
+      - { value: "100.000", label: "SAU 1 GIỜ",  color: hot }
+      - { value: "100.000", label: "SAU 1 NGÀY", color: hot }
+      - { value: "100.000", label: "SAU 1 TUẦN", color: hot }
+    verdict: KHÁCH THẤY TRƯỚC BẠN
+
+  # ================================================================ QUY TAC 2
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Lưới cuối.
+    # Gop "Quy tac hai." + "Luon dat TTL." thanh mot cau: cau 13 ky tu o mode
+    # `tach` gan nhu khong co ngu canh, do duoc 0,58s cho 4 am tiet = 6,9 am
+    # tiet/giay (dai tu nhien 4,5-6,0) - dung cho nguoi dung nghe thay "doc nhanh".
+    # Dau phay sau "Sáu mươi giây": khong co no thi model sinh mot khoi am
+    # 848ms lien khong co cho tut nang luong o dung cho "giây nghĩa" - nghe
+    # thanh "60 giây giây". Cac khoi am khac trong cau chi 0,05-0,36s.
+    narration: Quy tắc hai, luôn đặt ti ti eo cho cache. Sáu mươi giây, nghĩa là bạn chấp nhận tối đa một phút dữ liệu cũ.
+    caption: TTL không sửa thứ tự. Nó chặn cái sai sống mãi.
+    n: "02"
+    kicker: QUY TẮC
+    color: ok
+    body: Luôn đặt TTL, kể cả khi đã xoá đúng.
+    small: TTL 60 giây = bạn chấp nhận tối đa 1 phút dữ liệu cũ. Đổi lại, không có cái sai nào sống quá 1 phút.
+
+  # ================================================================ NOI THAT
+  # Cho nay quan trong: noi thang cho minh chua chac. Bo di thi video thanh
+  # hua hen sai su that, va mid-level phat hien ngay.
+  - scene: statement
+    chapter: CÒN LẠI
+    accent: gold
+    head: Nói cho hết.
+    # Bo "tram phan tram": tu lap lai nay lam OmniVoice sinh ra mot LO CHET giua
+    # cau - do duoc 459ms o ban v3 va 155ms o ban v2, cung mot vi tri van ban.
+    narration: Nói cho hết. Đúng thứ tự cộng ti ti eo vẫn chưa phải là tuyệt đối. Hai request trùng nhịp thì cache vẫn có thể giữ số cũ.
+    caption: Hai request trùng nhịp thì cache vẫn có thể giữ số cũ.
+    label: KHÔNG CÓ 100%
+    value: ĐÚNG THỨ TỰ CỘNG TTL VẪN CHƯA ĐỦ
+    size: 104
+    color: gold
+    sub: Chắc hơn nữa thì phải khoá, hoặc ghi qua một đường duy nhất
+
+  # ================================================================ CAU HOI
+  # Cau hoi KIEM TRA CO CHE, khong phai cau hoi tra cuu.
+  #
+  # Ban cu hoi "DEL cua ban nam tren hay duoi UPDATE?" - nguoi xem chi can mo
+  # file ra nhin la tra loi duoc, khong chung to hieu gi. Cau nay bat ho AP dung
+  # co che vua hoc vao mot tinh huong moi, va no tu phan loai:
+  #   nghe hoi hot  -> "khong can, TTL ngan roi"
+  #   hieu co che   -> "van can, vi trong khe ho van co nguoi doc sai; TTL chi
+  #                     gioi han thiet hai chu khong chan"
+  #
+  # Hai bay da hoc deu tranh o day: `TTL` viet phien am trong narration (caption
+  # va `text` giu chu goc), va cau cuoi 34 ky tu nen khong dinh he so ×0,85 danh
+  # cho cau duoi 25 ky tu.
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Nếu ti ti eo của bạn chỉ một giây thôi, thì thứ tự hai lệnh còn quan trọng nữa không? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã hiểu cơ chế.
+    text: TTL MỘT GIÂY THÌ CÒN CẦN ĐÚNG THỨ TỰ KHÔNG?
+    size: 88
+    hint: trả lời được là bạn đã hiểu cơ chế

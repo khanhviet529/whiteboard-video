@@ -1,0 +1,137 @@
+# Chu de KHAC HAN (N+1 query) nhung dung Y NGUYEN theme `bench` + HOOK 5 NHIP.
+# File nay ton tai de chung minh mot dieu: viet kich ban moi KHONG can sua code.
+# Chi doi noi dung YAML, chay lai render.py la ra video moi.
+#
+# Ngan hon cache-stale.yaml (8 canh) - dung lam ban mau cho dinh dang ~60 giay.
+
+title: 20 dòng dữ liệu, 143 câu truy vấn
+theme: bench
+accent: hot
+brand: HIỆN TRƯỜNG · HỒ SƠ 08
+tag: orm · mô phỏng
+footer: MỘT CÂU TRUY VẤN TRONG VÒNG LẶP  ·  NHÂN LÊN THEO SỐ DÒNG
+voice: female
+rate: "+16%"
+
+scenes:
+  # ---- NHIP 1: tinh huong quen, dong cuoi vo ly ---------------------------
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: API trả 200. Và mất 4 giây.
+    narration: Trang danh sách đơn hàng chỉ có hai mươi dòng. API trả về hai trăm OK. Nhưng mất bốn giây.
+    caption: Hai mươi dòng dữ liệu. Bốn giây.
+    heading: curl · rails log
+    status: 200 OK
+    lines:
+      - { cmd: "GET /api/orders?limit=20", out: "200 OK", state: ok }
+      - { cmd: "rows returned",            out: "20",     state: ok }
+      - { cmd: "total time",               out: "4.2s",   state: bad }
+    verdict: KHÔNG MỘT LỖI NÀO
+
+  # ---- NHIP 2: hau qua, vi sao no khong duoc sua --------------------------
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Trên máy bạn nó nhanh.
+    narration: Trên máy bạn có hai mươi đơn thì nó nhanh. Lên production có hai triệu đơn thì nó sập. Bug này lớn lên theo dữ liệu, không lớn theo code.
+    caption: Bug lớn lên theo dữ liệu, không theo code.
+    value: NHANH Ở LOCAL, SẬP Ở PRODUCTION
+    size: 108
+    sub: Nên nó đi qua hết code review
+
+  # ---- NHIP 3: goi mo, chua dat ten benh ---------------------------------
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Database không hề chậm.
+    narration: Và database không hề chậm. Mỗi câu truy vấn chỉ mất ba mili giây. Vấn đề là số lượng câu, không phải tốc độ từng câu.
+    caption: Mỗi câu chỉ 3ms. Vấn đề là số lượng câu.
+    label: CHỖ ÍT AI SOI
+    value: 3 MS MỘT CÂU
+    size: 132
+    sub: Nhân với bao nhiêu câu?
+
+  # ---- NHIP 4 + 5: nguoi xem duoc gi, roi vao demo -----------------------
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết cách đọc log để thấy nó ngay, và một dòng sửa nó. Giờ xem database nhận được gì.
+    caption: Cách thấy nó trong log, và một dòng sửa.
+    items:
+      - text: Dấu hiệu trong log để nhận ra ngay trong ba giây.
+        focus: true
+      - text: Một dòng eager load, và khi nào nó không đủ.
+
+  # ---- MO PHONG: bo dem chay len moi la thu giai thich --------------------
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: Đếm số câu gửi xuống database.
+    min_duration: 14
+    narration: Một câu đầu tiên lấy hai mươi đơn. Rồi vòng lặp bắt đầu. Mỗi đơn, ORM lặng lẽ gửi thêm một câu để lấy tên khách. Hai mươi đơn thành hai mươi câu. Rồi trang sau. Rồi trang sau nữa.
+    caption: Mỗi vòng lặp lặng lẽ thêm một câu truy vấn.
+    ruler: ["0", "1s", "2s", "4s"]
+    lanes:
+      - label: HANDLER
+        color: cool
+        steps:
+          - { at: 0.02, w: 0.20, text: "lấy 20 đơn" }
+      # Ten buoc phai NGAN de vua BEN TRONG thanh. "SELECT khách" (12 ky tu) o
+      # w=0.16 la khong vua, no bi day xuong hang nhan tran roi bon nhan de len
+      # nhau. Quy tac nham: w * 960 - 28 >= so_ky_tu * 12.
+      - label: VÒNG LẶP · MỖI ĐƠN THÊM 1 CÂU
+        color: violet
+        steps:
+          - { at: 0.26, w: 0.16, text: "khách #1" }
+          - { at: 0.44, w: 0.16, text: "khách #2" }
+          - { at: 0.62, w: 0.16, text: "khách #3" }
+          - { at: 0.80, w: 0.20, text: "còn 140 câu", bad: true }
+    readout:
+      - key: TRANG CẦN
+        steps:
+          - { at: 0.00, value: "20 dòng", state: stale, note: "đúng như thiết kế" }
+      # Moc doi gia tri phai TRUNG voi luc mot buoc vua xong, khong duoc dat
+      # tuy y: nguoi xem can thay VI SAO con so doi. 0.60 = luc "khách #2" xong.
+      - key: THỜI GIAN
+        steps:
+          - { at: 0.00, value: "40ms",  state: ok,   note: "câu đầu tiên" }
+          - { at: 0.60, value: "1.2s",  state: warn, note: "đang cộng dồn" }
+          - { at: 0.84, value: "4.2s",  state: bad,  note: "khách bỏ trang" }
+    counter:
+      key: CÂU SQL
+      from: 0.06
+      rate: 150
+      label: gửi xuống database
+    verdict_at: 0.97      # sau khi buoc cuoi xong (0.80 + 0.20), khong truoc
+    verdict: MỘT TRANG, 143 CÂU
+
+  # ---- THU PHAM: mot cau ------------------------------------------------
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là một dòng trông vô hại nằm trong vòng lặp. ORM cho phép bạn viết nó như thuộc tính, nên mắt không thấy đó là một câu truy vấn.
+    caption: ORM cho bạn viết truy vấn như thuộc tính.
+    label: THỦ PHẠM
+    value: TRUY VẤN NẰM TRONG VÒNG LẶP
+    size: 112
+    sub: Nhìn như thuộc tính, thực ra là một round trip
+
+  # ---- CHAN: mot quy tac + dau hieu phat hien som -----------------------
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Nói trước là sẽ cần.
+    narration: Sửa bằng eager load. Bạn nói trước với ORM là sẽ cần tên khách, nó gộp thành một câu. Dấu hiệu phát hiện sớm là log có cùng một câu lặp lại liên tiếp.
+    caption: Log có cùng một câu lặp lại liên tiếp là dấu hiệu.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Nói trước những gì sẽ cần, đừng để vòng lặp tự hỏi.
+    small: Dấu hiệu trong log — cùng một câu SELECT lặp lại liên tiếp. Đếm số câu mỗi request, cảnh báo khi vượt 20.
+
+  # ---- CAU HOI ve he thong cua chinh nguoi xem --------------------------
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Hệ thống của bạn?
+    narration: Endpoint danh sách nào của bạn đang gửi nhiều câu truy vấn nhất? Bạn có đang đếm không?
+    caption: Bạn có đang đếm số câu mỗi request không?
+    text: BẠN CÓ ĐANG ĐẾM SỐ CÂU SQL MỖI REQUEST?
+    size: 88
+    hint: bật log query rồi đếm thử một endpoint
