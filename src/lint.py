@@ -252,6 +252,89 @@ def check_narration(sp, idx, out, engine):
                     f"gọi model kèm một khoảng nghỉ, cả cảnh sẽ nghe rời rạc"))
 
 
+def _cau(text):
+    """Tach cau y het luc sinh giong, de vi tri cau tinh ra dung."""
+    try:
+        sys.path.insert(0, os.path.join("D:", os.sep, "omnivoice-test"))
+        import vitext
+        return vitext.prepare(text)
+    except Exception:
+        return [c.strip() for c in re.split(r"(?<=[.!?…])\s+", text) if c.strip()]
+
+
+# Nguong doi chieu voi phan hoi that, khong chon cho tron:
+#   da xac nhan hong  n-plus-one canh 5 (139 ky tu, 5,05x)
+#                     pool-can   canh 6 (133 ky tu, 2,11x)
+#   nguoi dung DA DUYET, khong phan nan  cache-stale canh 8 (102 ky tu, 2,62x)
+# Ty le mot minh khong tach duoc hai nhom (2,62x da duyet > 2,11x bi che), do
+# dai mot minh cung khong. Phai dung ca hai.
+CUOI_DAI = 125
+CUOI_TY_LE = 2.0
+LAP_CUM = 3
+
+
+def check_doc_ro(sp, idx, out, engine):
+    """Dau hieu SUY DUOC TU VAN BAN, khong can sinh mot giay audio nao.
+
+    KHONG co kiem tra am tiet dau bi nen o day, du do la loi nguoi dung that su
+    da bat duoc. Ly do: so do cua chinh toi khong ung ho gia thuyet ngu am nao.
+    "Mot" (am tiet dong, phu am tac) bi nen con 88ms, nhung "Cau" va "Dau" la am
+    tiet MO cung bi nen con 125ms va 116ms. Chi "Trang" va "Danh" giu duoc do
+    dai, va n=1 moi phuong an. Do bien nen thanh mot luat lint thi no se keu tren
+    moi screenplay ma khong dung han - dung kieu canh bao lam nguoi ta bo qua ca
+    nhung canh bao that.
+    Cho do thuoc ve cong nghiem thu (tang 2), noi do TRUC TIEP audio da sinh.
+    """
+    if engine != "omnivoice":
+        return
+    tag = f"cảnh {idx:02d}"
+    n = sp.get("narration", "") or ""
+    if not n.strip():
+        return
+    cau = _cau(n)
+
+    # 1. Cau nang nhat nam CUOI. `contour_for()` ha cau cuoi xuong x0,95, nen
+    #    cau dai nhat lai la cau chay cham nhat trong ca canh.
+    if len(cau) >= 2:
+        dai = [len(c) for c in cau]
+        con = sorted(dai[:-1])
+        tv = con[len(con) // 2] if len(con) % 2 else (con[len(con) // 2 - 1]
+                                                     + con[len(con) // 2]) / 2
+        ty = dai[-1] / (tv or 1)
+        if dai[-1] >= CUOI_DAI and ty >= CUOI_TY_LE:
+            out.append(("CANH BAO", tag,
+                        f"câu cuối dài {dai[-1]} ký tự, gấp {ty:.1f} lần các "
+                        f"câu còn lại, mà câu cuối bị `contour_for()` hạ tốc "
+                        f"xuống ×0,95 — thêm một câu kết ngắn hơn phía sau"))
+
+    # 2. Cum tu lap. Bay "tu lap" da do duoc: `"tram phan tram"` sinh lo chet
+    #    459ms, `"mot cau"` lap 4 lan cho 3,67 khoi/giay (trung vi 4,94).
+    for c in cau:
+        tu = [w.lower().strip(",.:;") for w in c.split()]
+        dem = {}
+        for i in range(len(tu) - 1):
+            k = tu[i] + " " + tu[i + 1]
+            dem[k] = dem.get(k, 0) + 1
+        for k, v in sorted(dem.items()):
+            if v >= LAP_CUM:
+                out.append(("CANH BAO", tag,
+                            f"cụm `{k}` lặp {v} lần trong một câu — dạng này "
+                            f"đã đo được sinh lỗ chết"))
+
+    # 3. Tu Latin chua khai trong tu dien phien am. Model TU DOAN cach doc, ma
+    #    `mode: tach` sinh tung cau doc lap nen moi cau doan mot kieu.
+    try:
+        import phienam
+        la = sorted(set(phienam.tu_la(n)), key=str.lower)
+    except Exception:
+        la = []
+    if la:
+        out.append(("CANH BAO", tag,
+                    f"từ chưa khai trong `phienam.TU_DIEN`: "
+                    f"{', '.join('`' + x + '`' for x in la)} — model tự đoán "
+                    f"cách đọc, mỗi câu đoán một kiểu"))
+
+
 def check_yaml_cat(o, out, path="doc"):
     """Bat gia tri bi dau phay cat doi trong flow style `{ ... }`.
 
@@ -390,6 +473,7 @@ def check(doc):
             check_kieu_chu(sp, i, out)
         check_caption(sp, i, out)
         check_narration(sp, i, out, engine)
+        check_doc_ro(sp, i, out, engine)
     return out
 
 

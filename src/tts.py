@@ -93,11 +93,34 @@ def config(doc):
     for k in ("num_step", "speed", "pause_scale", "mode"):
         if doc.get(k) is not None:
             cfg[k] = doc[k]
+    # Tat mac dinh. Ba screenplay dau da viet phien am thang vao `narration`,
+    # bat len se doi khoa cache va sinh lai audio DA DUYET.
+    if doc.get("phien_am"):
+        cfg["phien_am"] = True
     return cfg
 
 
+def doc_nhu(text, cfg):
+    """Van ban DUNG DE DOC. Khac van ban trong screenplay khi bat `phien_am`.
+
+    Goi o DAU moi duong vao (`prefetch`, `speak`) chu khong goi truoc khi bam
+    khoa mot cach rieng le: nhu vay khoa cache tinh tren ban DA PHIEN AM, nen
+    sua tu dien la audio tu sinh lai. Ap sau khi bam khoa thi doi tu dien ma
+    khoa khong doi - dung cai bay ma `speed` trong speak.py da vap.
+    """
+    if not cfg.get("phien_am") or not text:
+        return text
+    import phienam
+    return phienam.phien_am(text)
+
+
 def _key(text, cfg):
-    blob = json.dumps({"t": text, **cfg}, ensure_ascii=False, sort_keys=True)
+    # `phien_am` KHONG vao khoa: chinh van ban da bien doi roi, nen bat co them
+    # no vao thi mot screenplay khong co tu nao can phien am cung bi doi khoa va
+    # sinh lai audio y het. Con khi CO tu can phien am thi van ban khac nhau da
+    # du lam khoa khac nhau.
+    c = {k: v for k, v in cfg.items() if k != "phien_am"}
+    blob = json.dumps({"t": text, **c}, ensure_ascii=False, sort_keys=True)
     return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:16]
 
 
@@ -235,6 +258,7 @@ def prefetch(texts, cache_dir, cfg):
     cho mot cho duy nhat lo viec do.
     """
     os.makedirs(cache_dir, exist_ok=True)
+    texts = [doc_nhu(t, cfg) for t in texts]
     want = [t for t in dict.fromkeys(t.strip() for t in texts if t and t.strip())]
     missing = [t for t in want if not os.path.exists(_wav_path(cache_dir, t, cfg))]
     if not missing:
@@ -257,7 +281,7 @@ def speak(text, cache_dir, cfg):
     Sau `prefetch()` thi ham nay chi doc cache. Neu vi ly do gi chua co thi no
     tu sinh (duong lui, va la duong duy nhat voi edge khi goi le).
     """
-    text = (text or "").strip()
+    text = doc_nhu((text or "").strip(), cfg)
     if not text:
         return None, 0.0
     wav = _wav_path(cache_dir, text, cfg)
