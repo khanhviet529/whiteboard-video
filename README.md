@@ -159,7 +159,9 @@ Chọn bằng `engine:` ở đầu screenplay, hoặc ghi đè từ CLI.
 # edge (mặc định)
 python src/render.py screenplays/cache-stale.yaml
 
-# omnivoice — không cần sửa screenplay, ghi đè từ CLI
+# omnivoice — `--voice` là BẮT BUỘC. Screenplay khai `voice: female` cho
+# edge-tts, omnivoice không có tên giọng đó nên không truyền thì dừng ngay
+# (kèm dòng lỗi ghi rõ phải gõ gì).
 python src/render.py screenplays/cache-stale.yaml \
     --engine omnivoice --voice namtre_v3 --style camhung --tts-mode lien
 # -> out/cache-stale-omnivoice.mp4   (tên có hậu tố để không ghi đè bản edge)

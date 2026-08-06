@@ -45,11 +45,19 @@ ký ức. Cột `repro` trong bảng dưới ghi việc đó làm được hay k
 Lợi thế duy nhất của tool này so với người dựng tay là các cảnh mô phỏng. Cửa này áp
 cho **cả bốn tuyến**, không riêng tuyến 1.
 
-| Cảnh | Mô phỏng được cái gì |
-|---|---|
-| `gantt` | hai luồng chồng lấn theo thời gian, ô số đổi giá trị, bộ đếm hậu quả |
-| `counters` | một giá trị **không đổi** qua nhiều mốc thời gian |
-| `probe` | ba dòng shell, dòng cuối vô lý |
+| Cảnh | Trả lời câu | Mô phỏng được cái gì |
+|---|---|---|
+| `gantt` | KHI NÀO | hai luồng chồng lấn theo thời gian, ô số đổi giá trị, bộ đếm hậu quả |
+| `multiply` | BAO NHIÊU CÁI | một câu thành N câu, một render thành N render — lưới ô đầy dần |
+| `queue` | BAO NHIÊU THEO THỜI GIAN | hàng đợi dâng lên và không rút, biểu đồ cắt màu tại ngưỡng |
+| `topology` | Ở ĐÂU | tầng nào có, **tầng nào không** — gói tin dừng giữa đường |
+| `counters` | — | một giá trị **không đổi** qua nhiều mốc thời gian |
+| `compare` | — | hai vế đặt cạnh nhau, con số này bên con số kia |
+| `probe` | — | ba dòng shell, dòng cuối vô lý |
+
+Chọn theo **câu hỏi**, đừng chọn theo thói quen. Ba screenplay đầu tiên đều dùng
+`gantt` vì lúc đó nó là loại mô phỏng duy nhất, và kết quả là ba video nhìn giống
+hệt nhau. Xem [VIET-KICH-BAN.md](VIET-KICH-BAN.md) mục "Bẫy lớn nhất".
 
 Ý tưởng không lên được cảnh nào trong đây thì làm ở tool này cũng không hơn một video
 người nói. Ví dụ "10 lệnh git nên biết" trượt cửa này.
@@ -64,8 +72,10 @@ Trường `domain:` (`fe` `be` `database` `infra`) không phải cửa lọc, ch
 | Screenplay | Tuyến | Mảng | Triệu chứng | Mô phỏng |
 |---|---|---|---|---|
 | [cache-stale.yaml](screenplays/cache-stale.yaml) | 1 | database | Xoá cache xong, API vẫn trả giá cũ | `gantt` ×2 (sai / đúng thứ tự) |
-| [n-plus-one.yaml](screenplays/n-plus-one.yaml) | 1 | database | 20 dòng dữ liệu, API mất 4,2 giây | `gantt` + bộ đếm câu SQL |
+| [n-plus-one.yaml](screenplays/n-plus-one.yaml) | 1 | database | 20 đơn hàng, API mất 3,73 giây | `multiply` (149 ô, ô đầu xanh) |
 | [double-charge.yaml](screenplays/double-charge.yaml) | 1 | be | Khách bấm một lần, trừ tiền hai lần | `topology` + `race` (theme `phongtoi`) |
+| [async-song-song.yaml](screenplays/async-song-song.yaml) | 2 | be | Thêm async, nhanh hơn được 0,04 giây | `gantt` ×2 (một luồng / hai tiến trình) |
+| [pool-can.yaml](screenplays/pool-can.yaml) | 1 | be | 1/3 request lỗi, database dùng 1,1% sức | `topology` (chết ở POOL) + `queue` (70 chờ, 10 chỗ) |
 
 ---
 
@@ -87,7 +97,7 @@ không — nếu có thì ý tưởng đó không cần chờ ai cấp gì.
 
 | Ý tưởng | Cơ chế | Số liệu | repro | Mô phỏng |
 |---|---|---|---|---|
-| Connection pool cạn | Pool 10, request thứ 11 xếp hàng; một câu chậm làm dồn cả hàng | đo được | `asyncio.Semaphore` | `gantt` + ô "kết nối rảnh", bộ đếm chờ |
+| ~~Connection pool cạn~~ | đã viết → [pool-can.yaml](screenplays/pool-can.yaml) | **đo được** | ✅ [đã có](repro/pool_ket_noi_can.py) | `topology` + `queue` |
 | Tiền tính bằng float | `0.1 + 0.2` trong nhị phân không bằng `0.3` | **đo được** | 5 dòng Python | `probe` ba dòng phép tính |
 | Thiếu `await` | Hàm trả về trước khi việc xong, lỗi thành unhandled rejection | **suy ra** | asyncio, dễ | `probe`: log OK + `SELECT` trống |
 | Retry bão | Nhiều client retry cùng nhịp, không jitter | đo được | mô phỏng bằng vòng lặp | `gantt` nhiều lane cùng nhịp |

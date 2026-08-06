@@ -73,6 +73,8 @@ caption:   ...                       # caption giữ nguyên chữ TTL
 | `min_duration` canh theo edge-tts | Giọng omnivoice đọc gọn hơn, khung cứng để lại 3,9–4,9 giây im lặng ở cuối cảnh | Bỏ `min_duration`, để thời lượng chạy theo audio |
 | Quên `pre_pad` / `post_pad` | Mặc định 0,45 + 0,85 = 1,3 giây **mỗi điểm cắt**. Video 13 cảnh mất 15,6 giây chỉ để im lặng, đo được là 24% thời lượng | Khai `pre_pad: 0.35` và `post_pad: 0.55` |
 | `caption` để trống | Nó mặc định lấy luôn `narration`, mà thẻ phụ đề chỉ vừa ~3 dòng ở cỡ 24px | Viết `caption` riêng, ngắn hơn `narration` |
+| Chạy `--engine omnivoice` mà quên `--voice` | `voice: female` trong screenplay là tên giọng của **edge-tts**. Omnivoice không có tên đó nên render dừng ngay | `--voice` là **bắt buộc** khi dùng omnivoice. `tts.config()` chặn sớm và in ra tên giọng nên đọc dòng lỗi là biết phải gõ gì |
+| `status: 504` không có nháy | YAML trả về `int`, `track_w()` nổ **giữa lúc render** — tức sau khi đã trả tiền cho cả vòng tổng hợp giọng nói | Bọc nháy. `lint.py` bắt được mọi khoá được vẽ thẳng ra màn hình mà bị đọc thành số |
 | Dấu `:` theo sau dấu cách trong scalar YAML | Vỡ file, `ScannerError` | Bỏ dấu hai chấm hoặc bọc nháy |
 | **Dấu phẩy trong giá trị của flow style `{ ... }`** | **Không báo lỗi.** Dấu phẩy là dấu tách, nên `{ note: nhanh hơn 1,07 lần }` cho ra `{'note': 'nhanh hơn 1', '07 lần': None}` — file vẫn parse, vẫn render, chỉ mất nửa câu trên màn hình | Bọc giá trị bằng nháy. `lint.py` bắt được: bất kỳ khoá nào có giá trị rỗng đều bị báo LỖI |
 
@@ -102,15 +104,21 @@ Cách tránh: trước khi chọn loại cảnh, viết ra **câu hỏi** mà c�
 
 `n-plus-one.yaml` từng mắc đúng lỗi này: N+1 nói về **số lượng** bung ra, không
 phải hai việc chồng thời gian, nhưng vẫn dùng `gantt`. Đổi sang `multiply` thì
-143 ô hiện lên hết trên màn hình, ô đầu tiên xanh và 142 ô sau đỏ — tỷ lệ 1 trên
-142 đọc được trong nửa giây, không cần một lời giải thích nào.
+149 ô hiện lên hết trên màn hình, ô đầu tiên xanh và 148 ô sau đỏ — tỷ lệ 1 trên
+148 đọc được trong nửa giây, không cần một lời giải thích nào.
+
+Lần sửa đó còn lòi ra một chuyện khác: ba con số trong kịch bản không cộng ra
+đúng (143 câu × 3ms = 0,43 giây, nhưng kịch bản ghi tổng 4,2 giây). Chạy thật
+bằng [repro/n_cong_1_truy_van.py](repro/n_cong_1_truy_van.py) mới thấy phần
+thiếu nằm ở số lần đi về qua mạng. **Đổi loại cảnh cho đúng câu hỏi thường lôi
+ra luôn chỗ nội dung đang nói sai** — vì hình vẽ đúng thì không giấu được số sai.
 
 Hai điều nữa về sự đơn điệu:
 
 - `statement` là loại dễ viết nhất nên tay tự trôi về đó. Đo hiện tại:
-  `async-song-song` 30%, `cache-stale` 31%, `n-plus-one` 38%. Cả ba đều cao hơn
-  mức nên có — nhắm về **một phần tư**, và mỗi lần định viết `statement` thứ ba
-  thì hỏi lại xem cảnh đó có phải một `compare` hay `counters` bị nén không.
+  `async-song-song` 30%, `cache-stale` 31%, `pool-can` 22%, `n-plus-one` 25%
+  (hai file sau đã sửa). Nhắm về **một phần tư**, và mỗi lần định viết
+  `statement` thứ ba thì hỏi lại xem cảnh đó có phải một `compare` bị nén không.
 - Hai cảnh mô phỏng trong cùng một video thì hoặc **giống hệt bố cục** (để đối
   chiếu bằng mắt, như hai `gantt` của `async-song-song.yaml`), hoặc **khác hẳn
   loại**. Giống lờ mờ là tệ nhất — mắt tưởng đang so sánh nhưng không so được.

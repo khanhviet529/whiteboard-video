@@ -71,8 +71,20 @@ def config(doc):
                 "voice": doc.get("voice", "female"),
                 "rate": doc.get("rate", "+6%"),
                 "pitch": doc.get("pitch", "+0Hz")}
-    cfg = {"engine": "omnivoice",
-           "voice": doc.get("voice", OMNI_DEFAULT_VOICE),
+    # `voice:` trong screenplay la ten giong cua EDGE (female/male). Omnivoice
+    # dung ten giong clone (namtre_v2, nu_tre...), khong biet nhung ten do.
+    #
+    # Bat o day chu khong de say.py bao, va cang khong tu thay bang giong mac
+    # dinh: thay ngam thi doi luon KHOA CACHE, nen lan render sau se sinh lai
+    # het ma khong ai hieu vi sao.
+    v = doc.get("voice", OMNI_DEFAULT_VOICE)
+    if v in ("female", "male", "nu", "nam"):
+        raise SystemExit(
+            f"screenplay khai `voice: {v}` - do la ten giong cua edge-tts, "
+            f"omnivoice khong co.\n"
+            f"Chay lai kem `--voice {OMNI_DEFAULT_VOICE}` (hoac ten giong khac; "
+            f"xem `py D:/omnivoice-test/say.py --list`).")
+    cfg = {"engine": "omnivoice", "voice": v,
            "style": doc.get("style", OMNI_DEFAULT_STYLE)}
     for k in ("num_step", "speed", "pause_scale", "mode"):
         if doc.get(k) is not None:
