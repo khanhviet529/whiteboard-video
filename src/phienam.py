@@ -94,6 +94,11 @@ TU_DIEN_THU = {
     # `eager load` chua co khung cau trong bo chuan nen chua duoc nghe. Them
     # khung vao `research/bo_chuan_giong.py` roi chay lai moi quyet dinh duoc.
     "eager load": "i gờ lâu",
+    # Hai tu TRUNG TAM cua ca mua 3 ma bo chuan dau tien bo sot. `set` viet
+    # theo chinh ta tieng Viet doc thanh "sét", nen model dung giua hai cach
+    # doc cua cung mot chuoi ky tu.
+    "set": "sét",
+    "list": "lít",
 }
 
 # --- DA NGHE va QUYET DINH GIU NGUYEN CHU GOC ------------------------------

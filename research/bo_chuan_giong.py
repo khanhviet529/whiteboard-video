@@ -39,6 +39,8 @@ KHUNG = {
     "nginx": "Tầng {} chuyển tiếp hết, nó không giữ lại request nào.",
     "worker": "Mỗi {} lấy một việc ra khỏi hàng đợi rồi làm cho xong.",
     "pool": "Cái {} chỉ có mười kết nối dùng chung cho tất cả.",
+    "set": "Đổi kho sang {} rồi thì tìm bao nhiêu lần cũng như nhau.",
+    "list": "Tìm trong {} thì phải so sánh lần lượt từng phần tử một.",
 }
 
 # Cac dang da tung sinh loi. Moi dong kem ly do, xem VIET-KICH-BAN.md.

@@ -124,8 +124,11 @@ scenes:
   - scene: ask
     chapter: CÒN LẠI
     head: Câu hỏi cuối.
-    narration: Nếu kho của bạn chỉ có năm phần tử thì đổi sang set có còn đáng không? Trả lời được câu đó nghĩa là bạn đã hiểu cái giá của việc dựng set.
+    narration: Nếu kho của bạn chỉ có năm phần tử thì đổi sang set có còn đáng không? Trả lời được câu đó nghĩa là bạn đã hiểu dựng set cũng tốn một lượt duyệt.
     caption: Trả lời được là bạn đã hiểu cái giá của việc dựng set.
     text: KHO CHỈ CÓ 5 PHẦN TỬ THÌ CÒN ĐÁNG KHÔNG?
     size: 84
+    # `set` KHONG duoc dung cuoi cau cuoi cua canh cuoi: no vua la tu
+    # tieng Anh model tu doan, vua nhan he so ha toc x0,95, vua nam dung
+    # cho cao tan sut manh nhat. Nguoi dung nghe ra "mot tieng ky la".
     hint: dựng set cũng tốn một lượt duyệt
