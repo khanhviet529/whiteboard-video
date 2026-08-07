@@ -1,0 +1,131 @@
+# MUA 3 so 36 - HAI DOAN CODE. Xem KE-HOACH-90.md.
+#
+# Dinh dang nay khac han mua 1: hook KHONG phai mot trieu chung production ma la
+# chinh hai doan code. Suc manh nam o cho nguoi xem da trot chon trong dau truoc
+# khi biet dap an, roi vao binh luan de bao ve lua chon do.
+#
+# Vi vay canh `code` phai la canh DAU TIEN, va no phai co du ba giay dem nguoc.
+# Dat no o giua video la mat sach cai loi the do.
+#
+# MOI CON SO do bang repro/bench_python.py, ca `in_set`, tren chinh may nay:
+#   10.000 phan tu, tim 1.429 gia tri
+#   x in list  159,75 ms
+#   x in set     1,01 ms   -> 158 lan
+#
+# Lop phien am BAT (`phien_am: true`), nen narration viet "API" hay "CPU" nhu
+# binh thuong. Xem src/phienam.py.
+
+title: Một dòng, nhanh hơn 158 lần
+theme: bench
+accent: hot
+domain: be
+brand: HAI ĐOẠN CODE · SỐ 01
+tag: python · benchmark
+footer: MỘT DÒNG KHÁC NHAU  ·  ĐO TRÊN 10.000 PHẦN TỬ
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================== HOOK: chinh hai doan code
+  - scene: code
+    chapter: CHỌN ĐI
+    head: Cái nào chậm hơn?
+    narration: Hai hàm này làm đúng một việc, kiểm tra xem một giá trị có nằm trong kho mười nghìn phần tử hay không. Chúng khác nhau đúng một dòng. Bạn có ba giây để chọn, rồi tôi chạy thật cho bạn xem.
+    caption: Khác đúng một dòng. Bạn chọn cái nào?
+    hoi: CÁI NÀO CHẬM HƠN?
+    dem: 3
+    ket: b
+    a:
+      label: A
+      note: kho là list
+      lines:
+        - "def co(x, kho):"
+        - { text: "    kho = list(kho)", diff: true }
+        - "    return x in kho"
+      value: 159 ms
+    b:
+      label: B
+      note: kho là set
+      lines:
+        - "def co(x, kho):"
+        - { text: "    kho = set(kho)", diff: true }
+        - "    return x in kho"
+      value: 1 ms
+    verdict_at: 0.88
+    verdict: CHÊNH NHAU 158 LẦN
+
+  # ================================================== so do that
+  - scene: probe
+    chapter: CHẠY THẬT
+    head: Đo trên máy, không đoán.
+    narration: Đây là số đo thật, tìm một nghìn bốn trăm hai chín giá trị trong kho mười nghìn phần tử. Bản dùng list mất một trăm năm chín mili giây, bản dùng set mất một phẩy không một.
+    caption: 159,75ms so với 1,01ms trên cùng dữ liệu.
+    heading: python · bench_python.py
+    status: in_set
+    lines:
+      - { cmd: "x in list",  out: "159.75 ms", state: bad }
+      - { cmd: "x in set",   out: "1.01 ms",   state: ok }
+      - { cmd: "chênh lệch", out: "158×",      state: ok }
+    verdict: CÙNG KẾT QUẢ, KHÁC 158 LẦN
+
+  # ================================================== goi ten co che
+  - scene: compare
+    chapter: VÌ SAO
+    head: Một bên đi hỏi từng cái.
+    narration: List phải so sánh lần lượt từng phần tử cho tới khi gặp, nên tìm trong kho mười nghìn thì trung bình mất năm nghìn lần so sánh. Set thì băm giá trị ra thành địa chỉ rồi nhảy thẳng tới đó, một lần là xong.
+    caption: List so sánh lần lượt. Set băm ra rồi nhảy thẳng.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: SET, BĂM RỒI NHẢY THẲNG
+        value: 1 LẦN
+        note: không phụ thuộc kho lớn cỡ nào
+        color: ok
+      - label: LIST, SO SÁNH LẦN LƯỢT
+        value: 5.000 LẦN
+        note: trung bình, với kho 10.000 phần tử
+        color: hot
+
+  # ================================================== cho de sai
+  - scene: statement
+    chapter: VÌ SAO
+    head: Nó lớn lên theo dữ liệu.
+    narration: Trên máy bạn kho chỉ có ba chục phần tử nên hai bản nhanh như nhau. Kho càng lớn thì khoảng cách càng xa, vì một bên đứng yên còn bên kia lớn theo số phần tử.
+    caption: Kho càng lớn thì khoảng cách càng xa.
+    label: CHỖ ÍT AI SOI
+    value: MỘT BÊN ĐỨNG YÊN, BÊN KIA LỚN THEO KHO
+    size: 92
+    sub: Nên nó đi qua hết code review
+
+  # ================================================== quy tac
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Hỏi nhiều lần thì đổi sang set.
+    narration: Quy tắc chỉ có một câu. Nếu bạn hỏi cùng một kho nhiều hơn một lần, hãy đổi nó sang set trước khi vào vòng lặp. Còn hỏi đúng một lần thì list vẫn nhanh hơn, vì dựng set cũng tốn công.
+    caption: Hỏi nhiều lần thì dựng set. Hỏi một lần thì thôi.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Hỏi nhiều lần thì dựng set trước vòng lặp.
+    small: Dấu hiệu trong code — một lệnh `in` nằm bên trong vòng lặp, mà vế phải là list hoặc tuple. Đổi một dòng là xong.
+
+  # ================================================== cau hoi kiem tra co che
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Nếu kho của bạn chỉ có năm phần tử thì đổi sang set có còn đáng không? Trả lời được câu đó nghĩa là bạn đã hiểu cái giá của việc dựng set.
+    caption: Trả lời được là bạn đã hiểu cái giá của việc dựng set.
+    text: KHO CHỈ CÓ 5 PHẦN TỬ THÌ CÒN ĐÁNG KHÔNG?
+    size: 84
+    hint: dựng set cũng tốn một lượt duyệt

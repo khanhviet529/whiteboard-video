@@ -125,21 +125,21 @@ Cần loại cảnh `code` cho theme `bench`, hiện chưa có.
 
 | # | Hai đoạn khác nhau ở | Đoạn sai sai ở đâu | Số liệu | Đo bằng |
 |---|---|---|---|---|
-| 36 | `x in list` với `x in set` | Tuyến tính so với hằng số, 10 nghìn phần tử | đo | python |
+| 36 | `x in list` với `x in set` | ✅ **ĐÃ VIẾT** [tim-trong-set](screenplays/tim-trong-set.yaml) — 159,75ms so với 1,01ms, 158× | ✅ đo | python |
 | 37 | Tham số mặc định là `[]` | Dùng chung giữa mọi lần gọi | đo | python |
-| 38 | Nối chuỗi trong vòng lặp | Bình phương theo số vòng | đo | python |
+| 38 | Nối chuỗi trong vòng lặp | ĐÃ ĐO: chỉ **2×** chứ không bình phương — CPython sửa tại chỗ khi refcount bằng 1. Kể theo hướng đó, nối với số 53 | đo | python |
 | 39 | `datetime.now()` không có múi giờ | So sánh với mốc có múi giờ thì nổ | đo | python |
 | 40 | `float` với `Decimal` cho tiền | Cộng 10 lần đã lệch | đo | python |
-| 41 | `dict[k]` với `dict.get(k)` | Khi nào cái nào, và giá của mỗi cái | đo | python |
+| 41 | `dict[k]` với `dict.get(k)` | ĐÃ ĐO: `try/except` 2,44ms so với `dict.get` 3,02ms — **try/except nhanh hơn** khi khoá luôn có | đo | python |
 | 42 | Có `FOR UPDATE` và không | Lost update dưới tải | đo | postgres |
 | 43 | Thứ tự cột trong index ghép | `(a,b)` dùng được, `(b,a)` thì không | đo | postgres |
 | 44 | `LIMIT` không kèm `ORDER BY` | Hai lần chạy ra hai kết quả | đo | postgres |
-| 45 | `copy()` với `deepcopy()` | Sửa bản sao làm hỏng bản gốc | đo | python |
+| 45 | `copy()` với `deepcopy()` | ĐÃ ĐO: 15µs so với 18,64ms, **1226×** | đo | python |
 | 46 | `await` trong vòng lặp với `gather` | Tuần tự so với cùng lúc | đo | asyncio |
 | 47 | `except Exception` với bắt cụ thể | Nuốt luôn cả bug của chính mình | suy | python |
 | 48 | `open()` với `with open()` | Exception giữa chừng làm rò file | đo | python |
 | 49 | So sánh float bằng `==` | `0.1 + 0.2` không bằng `0.3` | đo | python |
-| 50 | `sort(key=hàm nặng)` với tính trước | Hàm key được gọi bao nhiêu lần | đo | python |
+| 50 | ~~`sort(key=)` với tính trước~~ | ĐÃ ĐO: **giả thuyết SAI** — `sorted(key=)` nhanh hơn 2× vì key chỉ gọi một lần mỗi phần tử. Chuyển sang mùa 2 làm một niềm tin bị lật | đo | python |
 
 ## Mùa 4 — CƠ CHẾ BÊN DƯỚI (15 số)
 

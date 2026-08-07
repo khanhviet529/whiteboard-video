@@ -1368,10 +1368,132 @@ def sc_topology(b, sp, acc):
     b.add(fn, dur=max(2.0, b.dur * 0.80), wait=b.dur)
 
 
+def _khoi_code(base, box, ve, p, lines, mau_diff, lo_mo):
+    """Ve mot khoi code trong the. Dong nao `diff: true` thi co vach mau ben
+    trai va chu sang hon - do la cho DUY NHAT hai ve khac nhau."""
+    dd = ImageDraw.Draw(base)
+    cf = typo.mono_font(28, 500)
+    x = box[0] + 34
+    y0 = box[1] + 74
+    lh = 38
+    for i, ln in enumerate(lines):
+        q = clamp((p - 0.10 - i * 0.045) / 0.30)
+        if q <= 0:
+            continue
+        txt = ln if isinstance(ln, str) else str(ln.get("text", ""))
+        khac = isinstance(ln, dict) and ln.get("diff")
+        y = y0 + i * lh
+        if khac:
+            dd.rounded_rectangle([s(box[0] + 14), s(y - 2), s(box[0] + 20),
+                                  s(y + 26)], radius=s(3),
+                                 fill=mau_diff + (255,))
+        col = FG if khac else MUTED
+        if lo_mo:
+            col = DIM
+        ttext(base, txt, cf, col, y, x=x, track=0.5, p=q, rise=8)
+
+
+def sc_code(b, sp, acc):
+    """HAI DOAN CODE - canh chinh cua mua 3.
+
+    Hinh dang: hai the code xep doc, dem nguoc ba giay cho nguoi xem CHON, roi
+    moi lat bai. Suc manh cua dinh dang nay khong nam o code ma o cho nguoi xem
+    da trot chon trong dau truoc khi biet dap an - ho vao binh luan de bao ve
+    lua chon do.
+
+    Vi vay ba moc thoi gian la bat buoc va khong duoc rut ngan:
+      0    -> 0,45   hai the hien ra, code hien tung dong
+      0,45 -> 0,70   dem nguoc, KHONG co gi khac dong (de mat kip doc lai)
+      0,70 -> het    lat bai: ve thang sang len, ve thua mo di, hien so do
+
+    Chi to mau dong NAO KHAC NHAU (`diff: true`). To ca doan thi mat cho nhin,
+    ma ca y nghia cua canh la "hai doan gan y het, khac dung mot cho".
+    """
+    A, B = sp["a"], sp["b"]
+    thang = str(sp.get("ket", "b")).lower()
+    # Tu tinh chieu cao theo SO DONG CODE. Dat cung mot con so thi doan 3 dong
+    # de lai mot mang trong, con doan 7 dong thi tran ra ngoai the.
+    #   74  nhan A/B + chu chu thich
+    #   38  moi dong code
+    #   76  cho o so ket qua ben duoi
+    n_dong = max(len(A.get("lines") or []), len(B.get("lines") or []))
+    ph = int(sp.get("box_h", 74 + n_dong * 38 + 76))
+    gap = 44
+    tong = ph * 2 + gap
+    y0 = STAGE_TOP + max(0, (STAGE_BOTTOM - 150 - STAGE_TOP - tong) / 2)
+    hop = [(MARGIN, y0, W - MARGIN, y0 + ph),
+           (MARGIN, y0 + ph + gap, W - MARGIN, y0 + ph + gap + ph)]
+    dem_n = int(sp.get("dem", 3))
+
+    def fn(base, d, p):
+        dd = ImageDraw.Draw(base)
+        lat = p >= 0.70
+        ql = clamp((p - 0.70) / 0.16)
+
+        for i, (ve, box) in enumerate(zip((A, B), hop)):
+            nhan = str(ve.get("label", "AB"[i]))
+            la_thang = (nhan.lower() == thang) or ("ab"[i] == thang)
+            col = acc_of(ve.get("color"), COOL if i == 0 else VIOLET)
+            if lat:
+                col = OK if la_thang else HOT
+            card(base, box, clamp(p / 0.16), fill=SURF, border=EDGE, radius=14,
+                 lit=col if (lat and la_thang) else None)
+            # Chip A / B: cho neo mat, phai co truoc ca code
+            cw = 62
+            dd.rounded_rectangle([s(box[0] + 24), s(box[1] + 20),
+                                  s(box[0] + 24 + cw), s(box[1] + 66)],
+                                 radius=s(10), fill=col + (255,))
+            nf = typo.mono_font(30, 700)
+            ttext(base, nhan, nf, BG, box[1] + 30,
+                  cx=box[0] + 24 + cw / 2, track=0)
+            if ve.get("note"):
+                mono(base, ve["note"], (box[0] + 104, box[1] + 30), MUTED,
+                     clamp(p / 0.20), 22, 3.0)
+            _khoi_code(base, box, i, p, ve.get("lines") or [], col,
+                       lat and not la_thang)
+            # so do, chi hien sau khi lat bai
+            if lat and ve.get("value"):
+                vf = fit_one("grot_black", str(ve["value"]), 300, 54, 30)
+                tw = track_w(str(ve["value"]), vf, -1.0)
+                glow(base, (box[2] - 60 - tw, box[3] - 76, box[2] - 20,
+                            box[3] - 20), col, 48, int(60 * ql))
+                ttext(base, str(ve["value"]), vf, col, box[3] - 72,
+                      x=box[2] - 34 - tw, track=-1.0, p=ql, rise=14)
+
+        # --- dem nguoc, nam giua hai the
+        if 0.45 <= p < 0.70:
+            gp = (p - 0.45) / 0.25
+            con = dem_n - int(gp * dem_n)
+            cy = (hop[0][3] + hop[1][1]) / 2
+            r = 34
+            dd.ellipse([s(CX - r), s(cy - r), s(CX + r), s(cy + r)],
+                       fill=BG + (255,), outline=EDGE_HI + (255,), width=s(3))
+            df = fit_one("grot_black", str(con), 60, 46, 30)
+            oy, th = typo.tm(str(con), df)
+            ttext(base, str(con), df, FG, cy - th / 2 - oy, cx=CX, track=-1)
+        elif p < 0.45:
+            f = typo.mono_font(22, 700)
+            t = sp.get("hoi", "CÁI NÀO ĐÚNG?")
+            cy = (hop[0][3] + hop[1][1]) / 2
+            ttext(base, t, f, MUTED, cy - 12, cx=CX, track=4.0,
+                  p=clamp((p - 0.20) / 0.20))
+
+        va = sp.get("verdict_at", 0.86)
+        if sp.get("verdict") and p >= float(va):
+            qq = clamp((p - float(va)) / 0.10)
+            cy = STAGE_BOTTOM - 110
+            vf, lines, _ = typo.headline(sp["verdict"], CONTENT_W - 40, 96, 70,
+                                         42, -2, "slab_black")
+            vcol = acc_of(sp.get("verdict_color"), OK)
+            glow(base, (MARGIN, cy, W - MARGIN, cy + 80), vcol, 70, int(70 * qq))
+            ttext(base, lines[0], vf, vcol, cy, cx=CX, track=-2, p=qq, rise=20)
+    b.add(fn, dur=max(2.0, b.dur * 0.86), wait=b.dur)
+
+
 BUILDERS = {
     "probe": sc_probe, "statement": sc_statement, "list": sc_list,
     "rule": sc_rule, "counters": sc_counters, "ask": sc_ask,
-    "compare": sc_compare,
+    "compare": sc_compare, "code": sc_code,
     # --- mo phong: moi cai tra loi mot cau hoi khac nhau, xem docstring
     "gantt": sc_gantt,          # KHI NAO   - hai viec chong len nhau
     "multiply": sc_multiply,    # BAO NHIEU CAI - mot thanh rat nhieu

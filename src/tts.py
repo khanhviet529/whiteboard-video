@@ -264,15 +264,85 @@ def prefetch(texts, cache_dir, cfg):
     if not missing:
         if want:
             print(f"  giong doc: {len(want)}/{len(want)} cau lay tu cache")
+        # VAN chay cong nghiem thu du khong sinh cau nao. Chi do thi rat nhanh,
+        # va cong phai la thu quyet dinh cuoi cung - khong the vi audio nam san
+        # trong cache ma bo qua. Cache co the la ban sinh tu truoc khi co cong.
+        if cfg["engine"] == "omnivoice" and want:
+            _nghiem_thu(want, cache_dir, cfg)
         return
     print(f"  giong doc: {len(want) - len(missing)}/{len(want)} cau co san, "
           f"can sinh {len(missing)} cau")
     if cfg["engine"] == "omnivoice":
         _omni_batch(missing, cache_dir, cfg)
+        _nghiem_thu(want, cache_dir, cfg)
     else:
         for t in missing:
             mp3 = _edge_one(t, cache_dir, cfg)
             _to_48k_stereo(mp3, _wav_path(cache_dir, t, cfg))
+
+
+def _nghiem_thu(texts, cache_dir, cfg):
+    """Do audio vua sinh, sinh lai nhung cau xau nhat neu ca video truot.
+
+    Day la thu thay viec ngoi nghe tung doan. Model khong co seed nen lan sinh
+    lai that su khac - da do duoc cung mot cau ra 5,71 va 4,71 khoi/giay.
+
+    Gac o muc VIDEO chu khong muc cau: xem `nghiemthu.py`, muc "ban dau toi
+    thiet ke sai". Tom tat: tieu chi muc cau tu choi sach ca ban da duyet.
+
+    Sinh lai KHONG bao gio lam xau di - luon so diem roi giu ban tot hon. Xau
+    nhat la khong cai thien gi va mat them thoi gian may.
+    """
+    try:
+        import nghiemthu as nt
+    except Exception as e:
+        print(f"  (bo qua nghiem thu: {type(e).__name__})")
+        return
+    duong = [_wav_path(cache_dir, t, cfg) for t in texts]
+    if not all(os.path.exists(p) for p in duong):
+        return
+    do = [nt.do(p) for p in duong]
+    dat, ty, xau = nt.nghiem_thu(do)
+    print(f"  nghiem thu: {ty:.2f} lo chet/phut "
+          f"(nguong {nt.LO_MOI_PHUT}) -> {'DAT' if dat else 'TRUOT'}")
+    if dat or not xau:
+        return
+
+    tam = os.path.join(cache_dir, "_thu_lai")
+    for vong in range(nt.VONG_TOI_DA):
+        chon = [i for i in xau[:nt.SINH_LAI_TOI_DA]]
+        if not chon:
+            break
+        print(f"  sinh lai vong {vong + 1}: {len(chon)} cau xau nhat")
+        os.makedirs(tam, exist_ok=True)
+        try:
+            _omni_batch([texts[i] for i in chon], tam, cfg)
+        except Exception as e:
+            print(f"  (sinh lai that bai: {e})")
+            break
+        for i in chon:
+            moi = _wav_path(tam, texts[i], cfg)
+            if not os.path.exists(moi):
+                continue
+            m2 = nt.do(moi)
+            if nt.diem(m2) < nt.diem(do[i]):
+                os.replace(moi, duong[i])
+                do[i] = m2
+                print(f"    cau {i + 1}: thay ban tot hon")
+            else:
+                os.remove(moi)
+        dat, ty, xau = nt.nghiem_thu(do)
+        print(f"  sau vong {vong + 1}: {ty:.2f} lo chet/phut "
+              f"-> {'DAT' if dat else 'van TRUOT'}")
+        if dat:
+            break
+    if os.path.isdir(tam):
+        for f in os.listdir(tam):
+            os.remove(os.path.join(tam, f))
+        os.rmdir(tam)
+    if not dat:
+        print("  van truot sau khi sinh lai - nghe lai canh dang ngo nhat, "
+              "co the la van de o cau chu chu khong o lan sinh")
 
 
 def speak(text, cache_dir, cfg):
