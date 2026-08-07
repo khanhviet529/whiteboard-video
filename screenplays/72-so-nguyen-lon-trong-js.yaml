@@ -62,7 +62,7 @@ scenes:
   - scene: statement
     chapter: HIỆN TRƯỜNG
     head: Không có lỗi nào để tìm.
-    narration: Không có ngoại lệ, không có dòng log đỏ, không có cảnh báo. Máy chủ trả đúng, mạng truyền đúng, giao diện hiển thị đúng cái mà nó nhận được. Chỉ có con số là đã đổi trên đường đi.
+    narration: Không có ngoại lệ nào, không một dòng log đỏ, cũng chẳng cảnh báo gì. Máy chủ trả đúng, mạng truyền đúng, giao diện hiển thị đúng cái mà nó nhận được. Chỉ có con số là đã đổi trên đường đi.
     caption: Máy chủ đúng, mạng đúng, giao diện đúng. Số thì đã đổi.
     value: KHÔNG LOG, KHÔNG LỖI, KHÔNG DẤU VẾT
     size: 92
