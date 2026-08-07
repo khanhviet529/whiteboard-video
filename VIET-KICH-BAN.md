@@ -7,6 +7,27 @@ vì có người bảo thế.
 Xem [CONG-THUC.md](CONG-THUC.md) để biết khung nhịp, [Y-TUONG.md](Y-TUONG.md) để chọn
 chủ đề, và README để biết các loại cảnh.
 
+## Khung tự sinh, và vì sao chúng bị chặn
+
+`research/sinh_khung.py` sinh khung cho cả 90 số từ bảng trong
+[KE-HOACH-90.md](KE-HOACH-90.md): chuỗi cảnh, tên file, brand, cấu hình giọng.
+Nó **không** viết lời đọc và **không** điền số — mọi chỗ cần số đo đều để trống
+bằng `{{SO}}`, và file có `chua_xong: true`.
+
+`lint.py` báo **LỖI** khi thấy một trong hai dấu hiệu đó, nên một khung không thể
+lọt vào bản render. Quy trình làm một số:
+
+1. chạy bộ đo tương ứng, **máy phải rảnh** (xem `repro/_hieu_chuan.py`)
+2. thay mọi `{{SO}}` bằng số đo được
+3. viết `narration` và `caption`
+4. đổi chuỗi cảnh nếu cơ chế đó hợp loại khác
+5. xoá dòng `chua_xong`
+
+Lý do tách hai bước: viết một mạch 82 kịch bản thì phần lớn phải điền số bịa, vì
+số đo của chúng chưa tồn tại. Trong một buổi đã có **hai lần** số sai lọt vào
+kịch bản thật — bộ đo Python chạy lúc máy render lệch 5 lần, và bộ đo postgres
+dao 23–90 lần qua năm lượt.
+
 ## Quy trình nên theo
 
 Đừng render cả video để thử một câu. Vòng lặp đúng:

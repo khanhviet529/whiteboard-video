@@ -1,0 +1,67 @@
+# SO 90 - MUA 6. Xem KE-HOACH-90.md.
+#   chu de   : `SIGTERM` và tắt êm
+#   ghi chu  : Rolling update cắt ngang request đang chạy
+#   do bang  : docker   (muc: đo)
+#
+# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
+# chua co so do. `chua_xong: true` chan khong cho render.
+#
+# Viec phai lam, theo thu tu:
+#   1. chay bo do `docker`, lay so THAT (may phai ranh)
+#   2. thay moi `{{SO}}` bang so do duoc
+#   3. viet `narration` va `caption` cho tung canh
+#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
+#   5. xoa dong `chua_xong` o duoi
+
+chua_xong: true       # XOA dong nay khi da co so that
+
+title: '`SIGTERM` và tắt êm'
+theme: bench
+accent: hot
+brand: 'CÔNG CỤ · SỐ 90'
+tag: 'docker · chưa xong'
+footer: '{{SO}}'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: statement
+    chapter: VÌ SAO
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: compare
+    chapter: VÌ SAO
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: rule
+    chapter: CHẶN
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: ask
+    chapter: CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+

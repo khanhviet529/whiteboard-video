@@ -454,8 +454,39 @@ def check_topology(sp, idx, out):
                         "giờ hiện — bỏ nó đi hoặc thu hẹp `from`/`to`"))
 
 
+def check_chua_xong(doc, out):
+    """Chan khung tu sinh khong cho lot vao ban render.
+
+    `research/sinh_khung.py` sinh khung cho ca 90 so, moi khung deu co
+    `chua_xong: true` va mot loat o trong `{{SO}}` o dung nhung cho can so do.
+    Hai dau hieu do la LOI chu khong phai canh bao: mot khung ma render duoc thi
+    no se ra mot video doc "hai ngoac nhon SO hai ngoac nhon" suot bay canh.
+    """
+    if doc.get("chua_xong"):
+        out.append(("LOI", "doc",
+                    "screenplay còn `chua_xong: true` — đây là khung tự sinh, "
+                    "chưa có số đo và chưa có lời đọc. Làm xong rồi xoá dòng đó"))
+    n = 0
+
+    def dem(o):
+        nonlocal n
+        if isinstance(o, str):
+            n += o.count("{{SO}}")
+        elif isinstance(o, dict):
+            for v in o.values():
+                dem(v)
+        elif isinstance(o, list):
+            for v in o:
+                dem(v)
+    dem(doc)
+    if n:
+        out.append(("LOI", "doc",
+                    f"còn {n} chỗ `{{{{SO}}}}` chưa thay bằng số đo được"))
+
+
 def check(doc):
     out = []
+    check_chua_xong(doc, out)
     check_yaml_cat(doc, out)
     engine = doc.get("engine", "edge")
     # Ten canh KHONG duy nhat giua cac theme: `phongtoi` cung co `topology` va

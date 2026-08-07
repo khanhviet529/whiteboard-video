@@ -1,0 +1,86 @@
+# SO 32 - MUA 2. Xem KE-HOACH-90.md.
+#   chu de   : Đọc cả file nhanh hơn đọc từng dòng
+#   ghi chu  : Bộ đệm đã lo phần đó rồi
+#   do bang  : python   (muc: đo)
+#
+# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
+# chua co so do. `chua_xong: true` chan khong cho render.
+#
+# Viec phai lam, theo thu tu:
+#   1. chay bo do `python`, lay so THAT (may phai ranh)
+#   2. thay moi `{{SO}}` bang so do duoc
+#   3. viet `narration` va `caption` cho tung canh
+#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
+#   5. xoa dong `chua_xong` o duoi
+
+chua_xong: true       # XOA dong nay khi da co so that
+
+title: 'Đọc cả file nhanh hơn đọc từng dòng'
+theme: bench
+he: giang_duong
+accent: hot
+brand: 'TÔI TƯỞNG TÔI BIẾT · SỐ 32'
+tag: 'python · chưa xong'
+footer: '{{SO}}'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  - scene: statement
+    chapter: BẠN TIN GÌ
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: probe
+    chapter: PHẦN CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: compare
+    chapter: PHẦN CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: list
+    chapter: PHẦN CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: statement
+    chapter: RANH GIỚI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: rule
+    chapter: CHẶN
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: ask
+    chapter: CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+

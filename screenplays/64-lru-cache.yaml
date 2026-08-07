@@ -1,0 +1,79 @@
+# SO 64 - MUA 4. Xem KE-HOACH-90.md.
+#   chu de   : LRU cache
+#   ghi chu  : Thêm bộ nhớ có lúc làm tỷ lệ trúng giảm
+#   do bang  : python   (muc: đo)
+#
+# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
+# chua co so do. `chua_xong: true` chan khong cho render.
+#
+# Viec phai lam, theo thu tu:
+#   1. chay bo do `python`, lay so THAT (may phai ranh)
+#   2. thay moi `{{SO}}` bang so do duoc
+#   3. viet `narration` va `caption` cho tung canh
+#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
+#   5. xoa dong `chua_xong` o duoi
+
+chua_xong: true       # XOA dong nay khi da co so that
+
+title: 'LRU cache'
+theme: bench
+accent: hot
+brand: 'CƠ CHẾ BÊN DƯỚI · SỐ 64'
+tag: 'python · chưa xong'
+footer: '{{SO}}'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  - scene: intro
+    chapter: MỞ MÀN
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: probe
+    chapter: CHẠY THẬT
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: topology
+    chapter: BÊN TRONG
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: compare
+    chapter: VÌ SAO
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: statement
+    chapter: CHỖ LẠ
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: rule
+    chapter: DÙNG ĐƯỢC GÌ
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: ask
+    chapter: CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+

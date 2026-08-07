@@ -1,0 +1,85 @@
+# SO 20 - MUA 1. Xem KE-HOACH-90.md.
+#   chu de   : Bảng phình vì UPDATE
+#   ghi chu  : ĐÃ ĐO: 200.000 dòng, UPDATE toàn bảng 5 lần → 11,8MB thành 55,0MB, **gấp 4,7 lần**, 200.070 bản 
+#   do bang  : postgres   (muc: ✅ đo)
+#
+# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
+# chua co so do. `chua_xong: true` chan khong cho render.
+#
+# Viec phai lam, theo thu tu:
+#   1. chay bo do `postgres`, lay so THAT (may phai ranh)
+#   2. thay moi `{{SO}}` bang so do duoc
+#   3. viet `narration` va `caption` cho tung canh
+#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
+#   5. xoa dong `chua_xong` o duoi
+
+chua_xong: true       # XOA dong nay khi da co so that
+
+title: 'Bảng phình vì UPDATE'
+theme: bench
+accent: hot
+brand: 'HIỆN TRƯỜNG · HỒ SƠ 20'
+tag: 'postgres · chưa xong'
+footer: '{{SO}}'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: rule
+    chapter: CHẶN
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
+  - scene: ask
+    chapter: CÒN LẠI
+    head: '{{SO}}'
+    narration: '{{SO}}'
+    caption: '{{SO}}'
+
