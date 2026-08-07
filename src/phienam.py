@@ -84,6 +84,7 @@ TU_DIEN = {
     "index": "in đét",
     "pool": "pun",
     "timeout": "tai mao",
+    "list": "lít",
 }
 
 # --- UNG VIEN, CHUA AP -----------------------------------------------------
@@ -97,8 +98,6 @@ TU_DIEN_THU = {
     # Hai tu TRUNG TAM cua ca mua 3 ma bo chuan dau tien bo sot. `set` viet
     # theo chinh ta tieng Viet doc thanh "sét", nen model dung giua hai cach
     # doc cua cung mot chuoi ky tu.
-    "set": "sét",
-    "list": "lít",
     # Gap khi viet mua 1 va mua 3. Chua duoc nghe, chua ap.
     "Python": "pai thơn",
     "code": "cốt",
@@ -118,7 +117,12 @@ TU_DIEN_THU = {
 # trong du an nay tai nguoi khong dong y voi thuoc do, va ca ba lan tai deu la
 # ben quyet dinh.
 GIU_GOC = ("database", "nginx", "query", "redis", "request", "transaction",
-           "worker")
+           "worker",
+           # `set` giu goc con `list` thi phien am, du hai tu doi nhau va deu
+           # nam trong cung mot cau. Nguoi dung nghe tung cap va chon nhu vay.
+           # Thuoc do cung nghieng ve ban goc cua `set`: ban phien am sinh them
+           # mot lo 120ms ma ban goc khong co.
+           "set")
 
 
 def _boundary(tu):

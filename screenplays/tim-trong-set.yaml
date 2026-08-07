@@ -82,7 +82,7 @@ scenes:
   - scene: compare
     chapter: VÌ SAO
     head: Một bên đi hỏi từng cái.
-    narration: List phải so sánh lần lượt từng phần tử cho tới khi gặp, nên tìm trong kho mười nghìn thì trung bình mất năm nghìn lần so sánh. Set thì băm giá trị ra thành địa chỉ rồi nhảy thẳng tới đó, một lần là xong.
+    narration: Bên list thì phải so sánh lần lượt từng phần tử cho tới khi gặp, nên tìm trong kho mười nghìn thì trung bình mất năm nghìn lần so sánh. Set thì băm giá trị ra thành địa chỉ rồi nhảy thẳng tới đó, một lần là xong.
     caption: List so sánh lần lượt. Set băm ra rồi nhảy thẳng.
     vs: TRONG KHI ĐÓ
     box_h: 290
