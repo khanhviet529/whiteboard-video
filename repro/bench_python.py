@@ -256,6 +256,41 @@ def ca_mui_gio():
                         + ", ".join(sorted(ngay))])
 
 
+def ca_so_sanh_float():
+    """So sanh hai so thuc bang `==`. So 49.
+
+    CO Y tranh chu de tien - so 15 da lo phan do roi. O day dung ty le va toa
+    do, de hai video khong trung nhau.
+    """
+    import math
+    N = 100_000
+    bang = gan = 0
+    vd = []
+    for i in range(1, N + 1):
+        # chia mot cong viec thanh `k` phan bang nhau roi cong lai
+        k = (i % 8) + 3
+        phan = 1.0 / k
+        tong = 0.0
+        for _ in range(k):
+            tong += phan
+        if tong == 1.0:
+            bang += 1
+        if math.isclose(tong, 1.0):
+            gan += 1
+        if tong != 1.0 and len(vd) < 2:
+            vd.append(f"chia 1 thành {k} phần rồi cộng lại -> {tong!r}")
+    return dict(loai="dung sai",
+                hoi=f"{N:,} lần chia 1 thành k phần bằng nhau rồi cộng lại"
+                    .replace(",", "."),
+                a="kiểm bằng `tong == 1.0`",
+                b="kiểm bằng `math.isclose`",
+                ka=f"{bang:,} lần đúng ({bang/N*100:.1f}%)".replace(",", "."),
+                kb=f"{gan:,} lần đúng ({gan/N*100:.1f}%)".replace(",", "."),
+                them=vd + [f"0.1 + 0.2 == 0.3          -> {0.1 + 0.2 == 0.3}",
+                           f"math.isclose(0.1+0.2, 0.3) -> "
+                           f"{math.isclose(0.1 + 0.2, 0.3)}"])
+
+
 def ca_sort_js_kieu():
     """Khong phai JS - day la ban Python cua cung mot bay: so sanh chuoi."""
     xs = [10, 9, 1, 200, 30]
@@ -281,6 +316,7 @@ CA = {
     "tien_so_sanh": ca_tien_so_sanh,
     "copy_nong": ca_copy_nong,
     "mui_gio": ca_mui_gio,
+    "so_sanh_float": ca_so_sanh_float,
     "sort_chuoi": ca_sort_js_kieu,
 }
 

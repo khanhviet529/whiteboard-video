@@ -129,7 +129,7 @@ Cần loại cảnh `code` cho theme `bench`, hiện chưa có.
 | 37 | Tham số mặc định là `[]` | ✅ **ĐÃ VIẾT** [gio-dung-chung](screenplays/gio-dung-chung.yaml) — gọi 3 lần ra `[[0],[0,1],[0,1,2]]` so với `[[0],[1],[2]]` | ✅ đo | python |
 | 38 | Nối chuỗi trong vòng lặp | ĐÃ ĐO: chỉ **2×** chứ không bình phương — CPython sửa tại chỗ khi refcount bằng 1. Kể theo hướng đó, nối với số 53 | đo | python |
 | 39 | `datetime.now()` không có múi giờ | So sánh với mốc có múi giờ thì nổ | đo | python |
-| 40 | `float` với `Decimal` cho tiền | Cộng 10 lần đã lệch | đo | python |
+| 40 | ~~`float` với `Decimal` cho tiền~~ | **TRÙNG, nên đổi chủ đề.** Số 15 đã kể tiền + Decimal ở mùa 1, số 49 đã kể so sánh float ở mùa 3. Làm thêm số này là ba video cùng một cơ chế. Đề nghị thay bằng một ứng viên khác trong Y-TUONG.md | — | — |
 | 41 | `dict[k]` với `dict.get(k)` | ĐÃ ĐO: `try/except` 2,44ms so với `dict.get` 3,02ms — **try/except nhanh hơn** khi khoá luôn có | đo | python |
 | 42 | Có `FOR UPDATE` và không | Lost update dưới tải | đo | postgres |
 | 43 | Thứ tự cột trong index ghép | `(a,b)` dùng được, `(b,a)` thì không | đo | postgres |
@@ -138,7 +138,7 @@ Cần loại cảnh `code` cho theme `bench`, hiện chưa có.
 | 46 | `await` trong vòng lặp với `gather` | Tuần tự so với cùng lúc | đo | asyncio |
 | 47 | `except Exception` với bắt cụ thể | Nuốt luôn cả bug của chính mình | suy | python |
 | 48 | `open()` với `with open()` | Exception giữa chừng làm rò file | đo | python |
-| 49 | So sánh float bằng `==` | `0.1 + 0.2` không bằng `0.3` | đo | python |
+| 49 | So sánh float bằng `==` | ✅ **ĐÃ VIẾT** [49-so-sanh-float-bang](screenplays/49-so-sanh-float-bang.yaml) — chia 1 thành k phần rồi cộng lại: `==` đúng 50%, `isclose` đúng 100% | ✅ đo | python |
 | 50 | ~~`sort(key=)` với tính trước~~ | ĐÃ ĐO: **giả thuyết SAI** — `sorted(key=)` nhanh hơn 2× vì key chỉ gọi một lần mỗi phần tử. Chuyển sang mùa 2 làm một niềm tin bị lật | đo | python |
 
 ## Mùa 4 — CƠ CHẾ BÊN DƯỚI (15 số)

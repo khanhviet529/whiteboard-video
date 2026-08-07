@@ -1,26 +1,24 @@
-# SO 49 - MUA 3. Xem KE-HOACH-90.md.
-#   chu de   : So sánh float bằng `==`
-#   ghi chu  : `0.1 + 0.2` không bằng `0.3`
-#   do bang  : python   (muc: đo)
+# SO 49 - MUA 3, HAI DOAN CODE. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# CO Y TRANH CHU DE TIEN. So 15 da lo phan tien roi (21,52% don bao "chua tra
+# du"). O day dung ty le va chia phan, de hai video khong trung nhau.
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# MOI CON SO do bang repro/bench_python.py, ca `so_sanh_float`:
+#   100.000 lan chia 1 thanh k phan bang nhau roi cong lai
+#     kiem bang `tong == 1.0`   ->  50.000 lan dung  (50,0%)
+#     kiem bang `math.isclose`  -> 100.000 lan dung (100,0%)
+#   chia 1 thanh 6 phan -> 0.9999999999999999
+#   chia 1 thanh 7 phan -> 0.9999999999999998
+#
+# Ca DUNG SAI nen ket qua khong phu thuoc tai may.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: 'So sánh float bằng `==`'
+title: Chia đều rồi cộng lại, không ra 1
 theme: bench
 accent: hot
-brand: 'HAI ĐOẠN CODE · SỐ 49'
-tag: 'python · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: HAI ĐOẠN CODE · SỐ 05
+tag: python · đúng sai
+footer: SO SÁNH BẰNG TRÊN SỐ THỰC  ·  MỘT NỬA SỐ LẦN TRẢ VỀ SAI
 voice: female
 rate: "+16%"
 
@@ -35,39 +33,99 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK
   - scene: code
     chapter: CHỌN ĐI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Cái nào bỏ sót một nửa?
+    narration: Hai hàm này kiểm xem một công việc đã hoàn thành chưa, bằng cách cộng tiến độ của từng phần lại. Chúng khác nhau đúng một phép so sánh. Bạn có ba giây để đoán hàm nào báo chưa xong dù đã xong.
+    caption: Khác đúng một phép so sánh. Cái nào báo sai?
+    hoi: CÁI NÀO BÁO SAI?
+    dem: 3
+    ket: a
+    a:
+      label: A
+      note: so sánh bằng
+      lines:
+        - "def xong(cac_phan):"
+        - "    tong = sum(cac_phan)"
+        - { text: "    return tong == 1.0", diff: true }
+      value: SAI 50%
+    b:
+      label: B
+      note: so sánh gần đúng
+      lines:
+        - "def xong(cac_phan):"
+        - "    tong = sum(cac_phan)"
+        - { text: "    return isclose(tong, 1.0)", diff: true }
+        - "    # math.isclose"
+      value: ĐÚNG 100%
+    verdict_at: 0.88
+    verdict: MỘT NỬA SỐ LẦN BÁO SAI
 
+  # ============================================ chay that
   - scene: probe
     chapter: CHẠY THẬT
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Một trăm nghìn lần chia đều.
+    narration: Chia một công việc thành k phần bằng nhau rồi cộng ngược lại, làm một trăm nghìn lần với k đổi từ ba tới mười. Bản so sánh bằng chỉ đúng năm mươi nghìn lần. Bản so sánh gần đúng thì đúng cả trăm nghìn.
+    caption: 50.000 lần đúng so với 100.000 lần đúng.
+    heading: python · bench_python.py
+    lenh: py repro/bench_python.py so_sanh_float
+    nguon: repro/bench_python.py
+    status: so_sanh_float
+    lines:
+      - { cmd: "chia 6 phần rồi cộng", out: "0.9999999999999999", state: bad }
+      - { cmd: "`tong == 1.0` đúng",   out: "50.0%",  state: bad }
+      - { cmd: "`isclose` đúng",       out: "100.0%", state: ok }
+    verdict: ĐÚNG MỘT NỬA SỐ LẦN
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Không có số nào sai cả.
+    narration: Từng phần đều đúng, phép cộng cũng đúng. Chỉ có điều một phần sáu trong hệ nhị phân là số vô hạn tuần hoàn, nên máy phải cắt bớt. Cộng sáu lần thì sáu chỗ cắt đó dồn lại thành một sai số bé xíu.
+    caption: Từng phần đúng. Sáu chỗ cắt dồn lại thành sai số.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: SO SÁNH GẦN ĐÚNG
+        value: HỎI CÓ ĐỦ GẦN KHÔNG
+        note: chấp nhận sai số của chính phép tính
+        color: ok
+      - label: SO SÁNH BẰNG
+        value: HỎI CÓ GIỐNG HỆT KHÔNG
+        note: một bit lệch cũng thành sai
+        color: hot
 
+  # ============================================ cho de sai
   - scene: statement
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Chia đôi thì luôn đúng.
+    narration: Chia thành hai, bốn hay tám phần thì phép so sánh bằng luôn cho kết quả đúng, vì những số đó biểu diễn được trọn vẹn trong hệ nhị phân. Chỉ chia thành ba, sáu hay bảy phần mới lộ.
+    caption: Chia 2, 4, 8 thì luôn đúng. Chia 3, 6, 7 mới lộ.
+    label: CHỖ ÍT AI SOI
+    value: CHIA ĐÔI THÌ KHÔNG BAO GIỜ LỘ
+    size: 100
+    sub: Nên ví dụ trong bài học luôn chạy đúng
 
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Hỏi có đủ gần không.
+    narration: Quy tắc chỉ có một câu. Với số thực thì đừng hỏi có bằng nhau không, hãy hỏi có đủ gần không. Còn với thứ phải chính xác tuyệt đối như tiền thì đừng dùng số thực ngay từ đầu.
+    caption: Số thực thì hỏi đủ gần. Tiền thì đừng dùng số thực.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Số thực thì so sánh gần đúng, không so sánh bằng.
+    small: Dấu hiệu trong code — dấu bằng kép hoặc khác kép đặt giữa hai biến kiểu số thực. Cả phép kiểm khác không cũng vậy, vì một số lẽ ra bằng không có thể ra một phần mười mũ mười sáu.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu bạn kiểm một số thực có bằng không hay không, thì phép kiểm đó có an toàn không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: KIỂM MỘT SỐ THỰC CÓ BẰNG KHÔNG, CÓ AN TOÀN KHÔNG?
+    size: 74
+    hint: số lẽ ra bằng không có thể ra rất gần không mà không bằng
