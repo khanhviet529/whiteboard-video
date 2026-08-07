@@ -100,7 +100,7 @@ scenes:
   - scene: probe
     chapter: QUAY CHẬM
     head: Hai câu, hai kế hoạch.
-    narration: Hai câu này tìm cùng một email và trả về cùng một kết quả. Câu trên bọc hàm lower quanh cột, câu dưới thì không. Chênh nhau vài chục lần.
+    narration: Hai câu này tìm cùng một email và trả về cùng một kết quả. Câu trên bọc hàm lower quanh cột, câu dưới thì không, và chênh nhau vài chục lần.
     caption: Cùng kết quả. Chênh nhau vài chục lần.
     heading: psql · explain analyze
     lenh: py repro/bench_pg.py index_bo_qua
