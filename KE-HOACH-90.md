@@ -65,10 +65,10 @@ mùa mạnh nhất và nên chạy trước để dựng nhận diện kênh.
 | 03 | Pool kết nối cạn | 1/3 request lỗi, database dùng 1% sức | ✅ đo | asyncio | `topology` + `queue` |
 | 04 | Phân trang bỏ sót | Xuất báo cáo ba lần ra ba số khác nhau | ✅ đo | sqlite | `gantt` |
 | 05 | Lost update | Trừ kho 100 lần, kho giảm ít hơn 100 | đo | sqlite | `gantt` hai lane |
-| 06 | Index bị bỏ qua | Thêm index xong query vẫn chậm y như cũ | đo | sqlite `EXPLAIN` | `probe` ×2 + `compare` |
+| 06 | Index bị bỏ qua | ĐÃ ĐO: `lower(email)` 81,23ms so với `email` 903µs, **90×**. EXPLAIN cho thấy A quét song song, B dùng Index Scan | ✅ đo | postgres | `probe` ×2 + `compare` |
 | 07 | Transaction giữ khoá quá lâu | Một request chậm làm cả bảng đứng | đo | postgres | `gantt` lane bị chặn |
 | 08 | Deadlock do thứ tự khoá | Job chạy 300 ngày không sao, ngày 301 chết | đo | postgres | `gantt` hai lane chéo nhau |
-| 09 | `COUNT(*)` là thứ chậm nhất trang | Danh sách load nhanh, con số tổng thì lâu | đo | postgres | `compare` |
+| 09 | `COUNT(*)` là thứ chậm nhất trang | ĐÃ ĐO: 39,28ms so với `LIMIT 20` 763µs, **51×** trên bảng 500.000 dòng | ✅ đo | postgres | `compare` |
 | 10 | Cache stampede | Cứ đúng năm phút một lần API sập vài giây | đo | asyncio | `queue` + `gantt` |
 | 11 | Retry bão không jitter | Thêm retry cho ổn định hơn, hệ thống sập hẳn | đo | asyncio | `multiply` + `queue` |
 | 12 | Hàng đợi không giới hạn | Container bị giết mà không để lại log nào | đo | asyncio + docker | `queue` |
@@ -76,10 +76,10 @@ mùa mạnh nhất và nên chạy trước để dựng nhận diện kênh.
 | 14 | Trừ tiền hai lần | Khách bấm một lần, trừ tiền hai lần | đo | asyncio | `gantt` hai lane |
 | 15 | Tiền tính bằng float | Đối soát lệch vài xu mỗi ngày, cuối năm lệch to | đo | python | `probe` ba dòng |
 | 16 | Timestamp không có offset | Báo cáo ngày 1 thiếu đơn, ngày 2 thừa đơn | đo | python `zoneinfo` | `counters` ba múi giờ |
-| 17 | UUID v4 làm khoá chính | Insert chậm dần theo số dòng đã có | đo | postgres | `queue` |
+| 17 | UUID v4 làm khoá chính | ĐÃ ĐO: chèn 300.000 dòng mất 5,04s so với 1,19s, **4,3×**. Index 11,6MB so với 6,8MB | ✅ đo | postgres | `queue` |
 | 18 | Regex quay lui thảm hoạ | Một dòng log làm treo cả service | đo | python | `queue` theo độ dài chuỗi |
 | 19 | Soft delete làm index vô dụng | Bảng có index mà query vẫn quét toàn bảng | đo | postgres | `probe` `EXPLAIN` |
-| 20 | Bảng phình vì UPDATE | Bảng 200 nghìn dòng chiếm vài GB đĩa | đo | postgres | `queue` dung lượng |
+| 20 | Bảng phình vì UPDATE | ĐÃ ĐO: 200.000 dòng, UPDATE toàn bảng 5 lần → 11,8MB thành 55,0MB, **gấp 4,7 lần**, 200.070 bản chết nằm lại | ✅ đo | postgres | `queue` dung lượng |
 
 Đã có video: 01 [cache-stale](screenplays/cache-stale.yaml), 02 [n-plus-one](screenplays/n-plus-one.yaml), 03 [pool-can](screenplays/pool-can.yaml). Số 04 đã có script đo
 ([phan_trang_bo_sot.py](repro/phan_trang_bo_sot.py)) nhưng chưa có kịch bản.
