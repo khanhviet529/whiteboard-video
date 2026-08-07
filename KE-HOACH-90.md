@@ -65,7 +65,7 @@ mùa mạnh nhất và nên chạy trước để dựng nhận diện kênh.
 | 03 | Pool kết nối cạn | 1/3 request lỗi, database dùng 1% sức | ✅ đo | asyncio | `topology` + `queue` |
 | 04 | Phân trang bỏ sót | Xuất báo cáo ba lần ra ba số khác nhau | ✅ đo | sqlite | `gantt` |
 | 05 | Lost update | Trừ kho 100 lần, kho giảm ít hơn 100 | đo | sqlite | `gantt` hai lane |
-| 06 | Index bị bỏ qua | ĐÃ ĐO: `lower(email)` 81,23ms so với `email` 903µs, **90×**. EXPLAIN cho thấy A quét song song, B dùng Index Scan | ✅ đo | postgres | `probe` ×2 + `compare` |
+| 06 | Index bị bỏ qua | ✅ **ĐÃ VIẾT** [index-bi-bo-qua](screenplays/index-bi-bo-qua.yaml) — 81,23ms so với 903µs, **90×**; EXPLAIN: quét song song so với Index Scan | ✅ đo | postgres | `probe` ×2 + `compare` |
 | 07 | Transaction giữ khoá quá lâu | Một request chậm làm cả bảng đứng | đo | postgres | `gantt` lane bị chặn |
 | 08 | Deadlock do thứ tự khoá | Job chạy 300 ngày không sao, ngày 301 chết | đo | postgres | `gantt` hai lane chéo nhau |
 | 09 | `COUNT(*)` là thứ chậm nhất trang | ĐÃ ĐO: 39,28ms so với `LIMIT 20` 763µs, **51×** trên bảng 500.000 dòng | ✅ đo | postgres | `compare` |
@@ -97,7 +97,7 @@ xem đọc nó như mùa 1 và hook mất tác dụng.
 | 21 | async là chạy song song | ✅ đã viết | ✅ đo | asyncio | `gantt` ×2 |
 | 22 | Index luôn làm query nhanh hơn | Cột ít giá trị phân biệt thì quét bảng còn nhanh hơn | đo | postgres | `compare` |
 | 23 | Cache luôn làm hệ thống nhanh hơn | Tỷ lệ trúng thấp thì cache là chi phí thuần | đo | asyncio | `queue` |
-| 24 | GIL làm Python vô dụng với đa luồng | Với việc chờ mạng thì luồng vẫn ăn đứt | đo | python | `gantt` |
+| 24 | GIL làm Python vô dụng với đa luồng | ✅ **ĐÃ VIẾT** [gil-va-viec-cho](screenplays/gil-va-viec-cho.yaml) — 8 việc chờ: 1204ms so với 158,84ms, **7,6×** | ✅ đo | python | `gantt` |
 | 25 | Thêm server thì chịu tải gấp đôi | Nút thắt chỉ dời chỗ, không biến mất | đo | asyncio | `topology` |
 | 26 | Nhiều index thì đọc nhanh hơn | Mỗi index là một lần ghi thêm | đo | postgres | `compare` |
 | 27 | `try/except` chậm nên phải tránh | Không có lỗi thì nó gần như miễn phí | đo | python | `compare` |
@@ -126,7 +126,7 @@ Cần loại cảnh `code` cho theme `bench`, hiện chưa có.
 | # | Hai đoạn khác nhau ở | Đoạn sai sai ở đâu | Số liệu | Đo bằng |
 |---|---|---|---|---|
 | 36 | `x in list` với `x in set` | ✅ **ĐÃ VIẾT** [tim-trong-set](screenplays/tim-trong-set.yaml) — 159,75ms so với 1,01ms, 158× | ✅ đo | python |
-| 37 | Tham số mặc định là `[]` | Dùng chung giữa mọi lần gọi | đo | python |
+| 37 | Tham số mặc định là `[]` | ✅ **ĐÃ VIẾT** [gio-dung-chung](screenplays/gio-dung-chung.yaml) — gọi 3 lần ra `[[0],[0,1],[0,1,2]]` so với `[[0],[1],[2]]` | ✅ đo | python |
 | 38 | Nối chuỗi trong vòng lặp | ĐÃ ĐO: chỉ **2×** chứ không bình phương — CPython sửa tại chỗ khi refcount bằng 1. Kể theo hướng đó, nối với số 53 | đo | python |
 | 39 | `datetime.now()` không có múi giờ | So sánh với mốc có múi giờ thì nổ | đo | python |
 | 40 | `float` với `Decimal` cho tiền | Cộng 10 lần đã lệch | đo | python |

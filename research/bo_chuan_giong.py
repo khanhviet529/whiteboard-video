@@ -41,6 +41,11 @@ KHUNG = {
     "pool": "Cái {} chỉ có mười kết nối dùng chung cho tất cả.",
     "set": "Đổi kho sang {} rồi thì tìm bao nhiêu lần cũng như nhau.",
     "list": "Tìm trong {} thì phải so sánh lần lượt từng phần tử một.",
+    "Python": "Bên {} thì mỗi lúc chỉ một luồng chạy được thôi.",
+    "code": "Đoạn {} này đi qua hết mọi vòng kiểm mà vẫn sai.",
+    "test": "Bài {} chỉ gọi một lần nên nó không bao giờ đỏ.",
+    "file": "Hàm này đọc {} lên rồi mới nén nội dung lại.",
+    "email": "Cột {} có index mà truy vấn vẫn quét cả bảng.",
 }
 
 # Cac dang da tung sinh loi. Moi dong kem ly do, xem VIET-KICH-BAN.md.

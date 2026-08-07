@@ -1,0 +1,156 @@
+# MUA 2 so 24 - TOI TUONG TOI BIET. Xem KE-HOACH-90.md.
+#
+# He nhan dien `giang_duong`: nen ke ngang, mau nhan vang ho phach. Mua nay
+# khong ke ve mot su co ma ve mot niem tin bi lat, nen mau bao dong la sai giong.
+#
+# MOI CON SO do bang repro/bench_async.py, ca `gil_luong`:
+#   8 viec CHO, moi viec 0,15 giay
+#   tuan tu   1204,06 ms
+#   8 luong    158,84 ms   -> 7,6 lan
+#
+# Can than khi viet: video nay KHONG duoc noi "GIL la chuyen hoang duong". GIL
+# co that va no CHAN that - chan viec TINH TOAN. Cai bi lat chi la pham vi cua
+# no. Noi qua len thanh sai, va sai theo huong nguoc lai thi cung te nhu cu.
+
+title: GIL không chặn thứ bạn tưởng
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: TÔI TƯỞNG TÔI BIẾT · SỐ 02
+tag: python · đo thật
+footer: GIL ĐƯỢC NHẢ RA TRONG LÚC CHỜ  ·  CHỈ CHẶN LÚC TÍNH
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================== NHIP 1: niem tin
+  - scene: statement
+    chapter: BẠN TIN GÌ
+    head: Python có GIL nên đa luồng vô dụng.
+    narration: Câu này bạn nghe từ ngày đầu học Python, và nó đúng trong rất nhiều trường hợp. Có một khoá lớn, mỗi lúc chỉ một luồng chạy được, nên thêm luồng cũng chẳng nhanh lên.
+    caption: Có một khoá lớn, mỗi lúc chỉ một luồng chạy được.
+    label: NIỀM TIN
+    value: CÓ GIL THÌ ĐA LUỒNG VÔ DỤNG
+    size: 104
+    sub: Đúng trong phần lớn ví dụ bạn từng đọc
+
+  # ================================================== NHIP 2: lat
+  - scene: probe
+    chapter: PHẦN CÒN LẠI
+    head: Tám việc chờ, đo thử xem.
+    narration: Đây là tám việc chờ, mỗi việc mất một trăm năm mươi mili giây. Chạy lần lượt thì mất một phẩy hai giây. Chia cho tám luồng thì còn một trăm năm mươi tám mili giây.
+    caption: Tám việc chờ. Tuần tự 1,2 giây, tám luồng 0,16 giây.
+    heading: python · bench_async.py
+    status: gil_luong
+    lines:
+      - { cmd: "tuần tự",     out: "1204.06 ms", state: bad }
+      - { cmd: "8 luồng",     out: "158.84 ms",  state: ok }
+      - { cmd: "chênh lệch",  out: "7.6×",       state: ok }
+    verdict: LUỒNG VẪN CHỒNG LÊN NHAU
+
+  # ================================================== NHIP 3: goi mo
+  - scene: compare
+    chapter: PHẦN CÒN LẠI
+    head: Khoá được nhả ra lúc nào.
+    narration: Khoá đó không bị giữ suốt. Ngay khi một luồng bắt đầu ngồi chờ mạng hay chờ đĩa, nó nhả khoá ra cho luồng khác dùng. Chỉ lúc thật sự tính toán thì khoá mới bị giữ.
+    caption: Luồng ngồi chờ thì nhả khoá. Luồng đang tính thì giữ.
+    vs: NHƯNG KHI TÍNH
+    box_h: 290
+    items:
+      - label: KHI ĐANG CHỜ
+        value: NHẢ KHOÁ RA
+        note: chờ mạng, chờ đĩa, chờ database
+        color: ok
+      - label: KHI ĐANG TÍNH
+        value: GIỮ KHOÁ SUỐT
+        note: nén ảnh, xử lý chuỗi, tính toán
+        color: hot
+
+  # ================================================== NHIP 4 + 5
+  - scene: list
+    chapter: PHẦN CÒN LẠI
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết khi nào luồng giúp được và khi nào không, cùng một câu để tự phân loại việc của mình. Giờ xem tám việc đó chạy thế nào.
+    caption: Khi nào luồng giúp, khi nào không, và cách tự phân loại.
+    items:
+      - text: Một câu hỏi để biết việc của bạn thuộc loại nào.
+        focus: true
+      - text: Thứ phải dùng thay khi việc là tính toán.
+
+  # ================================================== DEMO
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: Tám việc chờ, tám luồng.
+    narration: Đây là tám việc chờ chia cho hai luồng cho dễ nhìn. Cả hai cùng bắt đầu, cùng ngồi chờ, và khoá không cản gì cả vì lúc chờ thì không ai cần tới nó. Tám việc xong gần như cùng một lúc.
+    caption: Hai luồng cùng chờ. Khoá không cản gì.
+    ruler: ["0", "0.05s", "0.10s", "0.15s"]
+    lanes:
+      - label: LUỒNG 1
+        color: cool
+        steps:
+          - { at: 0.04, w: 0.90, text: "chờ mạng" }
+      - label: LUỒNG 2
+        color: violet
+        steps:
+          - { at: 0.06, w: 0.90, text: "chờ mạng" }
+    readout:
+      - key: KHOÁ GIL
+        steps:
+          - { at: 0.00, value: "rảnh", state: ok, note: "không ai đang tính" }
+      - key: THỜI GIAN
+        steps:
+          - { at: 0.00, value: "0 ms",   state: ok,   note: "cùng bắt đầu" }
+          - { at: 0.96, value: "158 ms", state: ok,   note: "cùng xong" }
+    counter:
+      key: VIỆC XONG
+      from: 0.96
+      rate: 60.0
+      label: xong gần như cùng lúc
+    verdict_at: 0.97
+    verdict_color: ok
+    verdict: CHỜ THÌ KHÔNG TRANH KHOÁ
+
+  # ================================================== THU PHAM (thuc ra la GIOI HAN)
+  - scene: statement
+    chapter: RANH GIỚI
+    head: Đổi việc thành tính toán thì sập.
+    narration: Nói cho công bằng, khoá đó có thật và nó chặn thật. Đổi tám việc chờ thành tám việc tính toán thì thêm luồng không giúp gì, vì lúc đó luồng nào cũng cần khoá và chúng phải xếp hàng.
+    caption: Đổi sang việc tính toán thì thêm luồng không giúp gì.
+    label: RANH GIỚI
+    value: VIỆC TÍNH THÌ LUỒNG XẾP HÀNG
+    size: 100
+    sub: Chỗ đó phải dùng nhiều tiến trình
+
+  # ================================================== CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Hỏi một câu là biết.
+    narration: Quy tắc chỉ có một câu hỏi. Việc của bạn có lúc nào ngồi không mà chờ thứ khác không? Có thì luồng giúp được, không thì phải chia ra nhiều tiến trình.
+    caption: Việc có chỗ ngồi chờ thì dùng luồng. Không có thì dùng tiến trình.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Việc có chỗ CHỜ thì luồng giúp được.
+    small: Đọc mạng, đọc đĩa, gọi API, truy vấn database đều có chỗ chờ. Nén ảnh, tính toán, xử lý chuỗi lớn thì không, và chỗ đó phải dùng nhiều tiến trình.
+
+  # ================================================== CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Một hàm đọc file rồi nén nội dung file đó lại, thì thêm luồng có giúp được phần nào không? Trả lời được câu đó là bạn đã nắm đúng ranh giới.
+    caption: Trả lời được là bạn đã nắm đúng ranh giới.
+    text: HÀM VỪA ĐỌC FILE VỪA NÉN THÌ SAO?
+    size: 92
+    hint: một nửa việc có chỗ chờ, nửa kia thì không

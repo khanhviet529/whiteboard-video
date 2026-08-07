@@ -99,6 +99,12 @@ TU_DIEN_THU = {
     # doc cua cung mot chuoi ky tu.
     "set": "sét",
     "list": "lít",
+    # Gap khi viet mua 1 va mua 3. Chua duoc nghe, chua ap.
+    "Python": "pai thơn",
+    "code": "cốt",
+    "test": "tét",
+    "file": "phai",
+    "email": "i meo",
 }
 
 # --- DA NGHE va QUYET DINH GIU NGUYEN CHU GOC ------------------------------

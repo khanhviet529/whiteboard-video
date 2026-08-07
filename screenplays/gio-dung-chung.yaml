@@ -1,0 +1,126 @@
+# MUA 3 so 37 - HAI DOAN CODE. Xem KE-HOACH-90.md.
+#
+# Khac so 36 o mot cho quan trong: so 36 hoi CAI NAO CHAM HON, so nay hoi CAI
+# NAO SAI. Mua 3 co hai loai cau hoi va nen tron deu, khong thi 15 so deu thanh
+# "doan nao nhanh hon" va lai don dieu theo mot kieu khac.
+#
+# MOI CON SO do bang repro/bench_python.py, ca `mac_dinh`:
+#   goi ba lan lien tiep voi x = 0, 1, 2
+#   def f(x, gio=[])    -> [[0], [0, 1], [0, 1, 2]]
+#   def f(x, gio=None)  -> [[0], [1], [2]]
+
+title: Cái giỏ dùng chung giữa mọi lần gọi
+theme: bench
+accent: hot
+domain: be
+brand: HAI ĐOẠN CODE · SỐ 02
+tag: python · đúng sai
+footer: THAM SỐ MẶC ĐỊNH TÍNH MỘT LẦN  ·  KHÔNG PHẢI MỖI LẦN GỌI
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================== HOOK: hai doan code
+  - scene: code
+    chapter: CHỌN ĐI
+    head: Cái nào trả về sai?
+    narration: Hai hàm này nhận một món rồi bỏ vào giỏ và trả giỏ về. Chúng khác nhau đúng một chỗ, ở giá trị mặc định của tham số thứ hai. Bạn có ba giây để đoán xem hàm nào trả về kết quả sai.
+    caption: Khác đúng một chỗ. Hàm nào trả về sai?
+    hoi: CÁI NÀO TRẢ VỀ SAI?
+    dem: 3
+    ket: b
+    a:
+      label: A
+      note: mặc định là list rỗng
+      lines:
+        - { text: "def them(mon, gio=[]):", diff: true }
+        - "    gio.append(mon)"
+        - "    return gio"
+      value: SAI
+    b:
+      label: B
+      note: mặc định là None
+      lines:
+        - { text: "def them(mon, gio=None):", diff: true }
+        - "    gio = gio or []"
+        - "    gio.append(mon)"
+        - "    return gio"
+      value: ĐÚNG
+    verdict_at: 0.88
+    verdict: A GIỮ LẠI MÓN CŨ
+
+  # ================================================== chay that
+  - scene: probe
+    chapter: CHẠY THẬT
+    head: Gọi ba lần liên tiếp.
+    narration: Gọi mỗi hàm ba lần, lần lượt với số không, số một và số hai. Bản đúng trả về ba cái giỏ riêng biệt. Bản sai thì giỏ cứ dài thêm ra sau mỗi lần gọi.
+    caption: Bản sai giữ lại mọi món của những lần gọi trước.
+    heading: python · bench_python.py
+    status: mac_dinh
+    lines:
+      - { cmd: "giỏ = []   lần 1", out: "[0]",       state: warn }
+      - { cmd: "giỏ = []   lần 3", out: "[0, 1, 2]", state: bad }
+      - { cmd: "giỏ = None lần 3", out: "[2]",       state: ok }
+    verdict: MỘT CÁI GIỎ CHO TẤT CẢ
+
+  # ================================================== goi ten co che
+  - scene: compare
+    chapter: VÌ SAO
+    head: Nó tính đúng một lần.
+    narration: Giá trị mặc định được tính một lần duy nhất, lúc Python đọc tới dòng định nghĩa hàm. Từ đó về sau mọi lần gọi đều dùng chung đúng cái list đó, chứ không phải mỗi lần một cái mới.
+    caption: Mặc định tính lúc định nghĩa hàm, không phải lúc gọi.
+    vs: CHỨ KHÔNG PHẢI
+    box_h: 290
+    items:
+      - label: THỰC TẾ, TÍNH MỘT LẦN
+        value: LÚC ĐỊNH NGHĨA HÀM
+        note: mọi lần gọi dùng chung một list
+        color: hot
+      - label: NGƯỜI VIẾT TƯỞNG
+        value: MỖI LẦN GỌI MỘT CÁI MỚI
+        note: và code chạy đúng trong lần test đầu
+        color: ok
+
+  # ================================================== cho de sai
+  - scene: statement
+    chapter: VÌ SAO
+    head: Lần test đầu luôn đúng.
+    narration: Đây là lý do nó sống sót qua code review. Lần gọi đầu tiên cho kết quả đúng, nên test viết một lần gọi thì xanh. Chỉ khi có lần gọi thứ hai trong cùng một tiến trình nó mới lộ.
+    caption: Lần gọi đầu luôn đúng, nên test một lần thì xanh.
+    label: CHỖ ÍT AI SOI
+    value: SAI TỪ LẦN GỌI THỨ HAI
+    size: 108
+    sub: Mà test thường chỉ gọi một lần
+
+  # ================================================== quy tac
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Đừng để thứ đổi được làm mặc định.
+    narration: Quy tắc chỉ có một câu. Giá trị mặc định phải là thứ không đổi được, ví dụ số hoặc chuỗi hoặc None. Cần một giỏ rỗng thì để None rồi tạo bên trong thân hàm.
+    caption: Mặc định phải là thứ không đổi được. Cần giỏ thì tạo trong hàm.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Mặc định chỉ được là thứ không đổi được.
+    small: Dấu hiệu trong code — dấu bằng theo sau là ngoặc vuông, ngoặc nhọn, hay một lời gọi hàm, ngay trên dòng định nghĩa. Ba thứ đó đều đổi được.
+
+  # ================================================== cau hoi kiem tra co che
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Nếu mặc định là một lời gọi lấy thời gian hiện tại, thì hàm của bạn trả về thời điểm nào? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: MẶC ĐỊNH LÀ NGÀY HÔM NAY THÌ SAO?
+    size: 92
+    hint: nó đóng băng ở lúc tiến trình khởi động

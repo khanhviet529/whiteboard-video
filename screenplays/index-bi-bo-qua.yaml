@@ -1,0 +1,134 @@
+# MUA 1 so 06 - HIEN TRUONG VU AN. Xem KE-HOACH-90.md.
+#
+# MOI CON SO do bang repro/bench_pg.py, ca `index_bo_qua`, tren PostgreSQL 18.4
+# trong WSL2:
+#   bang 200.000 dong, co index tren cot email
+#   WHERE lower(email) = ...   81,23 ms   EXPLAIN: Gather (quet song song)
+#   WHERE email = ...            903 us   EXPLAIN: Index Scan using ix_email
+#   -> 90 lan
+#
+# Loi EXPLAIN la bang chung manh hon con so: no cho thay planner KHONG dung
+# index chu khong phai dung index roi van cham. Do la thu chieu thang len canh
+# `probe` duoc.
+
+title: Có index mà vẫn quét cả bảng
+theme: bench
+accent: hot
+domain: database
+brand: HIỆN TRƯỜNG · HỒ SƠ 11
+tag: postgres · explain
+footer: BỌC HÀM QUANH CỘT  ·  INDEX THÀNH VÔ DỤNG
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v3
+style: camhung
+mode: tach
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================== NHIP 1: trieu chung
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Thêm index. Không nhanh hơn.
+    narration: Bảng có hai trăm nghìn dòng, truy vấn tìm một email mất tám mươi mốt mili giây. Bạn thêm index cho cột email rồi chạy lại, và nó vẫn mất đúng tám mươi mốt mili giây.
+    caption: Thêm index xong, thời gian không đổi.
+    heading: psql · bench
+    status: "81.23 ms"
+    lines:
+      - { cmd: "số dòng",           out: "200.000",   state: ok }
+      - { cmd: "index trên email",  out: "có",        state: ok }
+      - { cmd: "thời gian truy vấn", out: "81.23 ms", state: bad }
+    verdict: INDEX CÓ, MÀ KHÔNG DÙNG
+
+  # ================================================== NHIP 2: hau qua
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Bạn đi thêm index nữa.
+    narration: Phản xạ tiếp theo là nghi index dựng sai, nên bạn xoá đi dựng lại, rồi thêm một index nữa cho chắc. Bảng nặng thêm, ghi chậm thêm, còn truy vấn thì vẫn y nguyên.
+    caption: Thêm index nữa. Ghi chậm thêm, đọc không nhanh lên.
+    value: DỰNG LẠI BAO NHIÊU LẦN CŨNG THẾ
+    size: 100
+    sub: Vì vấn đề không nằm ở index
+
+  # ================================================== NHIP 3: goi mo
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Hỏi thẳng planner xem nó làm gì.
+    narration: Thay vì đoán, hãy hỏi thẳng. Lệnh explain cho biết database định chạy câu đó thế nào, và hai bản cho ra hai kế hoạch khác hẳn nhau.
+    caption: EXPLAIN cho biết database định chạy thế nào.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: BẢN KHÔNG BỌC HÀM
+        value: INDEX SCAN
+        note: đọc vài trang rồi trả về
+        color: ok
+      - label: BẢN BỌC HÀM QUANH CỘT
+        value: QUÉT SONG SONG CẢ BẢNG
+        note: gather, đọc hết 200.000 dòng
+        color: hot
+
+  # ================================================== NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết vì sao index nằm đó mà không được dùng, và cách kiểm chỉ trong một lệnh. Giờ xem hai kế hoạch chạy đó cạnh nhau.
+    caption: Vì sao index không được dùng, và cách kiểm trong một lệnh.
+    items:
+      - text: Một chữ trong câu truy vấn làm index thành vô dụng.
+        focus: true
+      - text: Cách hỏi database xem nó thật sự chạy thế nào.
+
+  # ================================================== DEMO: hai ke hoach
+  - scene: probe
+    chapter: QUAY CHẬM
+    head: Hai câu, hai kế hoạch.
+    narration: Hai câu này tìm cùng một email và trả về cùng một kết quả. Câu trên bọc hàm lower quanh cột, câu dưới thì không. Chênh nhau chín mươi lần.
+    caption: Cùng kết quả. Chênh nhau 90 lần.
+    heading: psql · explain analyze
+    status: "90×"
+    lines:
+      - { cmd: "WHERE lower(email) = ?", out: "81.23 ms", state: bad }
+      - { cmd: "WHERE email = ?",        out: "903 µs",   state: ok }
+      - { cmd: "cùng kết quả trả về",     out: "có",       state: ok }
+    verdict: CHÍN MƯƠI LẦN VÌ MỘT CHỮ
+
+  # ================================================== THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Index dựng trên giá trị của cột, chứ không dựng trên kết quả của một hàm nào đó bọc quanh cột. Khi bạn bọc hàm vào, database không còn cách nào biết giá trị đã đổi thành gì, nên nó đành quét hết.
+    caption: Index dựng trên cột, không dựng trên hàm bọc quanh cột.
+    label: THỦ PHẠM
+    value: HÀM BỌC QUANH CỘT TRONG MỆNH ĐỀ WHERE
+    size: 88
+    sub: Cột đổi giá trị thì index không còn khớp
+
+  # ================================================== CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Để cột đứng một mình.
+    narration: Quy tắc chỉ có một câu. Vế trái của phép so sánh phải là cột trần, mọi phép biến đổi đẩy hết sang vế phải. Cần so sánh không phân biệt hoa thường thì dựng index trên chính biểu thức đó.
+    caption: Vế trái để cột trần. Biến đổi đẩy sang vế phải.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Vế trái của WHERE phải là cột trần.
+    small: Dấu hiệu trong code — bất kỳ lời gọi hàm nào ôm lấy tên cột ở vế trái. Cần so sánh đã chuẩn hoá thì dựng index trên biểu thức, hoặc lưu sẵn một cột đã chuẩn hoá.
+
+  # ================================================== CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Cột của bạn kiểu chuỗi mà truy vấn truyền vào một số, thì index có được dùng không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: LỆCH KIỂU DỮ LIỆU THÌ INDEX CÒN DÙNG ĐƯỢC KHÔNG?
+    size: 78
+    hint: database phải ép kiểu, mà ép kiểu cũng là một hàm
