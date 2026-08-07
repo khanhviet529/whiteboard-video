@@ -1171,12 +1171,12 @@ def _stat_box(base, box, key, val, col, p, key_size=22, val_size=56):
     # nen canh theo dinh la hai o cao thap khac nhau va nhan de chong len so.
     vf = fit_one("grot_black", val, box[2] - box[0] - 96, val_size, 28)
     voy, vth = typo.tm(val, vf)
-    vy = box[3] - 24 - vth - voy
+    vy = box[3] - 24 - vth          # `ttext` dat dinh muc tai y, khong tru voy
     ttext(base, val, vf, col, vy, cx=bcx, track=-1.5, p=p)
 
     kf = typo.mono_font(key_size, 700)
     koy, kth = typo.tm(key, kf)
-    ttext(base, key, kf, MUTED, vy + voy - 14 - kth - koy, cx=bcx, track=4.0,
+    ttext(base, key, kf, MUTED, vy - 14 - kth, cx=bcx, track=4.0,
           p=p)
 
 
@@ -1553,7 +1553,9 @@ def sc_code(b, sp, acc):
                        fill=BG + (255,), outline=EDGE_HI + (255,), width=s(3))
             df = fit_one("grot_black", str(con), 60, 46, 30)
             oy, th = typo.tm(str(con), df)
-            ttext(base, str(con), df, FG, cy - th / 2 - oy, cx=CX, track=-1)
+            # `ttext` dat DINH MUC tai `y` va da tu bu `oy`, nen chi tru
+            # `th / 2` la du. Tru them `oy` la day chu len 12px.
+            ttext(base, str(con), df, FG, cy - th / 2, cx=CX, track=-1)
         elif p < 0.45:
             f = typo.mono_font(22, 700)
             t = sp.get("hoi", "CÁI NÀO ĐÚNG?")

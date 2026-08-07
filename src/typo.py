@@ -96,6 +96,13 @@ def ttext(base, txt, f, fill, y, x=None, cx=None, track=0.0, p=1.0,
     PIL khong ho tro tracking nen phai ve tung ky tu. reveal="mask": chu truot
     len tu duoi trong khi bi cat boi mot cua so co dinh -> giong chu duoc day
     vao cho, muot hon nhieu so voi mo dan.
+
+    `y` la DINH MUC, khong phai dinh khung dong. Ham tu bu `oy` ben
+    trong (`pad - s(oy)`), nen NGUOI GOI KHONG duoc tru `oy` mot lan
+    nua. Can giua theo chieu doc thi viet `y = cy - th / 2`, het.
+    Da vap: canh `code` tru them `oy` va chu so dem nguoc bi day len
+    12px trong vong tron - do duoc, va nguoi dung nhin thay truoc khi
+    thuoc do cua toi thay.
     """
     if p <= 0 or not txt:
         return 0.0
