@@ -288,6 +288,7 @@ xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` 
 | `counters` | Dãy ô số cạnh nhau — cho thấy một giá trị **không đổi** qua nhiều mốc | `items[{value,label,top,color}]`, `box_h`, `verdict` |
 | `compare` | Hai ô xếp dọc, có gạch nối `vs` ở giữa | `a{}`, `b{}`, `vs`, `bad`, `note` |
 | `ask` | Cảnh chốt: câu hỏi về hệ thống của chính người xem | `text`, `size`, `hint` |
+| `intro` | Mở màn: một câu hỏi trực tiếp, rồi tên video cỡ lớn | `hoi`, `title`, `sub`, `kicker` |
 
 ### ⚠ Số đo phải KIỂM CHỨNG ĐƯỢC, không chỉ được tuyên bố
 

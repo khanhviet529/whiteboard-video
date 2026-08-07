@@ -1484,6 +1484,66 @@ def sc_topology(b, sp, acc):
     b.add(fn, dur=max(2.0, b.dur * 0.80), wait=b.dur)
 
 
+def sc_intro(b, sp, acc):
+    """Canh mo man: mot cau hoi truc tiep, roi ten video.
+
+    Dung cho nhung so ma trieu chung phai KE ra moi hieu, chu khong chieu duoc
+    bang mot dong shell. Vi du "danh sach o may dev load nhanh ma len production
+    thi lau" - khong co lenh nao chup duoc canh do trong mot dong.
+
+    Thuong KHONG khai `kicker` - rail tren cung da co `brand` roi, khai them la
+    lap lai. Chi khai khi muon mot dong khac han rail.
+
+    Thu tu CO CHU Y: cau hoi truoc, ten video sau. Nguoi xem gat dau voi cau hoi
+    roi moi doc ten, nen ten doc thanh "dung roi, video nay noi ve cai do".
+    Dao lai thi thanh mot tam bia sach.
+    """
+    hoi = sp.get("hoi", "")
+    ten = sp.get("title") or sp.get("ten", "")
+    y = STAGE_TOP + 20
+
+    if sp.get("kicker"):
+        def fn_k(base, d, p):
+            mono(base, sp["kicker"], (MARGIN, y), acc, p, 24, 5.0, 700)
+        b.add(fn_k, dur=0.4, wait=0.24)
+
+    # --- cau hoi: chu vua, xuong dong, doc nhu loi noi
+    hy = y + 56
+    hf, hlines, hlh = typo.headline(hoi, CONTENT_W - 20, 300, 62, 38, -1.0,
+                                    "grot")
+    for i, ln in enumerate(hlines):
+        def fn_h(base, d, p, ln=ln, i=i):
+            ttext(base, ln, hf, FG, hy + i * hlh, x=MARGIN, track=-1.0, p=p,
+                  rise=18)
+        b.add(fn_h, dur=0.42, wait=0.20)
+    hbot = hy + hlh * len(hlines)
+
+    # --- ke ngang roi ten video, co lon nhat khung
+    def fn_ke(base, d, p):
+        hline(base, hbot + 26, EDGE_HI, MARGIN, MARGIN + 220, p, 3)
+    b.add(fn_ke, dur=0.34, wait=0.18)
+
+    ty = hbot + 62
+    tf, tlines, tlh = typo.headline(ten, CONTENT_W - 20,
+                                    STAGE_BOTTOM - ty - 120, 104, 56, -2.4,
+                                    "slab_black")
+    for i, ln in enumerate(tlines):
+        def fn_t(base, d, p, ln=ln, i=i):
+            yy = ty + i * tlh
+            if i == 0:
+                glow(base, (MARGIN, yy, W - MARGIN, yy + tlh), acc, 80,
+                     int(56 * expo_out(p)))
+            ttext(base, ln, tf, acc, yy, x=MARGIN, track=-2.4, p=p, rise=24)
+        b.add(fn_t, dur=0.5, wait=0.26)
+
+    if sp.get("sub"):
+        sy = ty + tlh * len(tlines) + 22
+
+        def fn_s(base, d, p):
+            mono(base, sp["sub"], (MARGIN, sy), MUTED, p, 24, 3.0, 500)
+        b.add(fn_s, dur=0.4, wait=0.2)
+
+
 def _khoi_code(base, box, ve, p, lines, mau_diff, lo_mo, lh=38):
     """Ve mot khoi code trong the. Dong nao `diff: true` thi co vach mau ben
     trai va chu sang hon - do la cho DUY NHAT hai ve khac nhau."""
@@ -1619,7 +1679,7 @@ def sc_code(b, sp, acc):
 BUILDERS = {
     "probe": sc_probe, "statement": sc_statement, "list": sc_list,
     "rule": sc_rule, "counters": sc_counters, "ask": sc_ask,
-    "compare": sc_compare, "code": sc_code,
+    "compare": sc_compare, "code": sc_code, "intro": sc_intro,
     # --- mo phong: moi cai tra loi mot cau hoi khac nhau, xem docstring
     "gantt": sc_gantt,          # KHI NAO   - hai viec chong len nhau
     "multiply": sc_multiply,    # BAO NHIEU CAI - mot thanh rat nhieu
