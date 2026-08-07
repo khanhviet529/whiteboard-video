@@ -165,6 +165,7 @@ Hai điều nữa về sự đơn điệu:
 
 | Bẫy | Cách tránh |
 |---|---|
+| **Nói "số đo thật" mà không cho xem cách đo** | Bảng số tĩnh là lời tuyên bố, không phải bằng chứng. Dùng `lenh:` để dòng lệnh gõ ra trước rồi kết quả chạy theo sau, và `nguon:` để người xem tự chạy lại. Mỗi mùa nên có ít nhất một cảnh `code` chiếu chính vòng đo |
 | Bịa triệu chứng hoặc số liệu | Ba mức hợp lệ: **đo được** (viết script trong `repro/`), **suy ra** (hệ quả tất yếu của cơ chế), **cần cấp** (sự cố thật). Xem [Y-TUONG.md](Y-TUONG.md) |
 | Đặt tên bệnh ở nhịp mở | Mất sạch căng thẳng. Giấu tới nhịp gọi tên thủ phạm |
 | Câu hỏi cuối là câu tra cứu | `"DEL nằm trên hay dưới UPDATE?"` chỉ cần mở file ra nhìn. Hỏi câu kiểm tra cơ chế: `"TTL một giây thì còn cần đúng thứ tự không?"` — người trả lời được là người đã hiểu |

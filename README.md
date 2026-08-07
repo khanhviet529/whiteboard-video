@@ -281,13 +281,37 @@ xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` 
 
 | `scene` | Dùng để | Trường chính |
 |---|---|---|
-| `probe` | Console thật: lệnh bên trái, kết quả bên phải, dòng sai tô đỏ | `heading`, `status`, `lines[{cmd,out,state}]`, `verdict` |
+| `probe` | Console thật: lệnh bên trái, kết quả bên phải, dòng sai tô đỏ | `heading`, `status`, `lines[{cmd,out,state}]`, `lenh`, `nguon`, `verdict` |
 | `statement` | Một câu đập vào mặt, đặt trong ngoặc góc, căn giữa | `label`, `value`, `size`, `sub`, `strike`, `color` |
 | `list` | Danh sách có số trong ô vuông nhỏ | `items[{text,focus,color}]` |
 | `rule` | Thẻ quy tắc: số lớn trong ngoặc góc + câu quy tắc + ghi chú | `n`, `kicker`, `body`, `small`, `color` |
 | `counters` | Dãy ô số cạnh nhau — cho thấy một giá trị **không đổi** qua nhiều mốc | `items[{value,label,top,color}]`, `box_h`, `verdict` |
 | `compare` | Hai ô xếp dọc, có gạch nối `vs` ở giữa | `a{}`, `b{}`, `vs`, `bad`, `note` |
 | `ask` | Cảnh chốt: câu hỏi về hệ thống của chính người xem | `text`, `size`, `hint` |
+
+### ⚠ Số đo phải KIỂM CHỨNG ĐƯỢC, không chỉ được tuyên bố
+
+Một bảng số tĩnh trong khung console là **lời tuyên bố**, không phải bằng chứng.
+Người xem không có lý do gì để tin, và một kênh lấy "không bịa số" làm gốc mà
+lại bắt người xem tin lời thì tự mâu thuẫn.
+
+`probe` có hai trường để biến bảng số thành phép đo kiểm chứng được:
+
+```yaml
+- scene: probe
+  lenh: py repro/bench_python.py in_set    # gõ ra từng ký tự, có con trỏ nháy
+  nguon: repro/bench_python.py             # "chạy lại: ..." ở đáy khung
+  lines:
+    - { cmd: "x in list", out: "159.75 ms", state: bad }
+```
+
+Dòng lệnh gõ ra trước, kết quả chạy theo sau từng dòng một — mắt đọc nó thành
+**một lượt chạy** chứ không phải một tấm ảnh. Còn `nguon` cho người xem đường
+kiểm lại bằng chính máy của họ.
+
+Mạnh hơn nữa thì dùng cảnh `code` chiếu luôn vòng đo (`time.perf_counter()`
+quanh N lần lặp, lấy trung vị) ít nhất một lần cho mỗi mùa, để người xem thấy
+**phương pháp** chứ không chỉ thấy kết quả.
 
 ### Đạo cụ — hình nhỏ gắn được vào bất kỳ cảnh nào
 
@@ -310,6 +334,8 @@ Sáu đạo cụ hiện có, chọn bằng cách **đếm** chứ không đoán 
 | `loai` | Vẽ gì | Số video dùng được | Trường riêng |
 |---|---|---|---|
 | `trinh_duyet` | cửa sổ trình duyệt, thanh địa chỉ, các dòng nội dung | ~11 | `url`, `dong[{text,bad}]` |
+| `tep` | chồng tệp, các dòng bên trong tệp trên cùng | 5 | `ten`, `dong[{text,bad}]` |
+| `thanh_day` | vạch đầy dần, có mốc ngưỡng | 4 | `day`, `nguong`, `so` |
 | `khoa` | ổ khoá đóng rồi mở | 6 | `mo_luc`, `nhan_dong`, `nhan_mo` |
 | `dong_ho` | đồng hồ có kim quét một vòng | 5 | `het_han`, `nhan`, `nhan_het` |
 | `nhieu_nguoi` | dãy biểu tượng người | 4 | `so`, `cot`, `dau_khac` |

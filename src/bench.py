@@ -442,7 +442,13 @@ def sc_probe(b, sp, acc):
     hh = 68
     rowh = 86
     pad = 30
-    hgt = hh + rowh * len(rows) + pad
+    # `lenh` va `nguon` deu cong them mot hang. Chung ton dat man hinh, va do la
+    # co y: mot bang so tinh chi la LOI TUYEN BO, con dong lenh go ra roi ket
+    # qua chay theo sau moi la BANG CHUNG. Kenh nay lay "khong bia so" lam goc
+    # nen phai cho nguoi xem duong kiem lai, khong the bat ho tin loi.
+    lenh_h = 52 if sp.get("lenh") else 0
+    nguon_h = 40 if sp.get("nguon") else 0
+    hgt = hh + lenh_h + rowh * len(rows) + nguon_h + pad
     y0 = STAGE_CY - hgt / 2
     box = (MARGIN, y0, W - MARGIN, y0 + hgt)
     cf = typo.mono_font(sp.get("code_size", 34), 500)
@@ -469,8 +475,25 @@ def sc_probe(b, sp, acc):
                       rise=8)
     b.add(fn_card, dur=0.5, wait=0.34)
 
+    # --- dong lenh: go ra tung ky tu roi moi toi ket qua
+    if sp.get("lenh"):
+        ly = y0 + hh + 10
+        lf = typo.mono_font(28, 500)
+        lenh = str(sp["lenh"])
+
+        def fn_lenh(base, d, p):
+            n = int(clamp(p / 0.72) * len(lenh))
+            txt = lenh[:n]
+            ttext(base, "$ " + txt, lf, FG, ly, x=MARGIN + 30, track=0.5)
+            if p < 0.86 and int(p * 22) % 2 == 0:   # con tro nhap nhay
+                cw = track_w("$ " + txt, lf, 0.5)
+                ImageDraw.Draw(base).rectangle(
+                    [s(MARGIN + 30 + cw + 3), s(ly + 2),
+                     s(MARGIN + 30 + cw + 16), s(ly + 30)], fill=FG + (255,))
+        b.add(fn_lenh, dur=0.9, wait=0.5)
+
     for i, r in enumerate(rows):
-        ry = y0 + hh + pad / 2 + i * rowh
+        ry = y0 + hh + lenh_h + pad / 2 + i * rowh
         state = (r.get("state") or "").lower()
         ocol = STATES.get(state, MUTED)
         is_bad = state == "bad"
@@ -495,6 +518,16 @@ def sc_probe(b, sp, acc):
                 ttext(base, out, of, ocol, cy - typo.tm(out, of)[1] / 2,
                       x=W - MARGIN - 34 - ow, track=1.5, p=q, rise=10)
         b.add(fn, dur=0.46, wait=0.3)
+
+    # Duong dan de nguoi xem TU CHAY LAI. Day moi la thu bien mot bang so thanh
+    # mot phep do kiem chung duoc.
+    if sp.get("nguon"):
+        ny = y0 + hgt - 30
+
+        def fn_nguon(base, d, p):
+            mono(base, "chạy lại:  " + str(sp["nguon"]), (MARGIN + 30, ny),
+                 DIM, p, 21, 2.0, 500)
+        b.add(fn_nguon, dur=0.4, wait=0.2)
 
     if sp.get("verdict"):
         _verdict(b, sp["verdict"], box[3] + 74, HOT)

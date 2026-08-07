@@ -72,6 +72,10 @@ scenes:
     caption: 159,75ms so với 1,01ms trên cùng dữ liệu.
     heading: python · bench_python.py
     status: in_set
+    # `lenh` go ra tung ky tu roi ket qua moi chay theo sau, `nguon` cho duong
+    # dan de nguoi xem tu chay lai. Mot bang so tinh chi la loi tuyen bo.
+    lenh: py repro/bench_python.py in_set
+    nguon: repro/bench_python.py
     lines:
       - { cmd: "x in list",  out: "159.75 ms", state: bad }
       - { cmd: "x in set",   out: "1.01 ms",   state: ok }
