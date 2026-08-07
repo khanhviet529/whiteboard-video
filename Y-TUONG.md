@@ -31,6 +31,13 @@ trái trực giác, và điều đó mô phỏng được.
 `CONG-THUC.md` viết: *"chỉ dùng sự cố thật **hoặc dựng lại được**"*. Hai vế đó khác
 nhau, và vế sau mạnh hơn người ta tưởng. Ba mức, xếp từ tốt nhất:
 
+> **Có một loại thứ tư, và nhận ra nó tiết kiệm rất nhiều công.** `[10,9,1].sort()`
+> trả về `[1,10,9]` vì **đặc tả** JavaScript quy định vậy — đúng trên mọi máy, mọi
+> phiên bản, không dao động, không phụ thuộc tải. Dựng bộ đo có hiệu chuẩn và lấy
+> trung vị cho một sự thật như thế là thừa. Vẫn nên **chạy một lần** cho chắc, vì
+> trong một buổi đã ba lần nhớ sai code làm gì, và vì dòng `nguon:` trong video chỉ
+> có nghĩa khi file đó chạy được. Xem `bench-js/su-that.mjs` — 40 dòng, không đo gì.
+
 | Mức | Nghĩa | Ví dụ |
 |---|---|---|
 | **đo được** | Viết script trong [repro/](repro/), chạy ra số thật rồi dùng đúng số đó | [phan_trang_bo_sot.py](repro/phan_trang_bo_sot.py) chạy ra: 3 bản ghi bị bỏ sót, 3 bản hiện hai lần |

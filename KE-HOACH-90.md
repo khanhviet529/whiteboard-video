@@ -180,7 +180,7 @@ Vài số cần trình duyệt thật (`puppeteer`) vì jsdom không có layout 
 | 69 | `useMemo` không có tác dụng | Dependency đổi mỗi render nên nó tính lại mỗi lần | đo | react |
 | 70 | `await` trong vòng lặp | 20 request tuần tự thay vì cùng lúc | đo | node |
 | 71 | `Array.sort` mặc định so chuỗi | `[10, 9, 1].sort()` ra `[1, 10, 9]` | đo | node |
-| 72 | Số nguyên lớn trong JS | ID từ backend vượt `MAX_SAFE_INTEGER` và đổi giá trị | đo | node |
+| 72 | Số nguyên lớn trong JS | ✅ **ĐÃ VIẾT** [72-so-nguyen-lon-trong-js](screenplays/72-so-nguyen-lon-trong-js.yaml) — `Number("…740993")` ra `…740992`, và hai id khác nhau `===` cho `true` | sự thật đặc tả | node |
 | 73 | `==` và bảng ép kiểu | `[] == ![]` là `true` | đo | node |
 | 74 | Nối mảng bằng spread trong vòng lặp | Bình phương theo số phần tử | đo | node |
 | 75 | `JSON.parse` chuỗi lớn | Chặn main thread bao lâu, đo được | đo | node |

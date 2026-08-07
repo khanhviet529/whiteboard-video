@@ -1,27 +1,25 @@
-# SO 72 - MUA 5. Xem KE-HOACH-90.md.
-#   chu de   : Số nguyên lớn trong JS
-#   ghi chu  : ID từ backend vượt `MAX_SAFE_INTEGER` và đổi giá trị
-#   do bang  : node   (muc: đo)
+# SO 72 - MUA 5, FRONTEND. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# KHONG DUNG BO DO. Day la SU THAT CUA DAC TA, khong phai so phu thuoc hoan
+# canh - `Number("9007199254740993")` tra ve 9007199254740992 tren moi may, moi
+# phien ban. Dung bo do co hieu chuan va trung vi cho no la thua.
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `node`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# Nhung van chay MOT LAN, va ket qua o day lay tu `bench-js/su-that.mjs`:
+#   Number.MAX_SAFE_INTEGER                -> 9007199254740991
+#   Number("9007199254740993")             -> 9007199254740992
+#   gia tri tra ve co dung id khong?       -> false
+#   9007199254740993 === 9007199254740992  -> true
+#   BigInt("9007199254740993")             -> 9007199254740993
+#   node v24.18.0
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: 'Số nguyên lớn trong JS'
+title: Hai đơn khác nhau, trình duyệt thấy giống
 theme: bench
 he: giang_duong
 accent: hot
-brand: 'FRONTEND · SỐ 72'
-tag: 'node · chưa xong'
-footer: '{{SO}}'
+domain: fe
+brand: FRONTEND · SỐ 01
+tag: javascript · đúng sai
+footer: SỐ NGUYÊN QUÁ 9 TRIỆU TỈ  ·  JAVASCRIPT LÀM TRÒN ÂM THẦM
 voice: female
 rate: "+16%"
 
@@ -36,45 +34,99 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ NHIP 1: trieu chung
   - scene: probe
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Bấm đơn này, mở ra đơn khác.
+    narration: Người dùng bấm vào một đơn trong danh sách, trình duyệt mở ra một đơn hoàn toàn khác. Kiểm lại thì thấy hai đơn có mã cạnh nhau, chỉ hơn kém nhau đúng một đơn vị.
+    caption: Bấm đơn này, mở ra đơn có mã liền kề.
+    heading: node · su-that.mjs
+    lenh: node bench-js/su-that.mjs
+    nguon: bench-js/su-that.mjs
+    status: "sai id"
+    lines:
+      - { cmd: "id máy chủ gửi",   out: "…740993", state: ok }
+      - { cmd: "id trình duyệt có", out: "…740992", state: bad }
+      - { cmd: "hai id bằng nhau?", out: "true",    state: bad }
+    verdict: KHÔNG MỘT LỖI NÀO ĐƯỢC BÁO
+    prop:
+      loai: trinh_duyet
+      goc: tren-phai
+      url: /don/…740993
+      nhan: MỞ NHẦM ĐƠN
+      dong:
+        - "đơn …740992"
+        - { text: "đơn …740993  ← bấm", bad: true }
 
+  # ============================================ NHIP 2: hau qua
   - scene: statement
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Không có lỗi nào để tìm.
+    narration: Không có ngoại lệ, không có dòng log đỏ, không có cảnh báo. Máy chủ trả đúng, mạng truyền đúng, giao diện hiển thị đúng cái mà nó nhận được. Chỉ có con số là đã đổi trên đường đi.
+    caption: Máy chủ đúng, mạng đúng, giao diện đúng. Số thì đã đổi.
+    value: KHÔNG LOG, KHÔNG LỖI, KHÔNG DẤU VẾT
+    size: 92
+    sub: Nên nó sống rất lâu trước khi có ai lần ra
 
+  # ============================================ NHIP 3: goi mo
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Có một trần, và nó thấp hơn bạn nghĩ.
+    narration: JavaScript chỉ có một kiểu số duy nhất, và nó biểu diễn nguyên vẹn tới chín triệu tỉ. Vượt qua đó thì nó lặng lẽ làm tròn về giá trị gần nhất mà nó biểu diễn được.
+    caption: Vượt 9 triệu tỉ thì nó làm tròn, không báo gì.
+    vs: NHƯNG ID CỦA BẠN
+    box_h: 290
+    items:
+      - label: JAVASCRIPT ĐẾM CHÍNH XÁC TỚI
+        value: 9.007.199.254.740.991
+        note: Number.MAX_SAFE_INTEGER
+        color: ok
+      - label: ID KIỂU 64 BIT ĐẾM TỚI
+        value: LỚN HƠN NGHÌN LẦN
+        note: snowflake, bigserial, id từ Twitter
+        color: hot
 
+  # ============================================ NHIP 4 + 5
   - scene: list
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết vì sao một mã số đổi giá trị mà không ai báo, và một quy tắc chặn được nó ngay từ tầng mạng. Giờ xem con số đó đổi thế nào.
+    caption: Vì sao mã số đổi âm thầm, và cách chặn từ tầng mạng.
+    items:
+      - text: Chỗ con số bị đổi, và vì sao không có lỗi nào.
+        focus: true
+      - text: Kiểu dữ liệu phải dùng cho mã số, ở cả hai đầu.
 
-  - scene: multiply
-    chapter: QUAY CHẬM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+  # ============================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là bước đọc chuỗi thành số. Máy chủ gửi mã số dưới dạng chuỗi ký tự, nhưng thư viện đọc dữ liệu tự đổi nó thành kiểu số, và chính lúc đổi đó con số bị làm tròn.
+    caption: Bước đọc chuỗi thành số là chỗ con số bị đổi.
+    label: THỦ PHẠM
+    value: TỰ ĐỔI CHUỖI THÀNH SỐ LÚC ĐỌC DỮ LIỆU
+    size: 84
+    sub: Máy chủ gửi đúng, trình duyệt đọc sai
 
+  # ============================================ CHAN
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Mã số thì giữ nguyên là chuỗi.
+    narration: Quy tắc chỉ có một câu. Mã định danh không phải để tính toán, nên hãy giữ nó là chuỗi ký tự từ đầu tới cuối. Cần làm toán trên số lớn thì dùng kiểu số nguyên lớn, đừng dùng kiểu số thường.
+    caption: Mã định danh giữ nguyên là chuỗi. Cần tính thì dùng BigInt.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Mã định danh là chuỗi, không phải số.
+    small: Dấu hiệu trong code — bất kỳ mã số nào được so sánh bằng dấu bằng ba, hoặc bị đưa qua hàm đổi sang số. Ngay cả khoá của một danh sách cũng phải giữ nguyên dạng chuỗi.
 
+  # ============================================ CAU HOI
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu mã số của bạn hiện chỉ có mười chữ số thì code vẫn chạy đúng, nhưng nó sẽ hỏng vào lúc nào? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: MÃ SỐ CÒN NGẮN THÌ BAO GIỜ NÓ HỎNG?
+    size: 90
+    hint: lúc bảng vượt qua chín triệu tỉ bản ghi, hoặc lúc đổi sang id kiểu mới
