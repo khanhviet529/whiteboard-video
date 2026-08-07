@@ -207,6 +207,55 @@ def ca_tien_so_sanh():
                            f"0.1 + 0.2         ->  {0.1 + 0.2!r}"])
 
 
+def ca_copy_nong():
+    """`copy.copy` chi sao chep VO ngoai. So 45.
+
+    Ca `copy` do TOC DO, ca nay do DUNG SAI - cung mot ham nhung hai cau hoi
+    khac nhau, va mua 3 can ca hai loai.
+    """
+    # HAI ban goc RIENG. Lan dau toi viet ket qua ve B cung trong code thay vi
+    # do - dung cai sai ma ca du an nay ton cong tranh.
+    def thu(sao_chep):
+        goc = {"ten": "don 1204", "hang": ["áo", "quần"]}
+        ban = sao_chep(goc)
+        ban["hang"].append("giày")
+        return goc["hang"], (goc["hang"] is ban["hang"])
+
+    ga, chung_a = thu(copy.copy)
+    gb, chung_b = thu(copy.deepcopy)
+    return dict(loai="dung sai",
+                hoi="Sao chép một đơn hàng rồi thêm món vào BẢN SAO",
+                a="copy.copy (nông)", b="copy.deepcopy (sâu)",
+                ka=f"gốc thành {ga}",
+                kb=f"gốc vẫn là {gb}",
+                them=[f"nông:  bản sao và bản gốc dùng chung list? {chung_a}",
+                      f"sâu:   bản sao và bản gốc dùng chung list? {chung_b}"])
+
+
+def ca_mui_gio():
+    """Timestamp khong kem mui gio: mot moc, ba cach hieu. So 16."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    # Chon moc SAT NUA DEM va sat cuoi thang. Moc 00:30 thi ba cach hieu van
+    # roi vao cung mot ngay, mat het diem quan trong - da chon sai mot lan.
+    tho = "2026-02-28 23:30:00"          # luu trong database, khong offset
+    naive = datetime.fromisoformat(tho)
+    ra = []
+    for z in ("Asia/Ho_Chi_Minh", "UTC", "America/New_York"):
+        t = naive.replace(tzinfo=ZoneInfo(z))
+        ra.append((z, t.astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))))
+    ngay = {t.date().isoformat() for _, t in ra}
+    return dict(loai="dung sai",
+                hoi=f"Một mốc `{tho}` không kèm múi giờ, đọc ở ba nơi",
+                a="hiểu là giờ Việt Nam", b="hiểu là giờ UTC",
+                ka=f"{ra[0][1].strftime('%d/%m %H:%M')} giờ VN",
+                kb=f"{ra[1][1].strftime('%d/%m %H:%M')} giờ VN",
+                them=[f"{z:20} -> {t.strftime('%d/%m/%Y %H:%M')} giờ VN"
+                      for z, t in ra]
+                     + [f"cùng một mốc rơi vào {len(ngay)} NGÀY khác nhau: "
+                        + ", ".join(sorted(ngay))])
+
+
 def ca_sort_js_kieu():
     """Khong phai JS - day la ban Python cua cung mot bay: so sanh chuoi."""
     xs = [10, 9, 1, 200, 30]
@@ -230,6 +279,8 @@ CA = {
     "mac_dinh": ca_mac_dinh,
     "float_tien": ca_float_tien,
     "tien_so_sanh": ca_tien_so_sanh,
+    "copy_nong": ca_copy_nong,
+    "mui_gio": ca_mui_gio,
     "sort_chuoi": ca_sort_js_kieu,
 }
 
@@ -267,6 +318,8 @@ def main():
             print(f"  A  {r['a']:26} -> {r['ka']}")
             print(f"  B  {r['b']:26} -> {r['kb']}")
             print(f"  -> hai ve ra KET QUA KHAC NHAU")
+        for d in r.get("them", []):
+            print(f"     {d}")
     if ban:
         print("\n!! MAY BAN luc do: " + ", ".join(ban))
         print("   Dung nhung so nay cho kich ban la SAI. Chay lai luc may ranh.")

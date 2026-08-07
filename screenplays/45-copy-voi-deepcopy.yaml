@@ -1,26 +1,28 @@
-# SO 45 - MUA 3. Xem KE-HOACH-90.md.
-#   chu de   : `copy()` với `deepcopy()`
-#   ghi chu  : ĐÃ ĐO: 15µs so với 18,64ms, **1226×**
-#   do bang  : python   (muc: đo)
+# SO 45 - MUA 3, HAI DOAN CODE. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# MOI CON SO do bang repro/bench_python.py, hai ca:
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+#   `copy_nong`  (DUNG SAI)
+#     goc = {"ten": "don 1204", "hang": ["áo", "quần"]}
+#     ban = copy.copy(goc);      ban["hang"].append("giày")
+#       -> goc["hang"] thanh ['áo', 'quần', 'giày']   <- DINH VAO GOC
+#     ban = copy.deepcopy(goc);  ban["hang"].append("giày")
+#       -> goc["hang"] van la ['áo', 'quần']
+#     ban sao va ban goc dung chung list?  nong True | sau False
+#
+#   `copy` (TOC DO) - de danh cho canh so sanh gia phai tra
+#     copy.copy 4 us | copy.deepcopy 3,52 ms  tren list 2.000 phan tu
+#
+# Ca dung sai khong phu thuoc tai may. Ca toc do thi co, va so cua no dao
+# 822-1226 lan qua cac luot nen kich ban noi "hang tram lan".
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: '`copy()` với `deepcopy()`'
+title: Sửa bản sao, hỏng bản gốc
 theme: bench
 accent: hot
-brand: 'HAI ĐOẠN CODE · SỐ 45'
-tag: 'python · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: HAI ĐOẠN CODE · SỐ 04
+tag: python · đúng sai
+footer: COPY CHỈ SAO CHÉP VỎ NGOÀI  ·  RUỘT VẪN DÙNG CHUNG
 voice: female
 rate: "+16%"
 
@@ -35,39 +37,100 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK
   - scene: code
     chapter: CHỌN ĐI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Cái nào làm hỏng bản gốc?
+    narration: Hai hàm này nhận một đơn hàng, sao chép ra một bản, rồi thêm một món vào bản sao. Chúng khác nhau đúng một chữ. Bạn có ba giây để đoán hàm nào làm bản gốc đổi theo.
+    caption: Khác đúng một chữ. Hàm nào làm hỏng bản gốc?
+    hoi: CÁI NÀO LÀM HỎNG BẢN GỐC?
+    dem: 3
+    ket: a
+    a:
+      label: A
+      note: sao chép nông
+      lines:
+        - "def them(don, mon):"
+        - { text: "    ban = copy.copy(don)", diff: true }
+        - "    ban['hang'].append(mon)"
+        - "    return ban"
+      value: GỐC ĐỔI THEO
+    b:
+      label: B
+      note: sao chép sâu
+      lines:
+        - "def them(don, mon):"
+        - { text: "    ban = copy.deepcopy(don)", diff: true }
+        - "    ban['hang'].append(mon)"
+        - "    return ban"
+      value: GỐC GIỮ NGUYÊN
+    verdict_at: 0.88
+    verdict: A SỬA CẢ BẢN GỐC
 
+  # ============================================ chay that
   - scene: probe
     chapter: CHẠY THẬT
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Chỉ thêm vào bản sao thôi.
+    narration: Đơn gốc có áo và quần. Ta sao chép ra một bản rồi thêm giày vào bản sao, tuyệt đối không đụng gì tới đơn gốc. Với bản sao nông thì đơn gốc cũng có giày, còn bản sao sâu thì đơn gốc giữ nguyên.
+    caption: Chỉ thêm vào bản sao. Bản gốc vẫn đổi.
+    heading: python · bench_python.py
+    lenh: py repro/bench_python.py copy_nong
+    nguon: repro/bench_python.py
+    status: copy_nong
+    lines:
+      - { cmd: "đơn gốc ban đầu",       out: "áo, quần",       state: ok }
+      - { cmd: "sau copy.copy",         out: "áo, quần, giày", state: bad }
+      - { cmd: "sau copy.deepcopy",     out: "áo, quần",       state: ok }
+    verdict: KHÔNG AI ĐỤNG VÀO GỐC CẢ
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Nó chỉ sao chép vỏ ngoài.
+    narration: Sao chép nông tạo ra một cái vỏ mới, nhưng mọi thứ nằm bên trong thì hai bản vẫn dùng chung. Danh sách hàng trong bản sao và danh sách hàng trong bản gốc là cùng một vật, chỉ có hai cái tên gọi.
+    caption: Vỏ thì mới, ruột thì vẫn dùng chung.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: SAO CHÉP SÂU
+        value: RUỘT CŨNG MỚI
+        note: bản sao và bản gốc rời hẳn nhau
+        color: ok
+      - label: SAO CHÉP NÔNG
+        value: CHUNG MỘT CÁI RUỘT
+        note: sửa bên nào cũng thấy ở bên kia
+        color: hot
 
+  # ============================================ cho de sai
   - scene: statement
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Dữ liệu phẳng thì không lộ.
+    narration: Nếu đơn hàng chỉ có tên và số tiền thì sao chép nông chạy đúng, vì không có gì bên trong để dùng chung. Nó chỉ lộ khi có một danh sách hoặc một từ điển lồng bên trong, tức là khi dữ liệu bắt đầu thật.
+    caption: Chỉ lộ khi có list hoặc dict lồng bên trong.
+    label: CHỖ ÍT AI SOI
+    value: CHỈ LỘ KHI DỮ LIỆU CÓ TẦNG
+    size: 104
+    sub: Nên test với dữ liệu giả thì luôn xanh
 
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Hỏi có tầng hay không.
+    narration: Quy tắc chỉ có một câu. Dữ liệu phẳng thì sao chép nông là đủ và rẻ hơn hàng trăm lần. Có tầng mà bạn định sửa bản sao thì phải sao chép sâu, hoặc dựng hẳn một bản mới thay vì sao chép.
+    caption: Phẳng thì nông. Có tầng và định sửa thì phải sâu.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Dữ liệu có tầng mà định sửa thì phải sao chép sâu.
+    small: Sao chép sâu tốn hàng trăm lần so với nông, nên đừng dùng bừa. Cách rẻ hơn cả là đừng sửa gì, dựng một bản mới từ bản cũ.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu đơn hàng của bạn chỉ chứa chuỗi và số, không có gì lồng bên trong, thì sao chép nông có an toàn không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: DỮ LIỆU PHẲNG THÌ SAO CHÉP NÔNG CÓ AN TOÀN KHÔNG?
+    size: 76
+    hint: không có gì bên trong thì không có gì để dùng chung

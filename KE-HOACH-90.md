@@ -134,7 +134,7 @@ Cần loại cảnh `code` cho theme `bench`, hiện chưa có.
 | 42 | Có `FOR UPDATE` và không | Lost update dưới tải | đo | postgres |
 | 43 | Thứ tự cột trong index ghép | `(a,b)` dùng được, `(b,a)` thì không | đo | postgres |
 | 44 | `LIMIT` không kèm `ORDER BY` | ✅ **ĐÃ VIẾT** [44-limit-khong-kem-order-by](screenplays/44-limit-khong-kem-order-by.yaml) — `[1,2,3,4,5]` rồi `[20001,…]` sau một UPDATE bình thường | ✅ đo | postgres |
-| 45 | `copy()` với `deepcopy()` | ĐÃ ĐO: 15µs so với 18,64ms, **1226×** | đo | python |
+| 45 | `copy()` với `deepcopy()` | ✅ **ĐÃ VIẾT** [45-copy-voi-deepcopy](screenplays/45-copy-voi-deepcopy.yaml) — sửa bản sao làm gốc đổi theo; tốc độ dao 822–1226× nên kịch bản nói "hàng trăm lần" | ✅ đo | python |
 | 46 | `await` trong vòng lặp với `gather` | Tuần tự so với cùng lúc | đo | asyncio |
 | 47 | `except Exception` với bắt cụ thể | Nuốt luôn cả bug của chính mình | suy | python |
 | 48 | `open()` với `with open()` | Exception giữa chừng làm rò file | đo | python |
