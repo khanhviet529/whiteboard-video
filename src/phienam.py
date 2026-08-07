@@ -78,8 +78,12 @@ TU_DIEN = {
     # --- ky hieu doc thanh chu
     "N+1": "en cộng một",
     "%": "phần trăm",
-    # --- tu tieng Anh DA NGHE HONG va da chot cach doc
-    #     (chua co muc nao - moi ung vien nam o TU_DIEN_THU ben duoi)
+    # --- tu tieng Anh DA NGHE va da chot. Chi nhung tu nguoi dung nghe thay
+    #     ban phien am RO HON moi nam o day; xem `research/bo_chuan_giong.py`.
+    "cache": "két",
+    "index": "in đét",
+    "pool": "pun",
+    "timeout": "tai mao",
 }
 
 # --- UNG VIEN, CHUA AP -----------------------------------------------------
@@ -87,19 +91,23 @@ TU_DIEN = {
 # thay cach phien am ro hon thi chuyen muc do sang TU_DIEN, thay khong hon thi
 # xoa han - dung de o day lung lung.
 TU_DIEN_THU = {
-    "database": "đa ta bây",
-    "cache": "két",
-    "request": "ri quét",
-    "timeout": "tai mao",
-    "transaction": "tran giác sần",
-    "index": "in đét",
-    "query": "quơ ri",
-    "redis": "re đít",
-    "nginx": "en gin ích",
-    "worker": "guốc cơ",
+    # `eager load` chua co khung cau trong bo chuan nen chua duoc nghe. Them
+    # khung vao `research/bo_chuan_giong.py` roi chay lai moi quyet dinh duoc.
     "eager load": "i gờ lâu",
-    "pool": "pun",
 }
+
+# --- DA NGHE va QUYET DINH GIU NGUYEN CHU GOC ------------------------------
+# Ghi lai de nguoi sau khong thu lai: nguoi dung da nghe doi chieu tung cap va
+# thay ban goc ro bang hoac ro hon. Ep phien am vao mot tu model von doc dung
+# chi lam no nghe gia.
+#
+# `database` dang chu y: thuoc do noi ban phien am RO HON HAN (5,66 so voi 3,49
+# khoi/giay, ban goc con bi gan co DINH-AM), va chinh nguoi dung la nguoi de
+# xuat "đa ta bây" luc dau. Nghe that thi ho chon ban goc. Day la lan thu ba
+# trong du an nay tai nguoi khong dong y voi thuoc do, va ca ba lan tai deu la
+# ben quyet dinh.
+GIU_GOC = ("database", "nginx", "query", "redis", "request", "transaction",
+           "worker")
 
 
 def _boundary(tu):
@@ -225,7 +233,10 @@ def tu_la(text):
     lap nen moi cau doan mot kieu. Linter bao de nguoi viet ra quyet dinh: hoac
     them vao TU_DIEN, hoac chap nhan va ghi ro la chap nhan.
     """
-    co = {k.upper() for k in TU_DIEN} | {k.upper() for k in TU_DIEN_THU}
+    # GIU_GOC cung tinh la "da khai": nguoi dung da nghe va quyet dinh giu chu
+    # goc, nen linter con bao nua la bao mot viec da xong.
+    co = ({k.upper() for k in TU_DIEN} | {k.upper() for k in TU_DIEN_THU}
+          | {k.upper() for k in GIU_GOC})
     ra = []
     for m in re.finditer(r"[A-Za-zÀ-ỹĐđ][A-Za-zÀ-ỹĐđ0-9_+]*", text):
         tu = m.group(0)
