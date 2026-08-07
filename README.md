@@ -304,11 +304,26 @@ Tầng giữa sinh ra vì phép đo này: `gantt` 167 dòng, `queue` ~150, `topo
 nhân với 90 video. Nhưng cái điện thoại có nút bấm thì xuất hiện ở trừ tiền hai
 lần, idempotency, retry, race condition — dùng lại được nên đáng làm.
 
+Sáu đạo cụ hiện có, chọn bằng cách **đếm** chứ không đoán — rà 90 chủ đề trong
+[KE-HOACH-90.md](KE-HOACH-90.md) xem hình nào lặp lại nhiều nhất:
+
+| `loai` | Vẽ gì | Số video dùng được | Trường riêng |
+|---|---|---|---|
+| `trinh_duyet` | cửa sổ trình duyệt, thanh địa chỉ, các dòng nội dung | ~11 | `url`, `dong[{text,bad}]` |
+| `khoa` | ổ khoá đóng rồi mở | 6 | `mo_luc`, `nhan_dong`, `nhan_mo` |
+| `dong_ho` | đồng hồ có kim quét một vòng | 5 | `het_han`, `nhan`, `nhan_het` |
+| `nhieu_nguoi` | dãy biểu tượng người | 4 | `so`, `cot`, `dau_khac` |
+| `dien_thoai` | điện thoại, nút bấm, ngón tay bấm N lần | — | `lan`, `nut` |
+| `ngay_dem` | mặt trăng đổi thành mặt trời | — | `nhan_dem`, `nhan_sang` |
+
+Luồng `client → gateway → nginx → database` **không** nằm ở đây: đó là loại cảnh
+`topology`, và nó chiếm cả sân diễn vì đó mới là nội dung chính.
+
 ```yaml
 - scene: statement
   # ...
   prop:
-    loai: dien_thoai       # dien_thoai | ngay_dem
+    loai: dien_thoai       # xem bảng trên
     goc: tren-phai         # tren-trai | tren-phai | duoi-trai | duoi-phai
     lan: 2                 # số lần bấm
     nut: ĐẶT HÀNG

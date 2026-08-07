@@ -177,7 +177,177 @@ def ngay_dem(base, p, sp, khung, mau, nen, vien, chu, mo):
     mono(base, nhan, (tx0, y + 16), chu if gp >= 0.5 else mo, q, co, 2.2, 700)
 
 
-DAO_CU = {"dien_thoai": dien_thoai, "ngay_dem": ngay_dem}
+# ------------------------------------------------------------ trinh duyet
+
+def trinh_duyet(base, p, sp, khung, mau, nen, vien, chu, mo):
+    """Cua so trinh duyet: thanh tab, thanh dia chi, khung noi dung.
+
+    Dao cu dung nhieu nhat theo bang dem tren 90 chu de - gan nhu ca mua 5.
+    `dong` la cac dong chu gia trong khung noi dung; dong nao `bad` thi to mau
+    nhan, dung de chi "cho nay hien sai".
+    """
+    rong, cao = 250, 180
+    x, y = _neo(sp.get("goc", "tren-phai"), rong, cao + 30, khung)
+    d = ImageDraw.Draw(base)
+    q = clamp(p / 0.18)
+    if q <= 0:
+        return
+    d.rounded_rectangle([s(x), s(y), s(x + rong), s(y + cao)], radius=s(10),
+                        fill=nen + (255,), outline=vien + (255,), width=s(2))
+    # ba cham + thanh dia chi
+    for i in range(3):
+        cx, cy = x + 16 + i * 13, y + 15
+        d.ellipse([s(cx - 4), s(cy - 4), s(cx + 4), s(cy + 4)],
+                  fill=vien + (255,))
+    d.rounded_rectangle([s(x + 62), s(y + 8), s(x + rong - 12), s(y + 24)],
+                        radius=s(6), fill=(0, 0, 0, 255))
+    if sp.get("url"):
+        co = _co_vua(sp["url"], rong - 90, 13, 1.0, 9)
+        mono(base, sp["url"], (x + 70, y + 12), mo, q, co, 1.0, 500)
+    d.line([s(x), s(y + 32), s(x + rong), s(y + 32)], fill=vien + (255,),
+           width=s(2))
+
+    # dong noi dung, hien dan
+    dong = sp.get("dong") or []
+    for i, ln in enumerate(dong[:5]):
+        k = clamp((p - 0.22 - i * 0.07) / 0.20)
+        if k <= 0:
+            continue
+        txt = ln if isinstance(ln, str) else str(ln.get("text", ""))
+        xau = isinstance(ln, dict) and ln.get("bad")
+        yy = y + 46 + i * 26
+        co = _co_vua(txt, rong - 32, 15, 1.0, 10)
+        mono(base, txt, (x + 16, yy), mau if xau else chu, k, co, 1.0,
+             700 if xau else 500)
+    if sp.get("nhan"):
+        co = _co_vua(sp["nhan"], rong, 19, 2.5)
+        mono(base, sp["nhan"], (x, y + cao + 12), chu, clamp((p - 0.3) / 0.2),
+             co, 2.5, 700)
+
+
+# ------------------------------------------------------------------- khoa
+
+def khoa(base, p, sp, khung, mau, nen, vien, chu, mo):
+    """O khoa dong roi mo, hoac nguoc lai.
+
+    `mo_luc` la moc p ma khoa bat ra. De 0 thi khoa mo san tu dau, de 1,1 thi
+    no dong suot ca canh - dung cho "cho nay bi giu suot".
+    """
+    rong, cao = 120, 150
+    x, y = _neo(sp.get("goc", "tren-phai"), rong, cao + 30, khung)
+    d = ImageDraw.Draw(base)
+    q = clamp(p / 0.18)
+    if q <= 0:
+        return
+    mo_luc = float(sp.get("mo_luc", 0.62))
+    dang_mo = p >= mo_luc
+    # Khoa DONG to mau nhan (day la cho dang bi giu), khoa MO thi chu thuong.
+    col = chu if dang_mo else mau
+
+    # quai khoa: dong thi thang, mo thi lech sang trai
+    lech = 16 if dang_mo else 0
+    bx, by = x + rong / 2 - lech, y + 18
+    d.arc([s(bx - 26), s(by - 26), s(bx + 26), s(by + 26)], 180, 360,
+          fill=col + (255,), width=s(7))
+    d.line([s(bx - 26), s(by), s(bx - 26), s(by + 26)], fill=col + (255,),
+           width=s(7))
+    if not dang_mo:
+        d.line([s(bx + 26), s(by), s(bx + 26), s(by + 26)], fill=col + (255,),
+               width=s(7))
+
+    # than khoa
+    d.rounded_rectangle([s(x + 14), s(y + 44), s(x + rong - 14), s(y + cao - 8)],
+                        radius=s(12), fill=col + (255,))
+    d.ellipse([s(x + rong / 2 - 9), s(y + 78), s(x + rong / 2 + 9), s(y + 96)],
+              fill=nen + (255,))
+    nhan = sp.get("nhan_mo" if dang_mo else "nhan_dong")
+    if nhan:
+        co = _co_vua(nhan, rong + 60, 19, 2.5)
+        mono(base, nhan, (x, y + cao + 10), chu, q, co, 2.5, 700)
+
+
+# --------------------------------------------------------------- dong ho
+
+def dong_ho(base, p, sp, khung, mau, nen, vien, chu, mo):
+    """Dong ho co kim quet mot vong. Cho TTL, timeout, cron.
+
+    Khac `ngay_dem` o cho: `ngay_dem` ke MOT lan chuyen doi, con cai nay ke
+    thoi gian TROI DEU. Vach do danh dau moc het han.
+    """
+    import math
+    r = 46
+    rong, cao = r * 2 + 20, r * 2 + 20
+    x, y = _neo(sp.get("goc", "tren-phai"), rong, cao + 30, khung)
+    d = ImageDraw.Draw(base)
+    q = clamp(p / 0.18)
+    if q <= 0:
+        return
+    cx, cy = x + rong / 2, y + cao / 2
+    d.ellipse([s(cx - r), s(cy - r), s(cx + r), s(cy + r)], fill=nen + (255,),
+              outline=vien + (255,), width=s(3))
+    for i in range(12):
+        g = math.radians(i * 30 - 90)
+        d.line([s(cx + math.cos(g) * (r - 9)), s(cy + math.sin(g) * (r - 9)),
+                s(cx + math.cos(g) * (r - 4)), s(cy + math.sin(g) * (r - 4))],
+               fill=vien + (255,), width=s(2))
+    # vach het han
+    hh = float(sp.get("het_han", 0.75))
+    gh = math.radians(hh * 360 - 90)
+    d.line([s(cx), s(cy), s(cx + math.cos(gh) * (r - 6)),
+            s(cy + math.sin(gh) * (r - 6))], fill=mau + (110,), width=s(3))
+    # kim
+    gp = clamp((p - 0.20) / 0.62)
+    g = math.radians(gp * 360 - 90)
+    col = mau if gp >= hh else chu
+    d.line([s(cx), s(cy), s(cx + math.cos(g) * (r - 12)),
+            s(cy + math.sin(g) * (r - 12))], fill=col + (255,), width=s(5))
+    d.ellipse([s(cx - 5), s(cy - 5), s(cx + 5), s(cy + 5)], fill=col + (255,))
+    nhan = sp.get("nhan_het") if gp >= hh else sp.get("nhan")
+    if nhan:
+        co = _co_vua(nhan, rong + 70, 19, 2.5)
+        mono(base, nhan, (x - 20, y + cao + 10), col, q, co, 2.5, 700)
+
+
+# ----------------------------------------------------------- nhieu nguoi
+
+def nhieu_nguoi(base, p, sp, khung, mau, nen, vien, chu, mo):
+    """Day bieu tuong nguoi hien dan. Cho "n nguoi cung luc".
+
+    Ve toi da 24 hinh; nhieu hon thi ghi "+N nua" - y het cach `multiply` lam,
+    va cung mot ly do: qua nhieu thi thanh mang mau, mat het y nghia dem.
+    """
+    tong = int(sp.get("so", 12))
+    cot = int(sp.get("cot", 6))
+    ve = min(tong, 24)
+    rong = cot * 26 + 8
+    hang = (ve + cot - 1) // cot
+    cao = hang * 30 + 6
+    x, y = _neo(sp.get("goc", "tren-phai"), rong, cao + 30, khung)
+    d = ImageDraw.Draw(base)
+    hien = int(clamp((p - 0.18) / 0.52) * ve)
+    for i in range(hien):
+        r_, c_ = divmod(i, cot)
+        px, py = x + 6 + c_ * 26, y + 6 + r_ * 30
+        col = mau if (i == 0 and sp.get("dau_khac")) else chu
+        d.ellipse([s(px), s(py), s(px + 13), s(py + 13)], fill=col + (255,))
+        d.rounded_rectangle([s(px - 3), s(py + 16), s(px + 16), s(py + 26)],
+                            radius=s(5), fill=col + (255,))
+    day = 0
+    if tong > ve and hien >= ve:
+        mono(base, f"+{tong - ve} nữa", (x + 6, y + cao + 2), mo, 1.0, 16,
+             2.0, 700)
+        day = 24          # nhan duoi phai lui xuong, khong thi hai dong chong
+    if sp.get("nhan"):
+        co = _co_vua(sp["nhan"], rong + 60, 19, 2.5)
+        mono(base, sp["nhan"], (x, y + cao + 16 + day), chu,
+             clamp((p - 0.3) / 0.2), co, 2.5, 700)
+
+
+DAO_CU = {
+    "dien_thoai": dien_thoai, "ngay_dem": ngay_dem,
+    "trinh_duyet": trinh_duyet, "khoa": khoa,
+    "dong_ho": dong_ho, "nhieu_nguoi": nhieu_nguoi,
+}
 
 
 def them(b, sp, khung, mau, nen, vien, chu, mo):
