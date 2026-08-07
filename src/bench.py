@@ -1484,14 +1484,14 @@ def sc_topology(b, sp, acc):
     b.add(fn, dur=max(2.0, b.dur * 0.80), wait=b.dur)
 
 
-def _khoi_code(base, box, ve, p, lines, mau_diff, lo_mo):
+def _khoi_code(base, box, ve, p, lines, mau_diff, lo_mo, lh=38):
     """Ve mot khoi code trong the. Dong nao `diff: true` thi co vach mau ben
     trai va chu sang hon - do la cho DUY NHAT hai ve khac nhau."""
     dd = ImageDraw.Draw(base)
     cf = typo.mono_font(28, 500)
     x = box[0] + 34
     y0 = box[1] + 74
-    lh = 38
+    cf = typo.mono_font(max(20, int(lh * 0.74)), 500)
     for i, ln in enumerate(lines):
         q = clamp((p - 0.10 - i * 0.045) / 0.30)
         if q <= 0:
@@ -1533,8 +1533,16 @@ def sc_code(b, sp, acc):
     #   38  moi dong code
     #   76  cho o so ket qua ben duoi
     n_dong = max(len(A.get("lines") or []), len(B.get("lines") or []))
-    ph = int(sp.get("box_h", 74 + n_dong * 38 + 76))
     gap = 44
+    lh = 38
+    ph = int(sp.get("box_h", 74 + n_dong * lh + 76))
+    # Hai the CONG cau ket phai lot trong san dien. Doan 6 dong lam ph = 378,
+    # nhan hai cong gap la 800 trong khi san chi con 676 - cau ket de len the
+    # duoi. Co dong lai thay vi de tran.
+    kha_dung = STAGE_BOTTOM - 150 - STAGE_TOP
+    if ph * 2 + gap > kha_dung and not sp.get("box_h"):
+        ph = int((kha_dung - gap) / 2)
+        lh = max(26, (ph - 150) / max(1, n_dong))
     tong = ph * 2 + gap
     y0 = STAGE_TOP + max(0, (STAGE_BOTTOM - 150 - STAGE_TOP - tong) / 2)
     hop = [(MARGIN, y0, W - MARGIN, y0 + ph),
@@ -1566,7 +1574,7 @@ def sc_code(b, sp, acc):
                 mono(base, ve["note"], (box[0] + 104, box[1] + 30), MUTED,
                      clamp(p / 0.20), 22, 3.0)
             _khoi_code(base, box, i, p, ve.get("lines") or [], col,
-                       lat and not la_thang)
+                       lat and not la_thang, lh)
             # so do, chi hien sau khi lat bai
             if lat and ve.get("value"):
                 vf = fit_one("grot_black", str(ve["value"]), 300, 54, 30)
