@@ -289,6 +289,40 @@ xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` 
 | `compare` | Hai ô xếp dọc, có gạch nối `vs` ở giữa | `a{}`, `b{}`, `vs`, `bad`, `note` |
 | `ask` | Cảnh chốt: câu hỏi về hệ thống của chính người xem | `text`, `size`, `hint` |
 
+### Đạo cụ — hình nhỏ gắn được vào bất kỳ cảnh nào
+
+Ba tầng từ vựng hình ảnh, chia theo tần suất dùng:
+
+| Tầng | Là gì | Chi phí | Điều kiện |
+|---|---|---|---|
+| Loại cảnh | `gantt`, `queue`, `topology`, `code`… | 150–250 dòng | dùng từ 10 lần trở lên |
+| **Đạo cụ** | điện thoại, dải ngày đêm… | 30–60 dòng | gắn được vào **mọi** cảnh |
+| Một lần | vẽ riêng cho một video | đắt | chỉ khi không kể được bằng gì khác |
+
+Tầng giữa sinh ra vì phép đo này: `gantt` 167 dòng, `queue` ~150, `topology`
+~130. Một hình chỉ dùng **một lần** cho tám giây màn hình là tỷ lệ rất tệ khi
+nhân với 90 video. Nhưng cái điện thoại có nút bấm thì xuất hiện ở trừ tiền hai
+lần, idempotency, retry, race condition — dùng lại được nên đáng làm.
+
+```yaml
+- scene: statement
+  # ...
+  prop:
+    loai: dien_thoai       # dien_thoai | ngay_dem
+    goc: tren-phai         # tren-trai | tren-phai | duoi-trai | duoi-phai
+    lan: 2                 # số lần bấm
+    nut: ĐẶT HÀNG
+    nhan: KHÁCH BẤM
+```
+
+> **Một luật phải giữ.** Cảnh mô phỏng vẫn phải có ít nhất một con số đang đổi.
+> Điện thoại nhấp nháy **cộng** bộ đếm "đã gửi 2 request" thì mạnh; điện thoại
+> nhấp nháy không kèm gì là hoạt hình. Thế mạnh riêng của tool này là đồng hồ đo
+> chạy thật, đạo cụ để làm rõ **bối cảnh** chứ không thay cho con số.
+
+Đạo cụ vẽ **đè lên** cảnh, nên người viết phải tự chọn góc còn trống và soi bằng
+`--stills` trước khi render. Nhãn tự co nhỏ cho vừa khung.
+
 ### Bốn cảnh mô phỏng ⭐ — chọn theo CÂU HỎI, đừng chọn theo thói quen
 
 Đây là chỗ tool ăn đứt slide, và cũng là chỗ dễ làm video nhìn giống nhau nhất.

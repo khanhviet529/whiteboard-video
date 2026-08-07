@@ -1599,6 +1599,12 @@ def build(sp, dur, doc=None):
     b = B(dur, pre=0.66)          # chua cho khung co dinh chay truoc noi dung
     chrome(b, sp, doc, acc, chapters(doc), first)
     BUILDERS[kind](b, sp, acc)
+    # Dao cu ve DE LEN canh, nen phai them SAU khi canh dung xong. Truoc
+    # `b.finish()` de no cung duoc chuan hoa nhip theo loi doc.
+    if sp.get("prop"):
+        import dao_cu
+        dao_cu.them(b, sp, (MARGIN, STAGE_TOP, W - MARGIN, STAGE_BOTTOM),
+                    acc, SURF, EDGE_HI, FG, DIM)
     b.finish()
     note(b, sp.get("caption"), acc, at=0.28)
     footer(b, doc, at=0.46, first=first)
