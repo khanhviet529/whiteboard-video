@@ -9,13 +9,20 @@
 #
 # MOI CON SO do bang repro/bench_python.py, ca `in_set`, tren chinh may nay:
 #   10.000 phan tu, tim 1.429 gia tri
-#   x in list  159,75 ms
-#   x in set     1,01 ms   -> 158 lan
+#   x in list  32,55 ms
+#   x in set     317 us   -> 103 lan
+#
+# BO SO DAU TIEN PHAI BO. No do luc may dang chay mot luot render, ra 159,75ms
+# va 158 lan. May ranh thi cung doan code do chi 32,55ms - lech 5 lan, va ty le
+# cung doi. `bench_python.py` gio tu hieu chuan va tu choi neu may dang ban.
+#
+# Ty le dao 96-108 lan qua nam luot chay khac nhau, nen kich ban noi "khoang
+# mot tram lan" chu khong noi mot con so le - do la do chinh xac that su co.
 #
 # Lop phien am BAT (`phien_am: true`), nen narration viet "API" hay "CPU" nhu
 # binh thuong. Xem src/phienam.py.
 
-title: Một dòng, nhanh hơn 158 lần
+title: Một dòng, nhanh hơn 100 lần
 theme: bench
 accent: hot
 domain: be
@@ -40,7 +47,7 @@ scenes:
   - scene: code
     chapter: CHỌN ĐI
     head: Cái nào chậm hơn?
-    narration: Hai hàm này làm đúng một việc, kiểm tra xem một giá trị có nằm trong kho mười nghìn phần tử hay không. Chúng khác nhau đúng một dòng. Bạn có ba giây để chọn, rồi tôi chạy thật cho bạn xem.
+    narration: Hai hàm này cùng làm một việc, kiểm tra xem một giá trị có nằm trong kho mười nghìn phần tử hay không. Chúng khác nhau đúng một dòng. Bạn có ba giây để chọn, rồi tôi chạy thật cho bạn xem.
     caption: Khác đúng một dòng. Bạn chọn cái nào?
     hoi: CÁI NÀO CHẬM HƠN?
     dem: 3
@@ -52,7 +59,7 @@ scenes:
         - "def co(x, kho):"
         - { text: "    kho = list(kho)", diff: true }
         - "    return x in kho"
-      value: 159 ms
+      value: 32 ms
     b:
       label: B
       note: kho là set
@@ -60,16 +67,16 @@ scenes:
         - "def co(x, kho):"
         - { text: "    kho = set(kho)", diff: true }
         - "    return x in kho"
-      value: 1 ms
+      value: 0,3 ms
     verdict_at: 0.88
-    verdict: CHÊNH NHAU 158 LẦN
+    verdict: CHÊNH NHAU KHOẢNG 100 LẦN
 
   # ================================================== so do that
   - scene: probe
     chapter: CHẠY THẬT
     head: Đo trên máy, không đoán.
-    narration: Đây là số đo thật, tìm một nghìn bốn trăm hai chín giá trị trong kho mười nghìn phần tử. Bản dùng list mất một trăm năm chín mili giây, bản dùng set mất một phẩy không một.
-    caption: 159,75ms so với 1,01ms trên cùng dữ liệu.
+    narration: Đây là số đo thật, tìm một nghìn bốn trăm hai chín giá trị trong kho mười nghìn phần tử. Bản dùng list mất ba hai mili giây, bản dùng set mất ba phần mười mili giây.
+    caption: 32,55ms so với 317µs trên cùng dữ liệu.
     heading: python · bench_python.py
     status: in_set
     # `lenh` go ra tung ky tu roi ket qua moi chay theo sau, `nguon` cho duong
@@ -77,10 +84,47 @@ scenes:
     lenh: py repro/bench_python.py in_set
     nguon: repro/bench_python.py
     lines:
-      - { cmd: "x in list",  out: "159.75 ms", state: bad }
-      - { cmd: "x in set",   out: "1.01 ms",   state: ok }
-      - { cmd: "chênh lệch", out: "158×",      state: ok }
-    verdict: CÙNG KẾT QUẢ, KHÁC 158 LẦN
+      - { cmd: "x in list",  out: "32.55 ms", state: bad }
+      - { cmd: "x in set",   out: "317 µs",   state: ok }
+      - { cmd: "chênh lệch", out: "103×",     state: ok }
+    verdict: CÙNG KẾT QUẢ, KHÁC 103 LẦN
+
+  # ================================================== CHIEU PHUONG PHAP
+  # Canh nay tra loi cau nguoi xem co quyen hoi: "sao biet la do that?".
+  # Mot bang so tinh la loi tuyen bo. Chieu chinh vong do, kem con so ve dao
+  # dong, thi nguoi xem tu kiem duoc.
+  #
+  # So do duoc: cung mot ham chay 15 lan tren may ranh cho 34,99ms den 59,93ms,
+  # trung vi 38,80ms. Mot lan do le co the lech 54% so voi trung vi.
+  - scene: code
+    chapter: ĐO THẾ NÀO
+    head: Vì sao không đo một lần.
+    narration: Đo một lần thì con số phụ thuộc vào việc máy đang làm gì lúc đó. Chạy cùng một hàm mười lăm lần cho ra từ ba lăm tới sáu mươi mili giây. Nên bộ đo chạy bảy lần rồi lấy trung vị, và tắt bộ dọn rác trong lúc đo.
+    caption: Một lần đo lẻ lệch tới 54% so với trung vị.
+    hoi: CÁCH NÀO ĐÁNG TIN?
+    dem: 2
+    ket: b
+    a:
+      label: A
+      note: đo một lần
+      lines:
+        - "t0 = perf_counter()"
+        - "ham()"
+        - { text: "return perf_counter() - t0", diff: true }
+      value: 35–60 ms
+    b:
+      label: B
+      note: bảy lần, lấy trung vị
+      lines:
+        - "gc.disable()"
+        - "for _ in range(7):"
+        - "    t0 = perf_counter()"
+        - "    ham()"
+        - "    ra.append(perf_counter() - t0)"
+        - { text: "return median(ra)", diff: true }
+      value: 38,8 ms
+    verdict_at: 0.88
+    verdict: LẤY TRUNG VỊ, KHÔNG LẤY MỘT LẦN
 
   # ================================================== goi ten co che
   - scene: compare

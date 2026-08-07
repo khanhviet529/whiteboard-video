@@ -18,12 +18,77 @@ Windows nen mot lan do le co the lech vai chuc phan tram vi tien trinh khac.
 import copy
 import decimal
 import gc
+import io
+import os
 import statistics as st
 import sys
 import time
 
 LAP = 7          # so lan do, lay trung vi
 AM = 10_000      # co mau mac dinh
+
+# --- CHONG DO LUC MAY DANG BAN ---------------------------------------------
+# Da mat mot bo so vi loi nay: chay bo do trong luc mot luot render dang chiem
+# CPU. Cung mot ham cho 159,75ms luc may ban va 31,94ms luc may ranh - lech 5
+# lan. Va TY LE giua hai ve cung doi, 158 lan thanh 96 lan, nen khong chua chay
+# duoc bang cach chi lay ty le.
+#
+# Cach phat hien: chay mot viec co chi phi CO DINH roi so voi moc do o dau
+# luot. May ban thi viec do cham han. Khong can thu vien ngoai.
+MOC_CHUAN = 0.0
+NGUONG_BAN = 1.35
+
+
+def _hieu_chuan(lap=5):
+    """Viec co chi phi co dinh: khong I/O, khong cap phat lon, khong cache."""
+    def viec():
+        t = 0
+        for i in range(200_000):
+            t += i * i
+        return t
+    ra = []
+    for _ in range(lap):
+        t0 = time.perf_counter()
+        viec()
+        ra.append(time.perf_counter() - t0)
+    return min(ra)
+
+
+MOC_FILE = os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), "build", "_moc_chuan.txt")
+
+
+def _doc_moc():
+    """Moc chuan phai LUU RA DIA, khong the do lai o dau moi luot.
+
+    Do lai moi luot thi moc bang chinh no, nen mot luot chay tren may DANG BAN
+    tu dau se thay "binh thuong" va khong canh bao gi - dung cai bay da lam
+    hong bo so cua tim-trong-set. Luu ra dia thi moc la lan chay NHANH NHAT tu
+    truoc toi nay, va moi lan sau deu so voi no.
+    """
+    try:
+        return float(io.open(MOC_FILE, encoding="utf-8").read().strip())
+    except Exception:
+        return 0.0
+
+
+def kiem_may(im=False):
+    """(ranh, ty_le). Goi o dau luot VA sau moi ca."""
+    global MOC_CHUAN
+    t = _hieu_chuan()
+    if not MOC_CHUAN:
+        MOC_CHUAN = _doc_moc()
+    if not MOC_CHUAN or t < MOC_CHUAN:
+        MOC_CHUAN = t                      # lan nhanh nhat tu truoc toi nay
+        os.makedirs(os.path.dirname(MOC_FILE), exist_ok=True)
+        io.open(MOC_FILE, "w", encoding="utf-8").write(f"{t:.6f}")
+        return True, 1.0
+    ty = t / MOC_CHUAN
+    if not im and ty >= NGUONG_BAN:
+        print(f"  !! MAY DANG BAN: hieu chuan cham gap {ty:.2f} lan mốc "
+              f"({t*1000:.1f}ms so với {MOC_CHUAN*1000:.1f}ms).")
+        print(f"     So do KHONG dung duoc cho kich ban. Dong bot viec khac.")
+    return ty < NGUONG_BAN, ty
 
 
 def _do(ham, lap=LAP):
@@ -194,12 +259,18 @@ def _ms(x):
 
 
 def main():
+    kiem_may()
+    print(f"hieu chuan: {MOC_CHUAN * 1000:.1f} ms")
     ten = sys.argv[1:] or list(CA)
+    ban = []
     for k in ten:
         if k not in CA:
             print(f"khong co ca {k!r}. Co: {', '.join(CA)}")
             continue
         r = CA[k]()
+        ranh, ty = kiem_may(im=True)
+        if not ranh:
+            ban.append(f"{k} ({ty:.2f}x)")
         print(f"\n=== {k} ===")
         print(f"  {r['hoi']}")
         if r["loai"] == "toc do":
@@ -213,6 +284,9 @@ def main():
             print(f"  A  {r['a']:26} -> {r['ka']}")
             print(f"  B  {r['b']:26} -> {r['kb']}")
             print(f"  -> hai ve ra KET QUA KHAC NHAU")
+    if ban:
+        print("\n!! MAY BAN luc do: " + ", ".join(ban))
+        print("   Dung nhung so nay cho kich ban la SAI. Chay lai luc may ranh.")
 
 
 if __name__ == "__main__":
