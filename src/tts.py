@@ -203,7 +203,11 @@ def _omni_batch(texts, cache_dir, cfg):
     Phai gom nhu vay vi nap model mat ~8s va cau dau moi process con them warmup
     ~14s; goi tung cau thi rieng chi phi co dinh da vuot thoi gian sinh.
     """
-    base = os.path.join(cache_dir, "_omni_batch.wav")
+    # Ten TAM phai rieng cho tung tien trinh. Hai lan render chay cung luc deu
+    # ghi vao `<cache>/_omni_batch_1.wav`, nen chung DE LEN NHAU va lan nao doi
+    # ten truoc thi lay phai audio cua lan kia. Da xay ra that: mot luot render
+    # va mot luot sinh bo chuan chay song song, cung ghi 6 file dau tien.
+    base = os.path.join(cache_dir, f"_omni_batch_{os.getpid()}.wav")
     for f in _batch_files(base, len(texts)):
         if os.path.exists(f):
             os.remove(f)
