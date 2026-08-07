@@ -19,9 +19,14 @@
 
 title: async không phải song song
 theme: bench
+# Mua 2 dung he nhan dien RIENG: nen ke ngang thay vi luoi cham, mau nhan
+# vang ho phach thay vi do. Ly do: mua nay khong ke ve mot su co ma ve mot
+# niem tin bi lat, nen mau bao dong la sai giong. Va neu nhin giong mua 1
+# thi nguoi xem doc hook nham.
+he: giang_duong
 accent: hot
 domain: be
-brand: HIỆN TRƯỜNG · HỒ SƠ 09
+brand: TÔI TƯỞNG TÔI BIẾT · SỐ 01
 tag: async · mô phỏng
 footer: MỘT LUỒNG ĐAN VIỆC  ·  KHÔNG PHẢI NHIỀU LUỒNG CHẠY CÙNG
 voice: female

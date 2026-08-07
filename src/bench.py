@@ -53,10 +53,63 @@ ACCENTS = {"hot": HOT, "ok": OK, "cool": COOL, "violet": VIOLET, "gold": GOLD,
 STATES = {"ok": OK, "bad": HOT, "stale": MUTED, "empty": DIM, "warn": GOLD}
 
 
-def acc_of(name, fallback=HOT):
+# --------------------------------------------------------------- he nhan dien
+#
+# Mot theme, HAI bo nhan dien. Ly do: 90 video ma cung mot bang mau thi nguoi
+# xem khong phan biet duoc mua, va hook cua mua 2 ("ban tin X, day la phan con
+# lai") doc nham thanh mua 1 ("hien truong vu an") la mat tac dung.
+#
+# Doi bang cach GHI DE bien module trong `build()`, khong phai bang cach truyen
+# bang mau xuong tung ham. Ly do rat thuc dung: 13 loai canh dang doc thang
+# `HOT`, `SURF`, `EDGE`... o hang tram cho: doi sang tra cuu thi phai sua het.
+# An toan vi moi tien trinh render chi lam MOT screenplay, va `build()` ap lai
+# he o dau moi canh.
+HE = {
+    # Mua 1, 3, 6 - hien truong vu an. Nen gan den, luoi CHAM, bloom tim.
+    "hien_truong": dict(
+        BG=(9, 9, 12), SURF=(18, 18, 23), EDGE=(50, 50, 60),
+        EDGE_HI=(78, 78, 92), FG=(240, 242, 246), MUTED=(152, 154, 164),
+        DIM=(96, 98, 108), DOTS=(26, 26, 33),
+        HOT=(255, 82, 48), OK=(58, 219, 138), COOL=(88, 168, 255),
+        VIOLET=(170, 132, 255), GOLD=(250, 196, 60),
+        nen="cham", bloom=(30.0, 20.0, 52.0)),
+    # Mua 2, 5 - toi tuong toi biet. Nen muc xanh, luoi KE NGANG, bloom am.
+    # Mau nhan chinh la vang ho phach chu khong phai do: mua 2 khong noi ve su
+    # co ma ve mot niem tin bi lat, nen mau bao dong la sai giong.
+    "giang_duong": dict(
+        BG=(14, 16, 26), SURF=(24, 27, 40), EDGE=(56, 60, 78),
+        EDGE_HI=(86, 92, 116), FG=(238, 240, 248), MUTED=(150, 156, 176),
+        DIM=(98, 104, 124), DOTS=(30, 34, 48),
+        HOT=(245, 176, 66), OK=(94, 214, 178), COOL=(120, 158, 255),
+        VIOLET=(186, 148, 255), GOLD=(255, 122, 92),
+        nen="ke", bloom=(46.0, 38.0, 18.0)),
+}
+_HE_HIEN = "hien_truong"
+
+
+def ap_he(ten):
+    """Ghi de bang mau cua module. Goi o dau `build()` cho moi canh."""
+    global _HE_HIEN, _bg, ACCENTS, STATES
+    ten = ten if ten in HE else "hien_truong"
+    if ten == _HE_HIEN and _bg is not None:
+        return
+    g = globals()
+    for k, v in HE[ten].items():
+        g[k] = v
+    ACCENTS = {"hot": HOT, "ok": OK, "cool": COOL, "violet": VIOLET,
+               "gold": GOLD, "fg": FG, "muted": MUTED}
+    STATES = {"ok": OK, "bad": HOT, "stale": MUTED, "empty": DIM, "warn": GOLD}
+    _bg = None          # nen da cache theo he cu, phai ve lai
+    _HE_HIEN = ten
+
+
+def acc_of(name, fallback=None):
     if isinstance(name, (tuple, list)):
         return tuple(name)
-    return ACCENTS.get((name or "").lower(), fallback)
+    # `fallback=HOT` trong chu ky ham thi KHONG dung duoc: tham so mac dinh
+    # duoc gan luc DINH NGHIA ham, nen no giu bang mau cua he dau tien va
+    # `ap_he()` doi mai cung khong toi. Phai tra cuu luc GOI.
+    return ACCENTS.get((name or "").lower(), HOT if fallback is None else fallback)
 
 
 # --------------------------------------------------------------------- bo cuc
@@ -84,8 +137,19 @@ STAGE_CY = (STAGE_TOP + STAGE_BOTTOM) / 2
 _bg = None
 
 
+def chuan_bi(doc):
+    """Ap he nhan dien TRUOC khi bat ky thu gi duoc ve.
+
+    Bat buoc phai co: `render.py` goi `background()` TRUOC vong lap canh, con
+    `build()` moi la cho goi `ap_he()`. Nen neu chi dua vao build() thi nen da
+    kip duoc ve va cache bang bang mau cua he mac dinh - da thay dung loi do,
+    mau doi dung nhung nen thi khong.
+    """
+    ap_he((doc or {}).get("he", "hien_truong"))
+
+
 def background():
-    """Nen gan den + luoi cham + bloom tim mo + hat nhieu. Ve MOT lan roi cache.
+    """Nen theo he dang ap. Ve MOT lan roi cache.
 
     Luoi CHAM (khong phai ke ngang nhu phongtoi) va vet bloom la hai thu lam
     khung hinh co chat lieu ma khong hut mat khoi noi dung. Ca hai phai nuong
@@ -96,11 +160,19 @@ def background():
         return _bg
     img = Image.new("RGBA", (s(W), s(H)), BG + (255,))
     d = ImageDraw.Draw(img)
-    r = max(1, s(1.2))
-    for y in range(RULE_Y + 40, FOOT_Y + 20, 46):
-        for x in range(MARGIN, W - MARGIN + 1, 46):
-            d.ellipse([s(x) - r, s(y) - r, s(x) + r, s(y) + r],
-                      fill=DOTS + (255,))
+    kieu = HE[_HE_HIEN].get("nen", "cham")
+    if kieu == "ke":
+        # KE NGANG thay vi luoi cham: doi chat lieu nen la thu doc duoc trong
+        # nua giay, nhanh hon bat ky khac biet mau nao.
+        for y in range(RULE_Y + 40, FOOT_Y + 20, 44):
+            d.line([s(MARGIN), s(y), s(W - MARGIN), s(y)],
+                   fill=DOTS + (255,), width=max(1, s(1)))
+    else:
+        r = max(1, s(1.2))
+        for y in range(RULE_Y + 40, FOOT_Y + 20, 46):
+            for x in range(MARGIN, W - MARGIN + 1, 46):
+                d.ellipse([s(x) - r, s(y) - r, s(x) + r, s(y) + r],
+                          fill=DOTS + (255,))
 
     a = np.array(img.convert("RGB")).astype(np.float32)
     hh, ww = a.shape[:2]
@@ -109,7 +181,7 @@ def background():
     nx = (xx / ww - 0.5) / 0.62
     ny = (yy / hh - 0.44) / 0.40
     fall = np.clip(1.0 - (nx * nx + ny * ny), 0.0, 1.0) ** 2.1
-    for i, tint in enumerate((30.0, 20.0, 52.0)):   # tim lanh
+    for i, tint in enumerate(HE[_HE_HIEN].get("bloom", (30.0, 20.0, 52.0))):
         a[:, :, i] += fall * tint
     rng = np.random.default_rng(7)
     a += rng.normal(0, 5.5, (hh, ww, 1))
@@ -118,11 +190,20 @@ def background():
 
 
 # ------------------------------------------------------------- primitive khung
-def card(base, box, p=1.0, fill=SURF, border=EDGE, radius=14, lit=None,
+def card(base, box, p=1.0, fill=-1, border=-1, radius=14, lit=None,
          width=2):
-    """The noi dung: bo goc, net manh. `lit` = mau vet sang neu la tieu diem."""
+    """The noi dung: bo goc, net manh. `lit` = mau vet sang neu la tieu diem.
+
+    `fill=-1` chu khong `fill=SURF`: tham so mac dinh duoc gan luc DINH NGHIA
+    ham, nen `SURF` o day se dong bang bang mau cua he dau tien va `ap_he()`
+    doi mai cung khong toi. Dung mot gia tri canh de biet "chua ai khai".
+    """
     if p <= 0:
         return
+    if fill == -1:
+        fill = SURF
+    if border == -1:
+        border = EDGE
     e = expo_out(p)
     x0, y0, x1, y1 = box
     cy = (y0 + y1) / 2
@@ -159,9 +240,11 @@ def brackets(base, box, col, p=1.0, size=30, width=3):
                width=w)
 
 
-def hline(base, y, col=EDGE, x0=MARGIN, x1=W - MARGIN, p=1.0, width=2):
+def hline(base, y, col=-1, x0=MARGIN, x1=W - MARGIN, p=1.0, width=2):
     if p <= 0:
         return
+    if col == -1:            # xem chu thich trong `card` ve tham so mac dinh
+        col = EDGE
     e = expo_out(p)
     ImageDraw.Draw(base).line(
         [s(x0), s(y), s(x0 + (x1 - x0) * e), s(y)], fill=col + (255,),
@@ -1503,6 +1586,7 @@ BUILDERS = {
 
 
 def build(sp, dur, doc=None):
+    ap_he((doc or {}).get("he", "hien_truong"))
     kind = sp.get("scene")
     if kind not in BUILDERS:
         raise ValueError(f"theme bench khong co loai canh {kind!r}. "

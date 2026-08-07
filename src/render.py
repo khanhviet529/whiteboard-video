@@ -131,6 +131,8 @@ def stills(doc, plan, only=None):
     """Xuat 1 PNG/canh o thoi diem hinh day nhat -> de soi style bang mat."""
     outdir = os.path.join(BUILD, "stills")
     os.makedirs(outdir, exist_ok=True)
+    if hasattr(THEME, "chuan_bi"):
+        THEME.chuan_bi(doc)
     bg = THEME.background()
     for i, item in enumerate(plan, 1):
         if only and i != only:
@@ -163,6 +165,8 @@ def _worker_init(theme_name, doc, specs):
     """Moi tien trinh tu dung lai theme va phan tu - closure khong pickle duoc."""
     use_theme(theme_name)
     _W["doc"] = doc
+    if hasattr(THEME, "chuan_bi"):
+        THEME.chuan_bi(doc)
     _W["bg"] = THEME.background()
     _W["built"] = [THEME.build(sp, d, doc) for sp, d in specs]
     _W["durs"] = [d for _, d in specs]
@@ -270,6 +274,8 @@ def render(doc, plan, out_path, use_audio, jobs=1, theme_name=None):
         _mux(tmp_video, audio_path, out_path, total)
         return
 
+    if hasattr(THEME, "chuan_bi"):
+        THEME.chuan_bi(doc)
     bg = THEME.background()
     built = [THEME.build(p["spec"], p["dur"], doc) for p in plan]
 
