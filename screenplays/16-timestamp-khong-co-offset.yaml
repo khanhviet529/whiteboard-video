@@ -1,26 +1,25 @@
 # SO 16 - MUA 1. Xem KE-HOACH-90.md.
-#   chu de   : Timestamp không có offset
-#   ghi chu  : Báo cáo ngày 1 thiếu đơn, ngày 2 thừa đơn
-#   do bang  : python `zoneinfo   (muc: đo)
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# MOI CON SO do bang repro/bench_python.py, ca `mui_gio`:
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python `zoneinfo`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+#   moc luu trong database, khong kem offset:  2026-02-28 23:30:00
+#     hieu la gio Viet Nam  ->  28/02/2026 23:30
+#     hieu la gio UTC       ->  01/03/2026 06:30
+#     hieu la gio New York  ->  01/03/2026 11:30
+#   cung mot moc roi vao 2 NGAY khac nhau, va khac ca THANG
+#
+# Chon moc SAT NUA DEM va sat cuoi thang la co y. Moc 00:30 thi ba cach hieu
+# van roi vao cung mot ngay, mat het diem quan trong - da chon sai mot lan.
+#
+# Ca DUNG SAI nen ket qua khong phu thuoc tai may.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: 'Timestamp không có offset'
+title: Báo cáo cuối tháng thiếu đơn
 theme: bench
 accent: hot
-brand: 'HIỆN TRƯỜNG · HỒ SƠ 16'
-tag: 'python `zoneinfo · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: HIỆN TRƯỜNG · HỒ SƠ 13
+tag: python · đúng sai
+footer: MỘT MỐC KHÔNG KÈM MÚI GIỜ  ·  HAI NGÀY KHÁC NHAU
 voice: female
 rate: "+16%"
 
@@ -35,51 +34,104 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ NHIP 1: trieu chung
   - scene: probe
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Tháng hai thiếu, tháng ba thừa.
+    narration: Kế toán báo doanh thu tháng hai thiếu mất mấy đơn, còn tháng ba thì thừa đúng chừng ấy. Không đơn nào mất, không đơn nào trùng, chúng chỉ nằm sai tháng.
+    caption: Không đơn nào mất. Chúng nằm sai tháng.
+    heading: psql · báo cáo tháng
+    nguon: repro/bench_python.py
+    status: "lệch tháng"
+    lines:
+      - { cmd: "tổng số đơn",       out: "khớp",   state: ok }
+      - { cmd: "doanh thu tháng 2", out: "thiếu",  state: bad }
+      - { cmd: "doanh thu tháng 3", out: "thừa",   state: bad }
+    verdict: KHÔNG MẤT ĐƠN NÀO
 
+  # ============================================ NHIP 2: hau qua
   - scene: statement
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Chỉ vài đơn, nhưng không đối soát được.
+    narration: Số đơn lệch rất ít nên không ai để ý suốt nhiều tháng. Nhưng báo cáo tháng thì không bao giờ khớp với sổ sách, và mỗi lần đối soát lại phải dò tay từng đơn một.
+    caption: Lệch rất ít, nhưng đối soát thì không bao giờ khớp.
+    value: BÁO CÁO KHÔNG BAO GIỜ KHỚP
+    size: 104
+    sub: Và không ai biết bắt đầu tìm từ đâu
 
-  - scene: compare
+  # ============================================ NHIP 3: goi mo
+  - scene: statement
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Mọi đơn lệch đều gần nửa đêm.
+    narration: Lọc riêng những đơn bị xếp sai tháng thì thấy một điểm chung. Tất cả đều được tạo trong khoảng vài tiếng quanh nửa đêm ngày cuối tháng, không có đơn nào giữa ban ngày.
+    caption: Mọi đơn lệch đều tạo quanh nửa đêm cuối tháng.
+    label: CHỖ ÍT AI SOI
+    value: TẤT CẢ ĐỀU QUANH NỬA ĐÊM
+    size: 108
+    sub: Ban ngày thì không đơn nào lệch
 
+  # ============================================ NHIP 4 + 5
   - scene: list
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết vì sao một mốc thời gian lại rơi vào hai ngày khác nhau, và cách lưu cho nó chỉ có một nghĩa. Giờ xem cùng một mốc đó đọc ở ba nơi.
+    caption: Vì sao một mốc rơi vào hai ngày, và cách lưu cho đúng.
+    items:
+      - text: Vì sao chỉ những đơn quanh nửa đêm mới lệch.
+        focus: true
+      - text: Kiểu dữ liệu phải dùng, và một quy tắc cho mọi mốc thời gian.
 
-  - scene: gantt
+  # ============================================ DEMO: ba mui gio
+  - scene: counters
     chapter: QUAY CHẬM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Một mốc, ba cách hiểu.
+    narration: Đây là mốc lưu trong database, hai tám tháng hai lúc hai ba giờ ba mươi, không kèm múi giờ nào. Máy chủ ở Việt Nam đọc ra hai tám tháng hai. Máy chủ chạy giờ quốc tế đọc ra mùng một tháng ba, từ cùng một dòng dữ liệu.
+    caption: Cùng một mốc. Một bên 28/02, một bên 01/03.
+    items:
+      - top: HIỂU LÀ GIỜ VIỆT NAM
+        value: 28/02
+        label: "23:30"
+        color: ok
+      - top: HIỂU LÀ GIỜ QUỐC TẾ
+        value: 01/03
+        label: "06:30"
+        color: hot
+      - top: HIỂU LÀ GIỜ NEW YORK
+        value: 01/03
+        label: "11:30"
+        color: hot
+    verdict: MỘT DÒNG, HAI NGÀY
 
+  # ============================================ THU PHAM
   - scene: statement
     chapter: THỦ PHẠM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là một cột kiểu thời gian không kèm vùng. Nó lưu đúng con số bạn ghi vào mà không lưu gốc quy chiếu. Ai đọc cũng phải tự đoán, và mỗi máy đoán theo cấu hình của chính nó.
+    caption: Cột lưu con số mà không lưu gốc quy chiếu.
+    label: THỦ PHẠM
+    value: KIỂU THỜI GIAN KHÔNG KÈM VÙNG
+    size: 100
+    sub: Mỗi máy tự đoán theo cấu hình riêng
 
+  # ============================================ CHAN
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Lưu kèm gốc quy chiếu.
+    narration: Quy tắc chỉ có một câu. Mọi mốc thời gian lưu xuống đều phải kèm vùng, và quy về giờ quốc tế ngay tại chỗ ghi. Đổi sang giờ địa phương là việc của lúc hiển thị, không phải việc của lúc lưu.
+    caption: Lưu kèm vùng, quy về giờ quốc tế. Đổi lúc hiển thị.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Lưu kèm vùng, đổi múi giờ lúc hiển thị.
+    small: Dấu hiệu trong code — bất kỳ mốc thời gian nào không có ký hiệu vùng ở cuối. Trong Python đó là `datetime.now()` thay vì `datetime.now(timezone.utc)`.
 
+  # ============================================ CAU HOI
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu cả hệ thống của bạn chỉ chạy ở một quốc gia thì lưu không kèm vùng có sao không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: CHỈ CHẠY MỘT QUỐC GIA THÌ CÓ SAO KHÔNG?
+    size: 86
+    hint: giờ mùa hè và một lần đổi cấu hình máy chủ

@@ -370,7 +370,13 @@ def check_yaml_cat(o, out, path="doc"):
 # int va `2.0` ra float, roi ham do be ngang chu no ngay giua luc render - tuc
 # la sau khi da tra tien cho ca vong tong hop giong noi.
 KHOA_CHU = ("status", "value", "text", "head", "verdict", "vs", "tag", "n",
-            "cap_label", "depth_key", "counter_key", "chip", "miss_tag")
+            "cap_label", "depth_key", "counter_key", "chip", "miss_tag",
+            # Them sau khi vap: `label: 23:30` bi PyYAML doc thanh SO 1410 theo
+            # he luc thap phan cua YAML 1.1 (23*60+30). Khong bao loi gi, chi no
+            # giua luc render. `06:30` thanh 390, `1:2:3` thanh 3723.
+            "label", "top", "note", "sub", "small", "body", "hint", "kicker",
+            "ten", "nhan", "nut", "url", "so", "packet", "heading", "lenh",
+            "nguon", "title", "brand", "footer", "hoi")
 
 
 def check_kieu_chu(sp, idx, out):
