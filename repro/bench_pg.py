@@ -184,7 +184,38 @@ def ca_bang_phinh(cx):
               .replace(",", ".")])
 
 
+def ca_limit_khong_order(cx):
+    """`LIMIT` khong kem `ORDER BY`: hai lan chay ra hai ket qua. So 44.
+
+    Postgres tra ve dong theo thu tu no gap trong heap. UPDATE lam dong cu chet
+    va dong moi duoc ghi vao cuoi heap, nen thu tu doi ma khong co gi bao.
+    """
+    cx.execute("DROP TABLE IF EXISTS t_lim")
+    cx.execute("CREATE TABLE t_lim (id int primary key, ten text, diem int)")
+    cx.execute("INSERT INTO t_lim SELECT g, 'nguoi ' || g, g % 7 "
+               "FROM generate_series(1, 50000) g")
+    cx.execute("ANALYZE t_lim")
+    sql = "SELECT id FROM t_lim LIMIT 5"
+    lan1 = [r[0] for r in cx.execute(sql).fetchall()]
+    # mot lan cap nhat binh thuong - khong dong toi 5 dong dau
+    cx.execute("UPDATE t_lim SET diem = diem + 1 WHERE id BETWEEN 1 AND 20000")
+    lan2 = [r[0] for r in cx.execute(sql).fetchall()]
+    sql_o = "SELECT id FROM t_lim ORDER BY id LIMIT 5"
+    o1 = [r[0] for r in cx.execute(sql_o).fetchall()]
+    cx.execute("UPDATE t_lim SET diem = diem + 1 WHERE id BETWEEN 1 AND 20000")
+    o2 = [r[0] for r in cx.execute(sql_o).fetchall()]
+    return dict(
+        loai="dung sai",
+        hoi="Cùng một câu LIMIT 5, chạy trước và sau một lần UPDATE",
+        a="LIMIT 5 (không ORDER BY)", b="ORDER BY id LIMIT 5",
+        ka=f"{lan1} rồi {lan2}",
+        kb=f"{o1} rồi {o2}",
+        them=[f"không ORDER BY: hai lần {'GIONG' if lan1 == lan2 else 'KHAC NHAU'}",
+              f"có ORDER BY:    hai lần {'giống nhau' if o1 == o2 else 'KHAC'}"])
+
+
 CA = {
+    "limit_khong_order": ca_limit_khong_order,
     "index_bo_qua": ca_index_bo_qua,
     "count_sao": ca_count_sao,
     "uuid_khoa": ca_uuid_khoa_chinh,

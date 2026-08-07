@@ -1,26 +1,24 @@
-# SO 44 - MUA 3. Xem KE-HOACH-90.md.
-#   chu de   : `LIMIT` không kèm `ORDER BY`
-#   ghi chu  : Hai lần chạy ra hai kết quả
-#   do bang  : postgres   (muc: đo)
+# SO 44 - MUA 3, HAI DOAN CODE. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# MOI CON SO do bang repro/bench_pg.py, ca `limit_khong_order`, tren
+# PostgreSQL 18.4 trong WSL2. Bang 50.000 dong:
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `postgres`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+#   SELECT id FROM t LIMIT 5           -> [1, 2, 3, 4, 5]
+#   (mot lan UPDATE 20.000 dong dau)
+#   cung cau do                        -> [20001, 20002, 20003, 20004, 20005]
+#
+#   SELECT id FROM t ORDER BY id LIMIT 5  -> [1..5] ca truoc lan sau
+#
+# Day la ca DUNG SAI nen ket qua khong phu thuoc tai may - khac han cac ca do
+# toc do cua cung file do.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: '`LIMIT` không kèm `ORDER BY`'
+title: LIMIT không kèm ORDER BY
 theme: bench
 accent: hot
-brand: 'HAI ĐOẠN CODE · SỐ 44'
-tag: 'postgres · chưa xong'
-footer: '{{SO}}'
+domain: database
+brand: HAI ĐOẠN CODE · SỐ 03
+tag: postgres · đúng sai
+footer: KHÔNG ORDER BY  ·  THỨ TỰ LÀ CHUYỆN MAY RỦI
 voice: female
 rate: "+16%"
 
@@ -35,39 +33,97 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK: hai doan code
   - scene: code
     chapter: CHỌN ĐI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Câu nào trả về sai?
+    narration: Hai câu này cùng lấy năm bản ghi đầu của một bảng năm mươi nghìn dòng. Chúng khác nhau đúng một mệnh đề. Bạn có ba giây để đoán câu nào có lúc trả về sai.
+    caption: Khác đúng một mệnh đề. Câu nào trả về sai?
+    hoi: CÂU NÀO TRẢ VỀ SAI?
+    dem: 3
+    ket: b
+    a:
+      label: A
+      note: không sắp xếp
+      lines:
+        - "SELECT id FROM don_hang"
+        - { text: "LIMIT 5", diff: true }
+      value: ĐỔI THEO THỜI GIAN
+    b:
+      label: B
+      note: có sắp xếp
+      lines:
+        - "SELECT id FROM don_hang"
+        - { text: "ORDER BY id", diff: true }
+        - "LIMIT 5"
+      value: LUÔN NHƯ NHAU
+    verdict_at: 0.88
+    verdict: A KHÔNG HỀ HỨA GÌ
 
+  # ============================================ chay that
   - scene: probe
     chapter: CHẠY THẬT
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Chạy hai lần, cách nhau một UPDATE.
+    narration: Chạy câu không sắp xếp, nó trả về một tới năm. Rồi cập nhật hai mươi nghìn dòng đầu, một việc hoàn toàn bình thường. Chạy lại đúng câu đó, nó trả về hai mươi nghìn lẻ một trở đi.
+    caption: Cùng câu, cùng bảng. Hai kết quả khác hẳn.
+    heading: psql · bench_pg.py
+    lenh: py repro/bench_pg.py limit_khong_order
+    nguon: repro/bench_pg.py
+    status: limit_khong_order
+    lines:
+      - { cmd: "LIMIT 5   lần đầu",  out: "1 2 3 4 5",  state: ok }
+      - { cmd: "sau một UPDATE",      out: "20001 …",   state: bad }
+      - { cmd: "có ORDER BY, cả hai", out: "1 2 3 4 5", state: ok }
+    verdict: CÙNG CÂU, HAI KẾT QUẢ
 
+  # ============================================ goi ten co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Nó trả về theo thứ tự nó gặp.
+    narration: Không có mệnh đề sắp xếp thì database được quyền trả về theo bất kỳ thứ tự nào tiện cho nó, và tiện nhất là thứ tự nó gặp trên đĩa. Cập nhật một dòng thì bản cũ chết đi, bản mới ghi xuống cuối, nên thứ tự đổi.
+    caption: Không sắp xếp thì thứ tự là thứ tự trên đĩa.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: CÓ ORDER BY
+        value: MỘT LỜI HỨA
+        note: kết quả xác định, lặp lại được
+        color: ok
+      - label: KHÔNG ORDER BY
+        value: THỨ TỰ TRÊN ĐĨA
+        note: đổi mỗi lần có ai đó UPDATE
+        color: hot
 
+  # ============================================ cho de sai
   - scene: statement
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Trên máy bạn nó luôn đúng.
+    narration: Bảng mới nạp thì thứ tự trên đĩa trùng với thứ tự khoá chính, nên câu thiếu sắp xếp chạy đúng suốt giai đoạn phát triển. Nó chỉ đổi sau khi có người cập nhật dữ liệu, tức là sau khi lên production một thời gian.
+    caption: Bảng mới nạp thì hai thứ tự trùng nhau, nên test luôn xanh.
+    label: CHỖ ÍT AI SOI
+    value: ĐÚNG CHO TỚI LẦN UPDATE ĐẦU TIÊN
+    size: 94
+    sub: Nên nó đi qua hết code review
 
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Có LIMIT thì phải có ORDER BY.
+    narration: Quy tắc chỉ có một câu. Hễ có mệnh đề giới hạn số dòng thì phải có mệnh đề sắp xếp đi kèm, và cột sắp xếp phải là duy nhất. Sắp theo cột trùng lặp thì các dòng bằng nhau vẫn tuỳ ý.
+    caption: Có LIMIT thì phải có ORDER BY, và cột phải duy nhất.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Có LIMIT thì phải có ORDER BY trên cột duy nhất.
+    small: Dấu hiệu trong code — bất kỳ câu nào có LIMIT hoặc phân trang mà không có ORDER BY. Sắp theo ngày tạo cũng chưa đủ nếu hai bản ghi cùng một giây, phải thêm khoá chính làm cột phụ.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu bạn sắp xếp theo ngày tạo mà hai đơn được tạo trong cùng một giây, thì phân trang có còn ổn định không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: SẮP THEO NGÀY TẠO ĐÃ ĐỦ CHƯA?
+    size: 96
+    hint: hai bản ghi bằng nhau thì thứ tự vẫn tuỳ ý
