@@ -49,14 +49,6 @@ scenes:
       - { cmd: "id trình duyệt có", out: "…740992", state: bad }
       - { cmd: "hai id bằng nhau?", out: "true",    state: bad }
     verdict: KHÔNG MỘT LỖI NÀO ĐƯỢC BÁO
-    prop:
-      loai: trinh_duyet
-      goc: tren-phai
-      url: /don/…740993
-      nhan: MỞ NHẦM ĐƠN
-      dong:
-        - "đơn …740992"
-        - { text: "đơn …740993  ← bấm", bad: true }
 
   # ============================================ NHIP 2: hau qua
   - scene: statement
@@ -67,6 +59,17 @@ scenes:
     value: KHÔNG LOG, KHÔNG LỖI, KHÔNG DẤU VẾT
     size: 92
     sub: Nên nó sống rất lâu trước khi có ai lần ra
+    # Dao cu gan o canh NAY chu khong o canh `probe`: `probe` chiem het san
+    # dien nen khong goc nao trong, va nhan cua dao cu de len chu `status`.
+    # `statement` thi chi dung phan giua nen goc tren phai con cho.
+    prop:
+      loai: trinh_duyet
+      goc: tren-phai
+      url: /don/…740993
+      nhan: MỞ NHẦM ĐƠN
+      dong:
+        - "đơn …740992"
+        - { text: "đơn …740993  ← bấm", bad: true }
 
   # ============================================ NHIP 3: goi mo
   - scene: compare

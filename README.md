@@ -362,8 +362,10 @@ Luồng `client → gateway → nginx → database` **không** nằm ở đây: 
 > nhấp nháy không kèm gì là hoạt hình. Thế mạnh riêng của tool này là đồng hồ đo
 > chạy thật, đạo cụ để làm rõ **bối cảnh** chứ không thay cho con số.
 
-Đạo cụ vẽ **đè lên** cảnh, nên người viết phải tự chọn góc còn trống và soi bằng
-`--stills` trước khi render. Nhãn tự co nhỏ cho vừa khung.
+Đạo cụ vẽ **đè lên** cảnh, nên đừng gắn vào loại cảnh chiếm hết sân diễn:
+`probe`, `gantt`, `queue`, `topology`, `multiply`, `code`. `lint.py` cảnh báo
+nếu bạn làm vậy. Chỗ còn trống là `statement`, `list`, `ask`. Nhãn tự co nhỏ
+cho vừa khung, nhưng vẫn nên soi bằng `--stills` trước khi render.
 
 ### Bốn cảnh mô phỏng ⭐ — chọn theo CÂU HỎI, đừng chọn theo thói quen
 

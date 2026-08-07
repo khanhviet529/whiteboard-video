@@ -460,6 +460,25 @@ def check_topology(sp, idx, out):
                         "giờ hiện — bỏ nó đi hoặc thu hẹp `from`/`to`"))
 
 
+# Loai canh chiem HET san dien - gan dao cu vao la de len noi dung.
+CANH_KIN = {"probe", "gantt", "queue", "topology", "multiply", "code"}
+
+
+def check_prop(sp, idx, out):
+    """Dao cu ve DE LEN canh, nen canh nao chiem het san thi no cham vao chu.
+
+    Da thay: dao cu `trinh_duyet` gan vao canh `probe`, nhan cua no de len chu
+    `status` o goc tren phai cua khung console.
+    """
+    if not sp.get("prop"):
+        return
+    if sp.get("scene") in CANH_KIN:
+        out.append(("CANH BAO", f"cảnh {idx:02d}",
+                    f"gắn đạo cụ vào cảnh `{sp['scene']}` — loại cảnh này chiếm "
+                    f"hết sân diễn nên đạo cụ sẽ đè lên nội dung. Chuyển sang "
+                    f"cảnh `statement`, `list` hoặc `ask`"))
+
+
 def check_chua_xong(doc, out):
     """Chan khung tu sinh khong cho lot vao ban render.
 
@@ -511,6 +530,8 @@ def check(doc):
         check_caption(sp, i, out)
         check_narration(sp, i, out, engine)
         check_doc_ro(sp, i, out, engine)
+        if bench:
+            check_prop(sp, i, out)
     return out
 
 
