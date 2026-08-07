@@ -141,6 +141,9 @@ def ca_mac_dinh():
 
 def ca_float_tien():
     def a():
+        # VONG LAP chu khong `sum([0.1]*10)`: hai cach cong cung muoi so cho hai
+        # ket qua khac nhau. `sum` tra ve dung 1.0, vong lap tra ve
+        # 0.9999999999999999. Da vap khi kiem lai.
         s = 0.0
         for _ in range(10):
             s += 0.1
@@ -153,6 +156,55 @@ def ca_float_tien():
         return str(s)
     return dict(loai="dung sai", hoi="Cộng 0,1 mười lần rồi so với 1",
                 a="float", b="Decimal", ka=a(), kb=b())
+
+
+def ca_tien_so_sanh():
+    """Bay THAT cua tien tinh bang float: PHEP SO SANH, khong phai tich luy.
+
+    Ban dau toi dinh ke "doi soat lech vai xu moi ngay". Do thu thi cong 50.000
+    giao dich that chi lech 0,00000038 dong mot ngay - khong ai phat hien ra, va
+    viet nhu vay la bia trieu chung.
+
+    Cho hong that: khach tra lam nhieu lan, he thong kiem `da_tra == tong` va
+    phep so sanh tra ve False du tien da du.
+    """
+    import random
+    rnd = random.Random(11)
+    N = 100_000
+    hong = 0
+    vd = []
+    for _ in range(N):
+        tong = rnd.randrange(1_000, 500_000) / 100
+        k = rnd.randint(2, 5)
+        phan = [round(tong / k, 2)] * (k - 1)
+        phan.append(round(tong - sum(phan), 2))
+        tra = 0.0
+        for x in phan:
+            tra += x
+        if tra != tong:
+            hong += 1
+            if len(vd) < 2:
+                vd.append(f"{tong} tra {phan} -> {tra!r}")
+
+    D = decimal.Decimal
+    rnd = random.Random(11)
+    hong_d = 0
+    for _ in range(N):
+        tong = rnd.randrange(1_000, 500_000) / 100
+        k = rnd.randint(2, 5)
+        T = D(f"{tong:.2f}")
+        phan = [(T / k).quantize(D("0.01"))] * (k - 1)
+        phan.append(T - sum(phan))
+        if sum(phan) != T:
+            hong_d += 1
+    return dict(loai="dung sai",
+                hoi=f"{N:,} đơn, mỗi đơn khách trả làm 2-5 lần".replace(",", "."),
+                a="float, kiểm `đã_trả == tổng`",
+                b="Decimal, cùng phép kiểm",
+                ka=f"{hong:,} đơn báo CHƯA ĐỦ dù tiền đủ ({hong/N*100:.2f}%)".replace(",", "."),
+                kb=f"{hong_d} đơn báo sai",
+                them=vd + [f"0.1 + 0.2 == 0.3  ->  {0.1 + 0.2 == 0.3}",
+                           f"0.1 + 0.2         ->  {0.1 + 0.2!r}"])
 
 
 def ca_sort_js_kieu():
@@ -177,6 +229,7 @@ CA = {
     "copy": ca_copy,
     "mac_dinh": ca_mac_dinh,
     "float_tien": ca_float_tien,
+    "tien_so_sanh": ca_tien_so_sanh,
     "sort_chuoi": ca_sort_js_kieu,
 }
 
@@ -194,7 +247,11 @@ def main():
             print(f"khong co ca {k!r}. Co: {', '.join(CA)}")
             continue
         r = CA[k]()
-        ranh, ty = kiem_may(im=True)
+        # CHI gac ca do TOC DO. Ca DUNG SAI dung seed co dinh nen ket qua khong
+        # phu thuoc tai may chut nao - bao "may ban" o do la bao nham, va nhung
+        # ca do lai thuong nang CPU nen tu lam may ban. Bao nham thi nguoi ta bo
+        # qua ca nhung lan bao dung.
+        ranh, ty = (True, 1.0) if r["loai"] != "toc do" else kiem_may(im=True)
         if not ranh:
             ban.append(f"{k} ({ty:.2f}x)")
         print(f"\n=== {k} ===")

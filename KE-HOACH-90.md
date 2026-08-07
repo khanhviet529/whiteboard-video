@@ -74,7 +74,7 @@ mùa mạnh nhất và nên chạy trước để dựng nhận diện kênh.
 | 12 | Hàng đợi không giới hạn | Container bị giết mà không để lại log nào | đo | asyncio + docker | `queue` |
 | 13 | Thiếu timeout | Một dịch vụ ngoài treo, cả hệ thống treo theo | đo | asyncio | `topology` + `queue` |
 | 14 | Trừ tiền hai lần | Khách bấm một lần, trừ tiền hai lần | đo | asyncio | `gantt` hai lane |
-| 15 | Tiền tính bằng float | Đối soát lệch vài xu mỗi ngày, cuối năm lệch to | đo | python | `probe` ba dòng |
+| 15 | Tiền tính bằng float | ✅ **ĐÃ VIẾT** [15-tien-tinh-bang-float](screenplays/15-tien-tinh-bang-float.yaml). **Triệu chứng ghi ở đây ban đầu SAI**: cộng 50.000 giao dịch thật chỉ lệch 0,00000038 đồng/ngày. Cơ chế thật là PHÉP SO SÁNH — 21,52% đơn báo "chưa trả đủ" dù tiền đủ | ✅ đo | python | `probe` ba dòng |
 | 16 | Timestamp không có offset | Báo cáo ngày 1 thiếu đơn, ngày 2 thừa đơn | đo | python `zoneinfo` | `counters` ba múi giờ |
 | 17 | UUID v4 làm khoá chính | ĐÃ ĐO: chèn 300.000 dòng mất 5,04s so với 1,19s, **4,3×**. Index 11,6MB so với 6,8MB | ✅ đo | postgres | `queue` |
 | 18 | Regex quay lui thảm hoạ | Một dòng log làm treo cả service | đo | python | `queue` theo độ dài chuỗi |

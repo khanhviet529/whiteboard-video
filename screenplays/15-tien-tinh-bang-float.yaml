@@ -1,26 +1,30 @@
 # SO 15 - MUA 1. Xem KE-HOACH-90.md.
-#   chu de   : Tiền tính bằng float
-#   ghi chu  : Đối soát lệch vài xu mỗi ngày, cuối năm lệch to
-#   do bang  : python   (muc: đo)
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# TRIEU CHUNG TRONG KE HOACH DA SAI, va do dung truoc khi viet cuu duoc.
+# Ke hoach ghi "doi soat lech vai xu moi ngay, cuoi nam lech to". Do thu thi
+# cong 50.000 giao dich that bang float chi lech 0,00000038 dong mot ngay, mot
+# nam la 0,00014 dong - khong ai phat hien ra. Viet theo do la BIA trieu chung.
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# Co che that nam o PHEP SO SANH, khong o tich luy sai so.
+#
+# MOI CON SO do bang repro/bench_python.py, ca `tien_so_sanh`:
+#   100.000 don, moi don khach tra lam 2-5 lan
+#   float   21.522 don bao CHUA DU du tien da du  (21,52%)
+#   Decimal 0 don bao sai
+#   0.1 + 0.2 == 0.3  ->  False
+#
+# Ca nay dung seed co dinh nen ket qua khong doi giua cac lan chay, va khong
+# phu thuoc tai may - khac han cac ca do toc do.
 
-chua_xong: true       # XOA dong nay khi da co so that
+chua_xong_da_xoa: đã có số đo thật, xem dòng trên
 
-title: 'Tiền tính bằng float'
+title: Khách trả đủ, đơn vẫn treo
 theme: bench
 accent: hot
-brand: 'HIỆN TRƯỜNG · HỒ SƠ 15'
-tag: 'python · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: HIỆN TRƯỜNG · HỒ SƠ 12
+tag: python · đúng sai
+footer: SO SÁNH BẰNG TRÊN SỐ THẬP PHÂN  ·  21,52% ĐƠN BÁO SAI
 voice: female
 rate: "+16%"
 
@@ -35,51 +39,91 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ NHIP 1: trieu chung vo ly
   - scene: probe
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Tiền vào đủ. Đơn vẫn treo.
+    narration: Khách trả ba lần cho một đơn ba nghìn ba trăm mười hai phẩy ba chín. Cộng lại đúng bằng số đó, tiền đã vào tài khoản, mà hệ thống vẫn báo đơn chưa trả đủ.
+    caption: Tiền vào đủ mà đơn vẫn báo chưa trả đủ.
+    heading: python · bench_python.py
+    lenh: py repro/bench_python.py tien_so_sanh
+    nguon: repro/bench_python.py
+    status: tien_so_sanh
+    lines:
+      - { cmd: "tổng đơn",          out: "3312.39", state: ok }
+      - { cmd: "cộng ba lần trả",   out: "3312.3900000000003", state: bad }
+      - { cmd: "đã_trả == tổng",    out: "False",   state: bad }
+    verdict: KHÔNG MỘT ĐỒNG NÀO THIẾU
 
+  # ============================================ NHIP 2: hau qua
   - scene: statement
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Cứ năm đơn thì một đơn.
+    narration: Chạy thử trên một trăm nghìn đơn, mỗi đơn khách trả làm hai tới năm lần. Có hai mươi mốt phẩy năm hai phần trăm số đơn bị báo là chưa trả đủ, trong khi tiền đã vào đúng bằng tổng.
+    caption: 21,52% số đơn bị báo sai trên 100.000 đơn.
+    value: 21.522 ĐƠN TRÊN 100.000
+    size: 108
+    sub: Và không có đồng nào thiếu thật
 
+  # ============================================ NHIP 3: goi mo
   - scene: compare
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Cùng phép kiểm, hai kết quả.
+    narration: Cùng một trăm nghìn đơn đó, cùng phép kiểm đã trả bằng tổng. Bản dùng kiểu số thập phân chính xác không báo sai đơn nào. Bản dùng kiểu số thực báo sai hơn hai mươi nghìn đơn.
+    caption: Cùng phép kiểm. Một bên 0 đơn sai, một bên 21.522.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: DECIMAL
+        value: 0 ĐƠN BÁO SAI
+        note: trên cùng 100.000 đơn
+        color: ok
+      - label: FLOAT
+        value: 21.522 ĐƠN BÁO SAI
+        note: cùng dữ liệu, cùng phép kiểm
+        color: hot
 
+  # ============================================ NHIP 4 + 5
   - scene: list
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết vì sao phép cộng đơn giản lại ra số lẻ, và một quy tắc chặn được nó. Giờ xem máy tính cộng ba con số đó thế nào.
+    caption: Vì sao phép cộng ra số lẻ, và cách chặn.
+    items:
+      - text: Vì sao một phần năm số đơn bị kẹt mà không ai thiếu tiền.
+        focus: true
+      - text: Kiểu dữ liệu phải dùng cho tiền, và chỗ được phép dùng float.
 
-  - scene: gantt
-    chapter: QUAY CHẬM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+  # ============================================ THU PHAM
   - scene: statement
     chapter: THỦ PHẠM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Gọi tên thủ phạm.
+    narration: Máy tính lưu số thập phân theo hệ nhị phân, mà một phần mười trong hệ nhị phân là một số vô hạn tuần hoàn. Nó phải cắt bớt, nên số lưu được không đúng bằng số bạn viết.
+    caption: Một phần mười trong hệ nhị phân là số vô hạn tuần hoàn.
+    label: THỦ PHẠM
+    value: MỘT PHẦN MƯỜI KHÔNG BIỂU DIỄN ĐƯỢC
+    size: 92
+    sub: Nên 0,1 cộng 0,2 không bằng 0,3
 
+  # ============================================ CHAN
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Tiền thì đừng dùng số thực.
+    narration: Quy tắc chỉ có một câu. Tiền lưu bằng số nguyên đơn vị nhỏ nhất, hoặc bằng kiểu số thập phân chính xác. Số thực chỉ dùng cho thứ vốn đã là ước lượng, ví dụ nhiệt độ hay toạ độ.
+    caption: Tiền dùng số nguyên hoặc Decimal. Float chỉ cho ước lượng.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Tiền lưu bằng số nguyên hoặc Decimal.
+    small: Dấu hiệu trong code — bất kỳ phép so sánh bằng nào trên biến kiểu số thực. Kể cả khi bạn làm tròn trước, phép làm tròn cũng chạy trên số đã sai sẵn.
 
+  # ============================================ CAU HOI
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu bạn làm tròn hai chữ số trước khi so sánh thì có hết lỗi không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: LÀM TRÒN TRƯỚC KHI SO SÁNH THÌ HẾT LỖI CHƯA?
+    size: 80
+    hint: phép làm tròn cũng chạy trên số đã sai sẵn
