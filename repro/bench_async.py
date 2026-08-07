@@ -20,9 +20,13 @@ CAI-DAT-WSL.md. Khong co Redis thi ca do tu bo qua chu khong lam hong ca luot.
    canh `multiply` hay `queue` duoc.
 """
 import asyncio
+import os
 import statistics as st
 import sys
 import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _hieu_chuan import canh_bao, in_moc, kiem_may  # noqa: E402
 
 
 def _redis():
@@ -294,13 +298,19 @@ def _ms(x):
 
 
 def main():
+    in_moc()
+    print()
+    ban = []
     for k in (sys.argv[1:] or list(CA)):
         if k not in CA:
             print(f"khong co ca {k!r}. Co: {', '.join(CA)}")
             continue
         f = CA[k]
         r = asyncio.run(f()) if asyncio.iscoroutinefunction(f) else f()
-        print(f"=== {k} ===")
+        ranh, ty = kiem_may(im=True)
+        if not ranh:
+            ban.append(f"{k} ({ty:.2f}x)")
+        print(f"=== {k} ===" + ("" if ranh else f"   [MAY BAN {ty:.2f}x]"))
         if r is None:
             print("  (bo qua: khong noi duoc Redis, xem CAI-DAT-WSL.md)\n")
             continue
@@ -318,6 +328,7 @@ def main():
         for d in r.get("them", []):
             print(f"     {d}")
         print()
+    canh_bao(ban)
 
 
 if __name__ == "__main__":

@@ -3,9 +3,19 @@
 # MOI CON SO do bang repro/bench_pg.py, ca `index_bo_qua`, tren PostgreSQL 18.4
 # trong WSL2:
 #   bang 200.000 dong, co index tren cot email
-#   WHERE lower(email) = ...   81,23 ms   EXPLAIN: Gather (quet song song)
-#   WHERE email = ...            903 us   EXPLAIN: Index Scan using ix_email
-#   -> 90 lan
+#   WHERE lower(email) = ...   26,30 ms   EXPLAIN: Gather (quet song song)
+#   WHERE email = ...            513 us   EXPLAIN: Index Scan using ix_email
+#
+# BO SO DAU TIEN (81,23ms / 903us / 90 lan) PHAI BO: do luc may dang render.
+#
+# VA CA CON SO MOI CUNG KHONG DUOC NEU CHINH XAC. Ty le dao 23-63 lan qua bon
+# luot chay tren may ranh, ngay ca voi LAP=21. Postgres co bo dem trang,
+# checkpoint, autovacuum chay nen, cong chang loopback cua WSL. Nen kich ban
+# noi "hang chuc lan" chu khong noi mot con so.
+#
+# Bang chung CHINH cua video nay la DONG EXPLAIN, khong phai con so: "Gather"
+# so voi "Index Scan" la mot su that phan loai, khong dao theo tai may. Do la
+# thu dang dat len man hinh.
 #
 # Loi EXPLAIN la bang chung manh hon con so: no cho thay planner KHONG dung
 # index chu khong phai dung index roi van cham. Do la thu chieu thang len canh
@@ -36,14 +46,15 @@ scenes:
   - scene: probe
     chapter: HIỆN TRƯỜNG
     head: Thêm index. Không nhanh hơn.
-    narration: Bảng có hai trăm nghìn dòng, truy vấn tìm một email mất tám mươi mốt mili giây. Bạn thêm index cho cột email rồi chạy lại, và nó vẫn mất đúng tám mươi mốt mili giây.
+    narration: Bảng có hai trăm nghìn dòng, truy vấn tìm một email mất hai sáu mili giây. Bạn thêm index cho cột email rồi chạy lại, và nó vẫn mất đúng chừng ấy.
     caption: Thêm index xong, thời gian không đổi.
     heading: psql · bench
-    status: "81.23 ms"
+    nguon: repro/bench_pg.py
+    status: "26.30 ms"
     lines:
       - { cmd: "số dòng",           out: "200.000",   state: ok }
       - { cmd: "index trên email",  out: "có",        state: ok }
-      - { cmd: "thời gian truy vấn", out: "81.23 ms", state: bad }
+      - { cmd: "thời gian truy vấn", out: "26.30 ms", state: bad }
     verdict: INDEX CÓ, MÀ KHÔNG DÙNG
 
   # ================================================== NHIP 2: hau qua
@@ -89,15 +100,17 @@ scenes:
   - scene: probe
     chapter: QUAY CHẬM
     head: Hai câu, hai kế hoạch.
-    narration: Hai câu này tìm cùng một email và trả về cùng một kết quả. Câu trên bọc hàm lower quanh cột, câu dưới thì không. Chênh nhau chín mươi lần.
-    caption: Cùng kết quả. Chênh nhau 90 lần.
+    narration: Hai câu này tìm cùng một email và trả về cùng một kết quả. Câu trên bọc hàm lower quanh cột, câu dưới thì không. Chênh nhau vài chục lần.
+    caption: Cùng kết quả. Chênh nhau vài chục lần.
     heading: psql · explain analyze
-    status: "90×"
+    lenh: py repro/bench_pg.py index_bo_qua
+    nguon: repro/bench_pg.py
+    status: "51×"
     lines:
-      - { cmd: "WHERE lower(email) = ?", out: "81.23 ms", state: bad }
-      - { cmd: "WHERE email = ?",        out: "903 µs",   state: ok }
+      - { cmd: "WHERE lower(email) = ?", out: "26.30 ms", state: bad }
+      - { cmd: "WHERE email = ?",        out: "513 µs",   state: ok }
       - { cmd: "cùng kết quả trả về",     out: "có",       state: ok }
-    verdict: CHÍN MƯƠI LẦN VÌ MỘT CHỮ
+    verdict: VÀI CHỤC LẦN VÌ MỘT CHỮ
 
   # ================================================== THU PHAM
   - scene: statement

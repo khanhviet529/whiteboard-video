@@ -13,6 +13,16 @@ do tre di ve THAT, khac han sqlite chay cung tien trinh. Script IN RA do tre
 nen do luc bat dau moi lan chay - dung chep con so do vao kich ban, no dao
 theo tai may (da thay 0,29ms va 0,64ms o hai lan chay khac nhau).
 
+## Hieu chuan chi kiem luc BAT DAU luot
+
+Khac `bench_python.py`, file nay KHONG kiem hieu chuan giua cac ca. Postgres
+chay trong WSL tren cung CPU, va moi ca chen 200-500 nghin dong, nen sau moi ca
+hieu chuan luon bao "may ban 2-3 lan" - do la tai do CHINH BO DO gay ra. Bao
+nhu vay la bao nham, ma bao nham thi nguoi ta bo qua ca nhung lan bao dung.
+
+Con so hieu chuan in o dau luot cho biet may co ranh luc bat dau khong, va do
+la thu duy nhat kiem duoc o day.
+
 ## Hai dieu khac han sqlite, phai nho khi viet ca moi
 
 1. TRANG THAI SONG QUA NHIEU LAN CHAY. Moi ca phai tu `DROP TABLE IF EXISTS` o
@@ -23,12 +33,20 @@ theo tai may (da thay 0,29ms va 0,64ms o hai lan chay khac nhau).
    uoc luong bang mac dinh va chon sai cach chay - do la do sai chu khong phai
    phat hien ra dieu gi.
 """
+import os
 import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _hieu_chuan import in_moc  # noqa: E402
+
 PG = dict(host="127.0.0.1", port=5432, dbname="bench",
           user="bench", password="bench")
-LAP = 5
+# 21 chu khong 5. Voi LAP=5, ty le cua `index_bo_qua` dao 23-90 lan qua bon
+# luot chay tren may ranh - khong the cong bo mot con so nao tu day. Postgres co
+# bo dem trang, checkpoint va autovacuum chay nen, cong them chang loopback cua
+# WSL, nen phai lay nhieu mau hon han so voi do trong tien trinh.
+LAP = 21
 
 
 def noi():
@@ -36,12 +54,21 @@ def noi():
         import psycopg
     except ImportError:
         raise SystemExit('chua co psycopg: py -m pip install "psycopg[binary]"')
-    try:
-        return psycopg.connect(**PG, connect_timeout=5, autocommit=True)
-    except Exception as e:
-        raise SystemExit(
-            f"khong noi duoc PostgreSQL: {str(e).strip()[:120]}\n"
-            f"Chay `py repro/_kiem_ket_noi.py` de xem thieu buoc nao.")
+    for lan in range(2):
+        try:
+            return psycopg.connect(**PG, connect_timeout=5, autocommit=True)
+        except Exception as e:
+            if lan:
+                raise SystemExit(
+                    f"khong noi duoc PostgreSQL: {str(e).strip()[:120]}\n"
+                    f"Chay `py repro/_kiem_ket_noi.py` de xem thieu buoc nao.")
+            # WSL tu tat sau mot luc khong dung, va lan noi dau tien sau do luon
+            # timeout. Tu danh thuc thay vi bat nguoi dung nho.
+            import subprocess
+            print("  (WSL dang ngu, danh thuc...)")
+            subprocess.run(["wsl.exe", "--", "true"], capture_output=True,
+                           timeout=90)
+            time.sleep(3)
 
 
 def do(cx, sql, tham=None, lap=LAP):
@@ -175,12 +202,23 @@ def main():
     print(f"PostgreSQL qua cầu localhost của WSL2. "
           f"Độ trễ nền một vòng đi về: {_ms(nen)}")
     print("(mọi số thời gian dưới đây đã bao gồm độ trễ đó)\n")
+    in_moc()
+    print()
     for k in (sys.argv[1:] or list(CA)):
         if k not in CA:
             print(f"khong co ca {k!r}. Co: {', '.join(CA)}")
             continue
-        print(f"=== {k} ===")
+        # KHONG kiem hieu chuan giua cac ca o day, khac han `bench_python.py`.
+        #
+        # Ly do: postgres chay trong WSL tren CUNG CPU, va moi ca chen 200-500
+        # nghin dong. Sau moi ca thi background writer con dang xa, nen hieu
+        # chuan luon bao "may ban 2-3 lan" - do la do CHINH BO DO gay ra, khong
+        # phai do viec khac. Bao nhu vay la bao nham, va bao nham thi nguoi ta
+        # bo qua ca nhung lan bao dung.
+        #
+        # Cai kiem duoc la trang thai luc BAT DAU luot, da in o `in_moc()` tren.
         r = CA[k](cx)
+        print(f"=== {k} ===")
         print(f"  {r['hoi']}")
         if r["loai"] == "toc do":
             ta, tb = r["ta"], r["tb"]
@@ -195,6 +233,7 @@ def main():
         for d in r.get("them", []):
             print(f"     {d}")
         print()
+
 
 
 if __name__ == "__main__":
