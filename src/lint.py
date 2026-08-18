@@ -15,7 +15,11 @@ Nen o day kiem hai nhom:
 Khong tu sua gi. Bo cuc va nhip la quyet dinh cua nguoi viet, tool chi chi ra
 cho dang ngo.
 
-    python src/lint.py screenplays/cache-stale.yaml
+    python src/lint.py screenplays/cache-stale.yaml [--engine omnivoice]
+
+    thoat 1 neu co LOI, 0 neu chi co canh bao -> dung duoc trong vong lap kiem
+    hang loat. Chot chan luc render (`render.py` goi `lint.report`) chi IN loi
+    roi chay tiep, tru khi co `--strict`.
 """
 import os
 import re
@@ -512,6 +516,8 @@ def check_chua_xong(doc, out):
 def check(doc):
     out = []
     check_chua_xong(doc, out)
+    check_cau_dai(doc, out)
+    check_tu_la(doc, out)
     check_yaml_cat(doc, out)
     engine = doc.get("engine", "edge")
     # Ten canh KHONG duy nhat giua cac theme: `phongtoi` cung co `topology` va
@@ -549,6 +555,84 @@ def report(doc, prefix="  "):
     return nerr
 
 
+# --- do dai MOT LAN SINH, va tu la chua phien am -----------------------------
+#
+# Ca hai loi duoi day do NGUOI XEM nghe ra o so 72, khong phai tu suy dien:
+#
+#   canh 2  "khong mot dong log do"   -> `log` chua co trong TU_DIEN, model tu
+#           doan cach doc mot tu ngan va la nam giua dong chay tieng Viet.
+#   canh 5  "...duoi dang chuoi ky tu, nhung thu vien..."  -> cau do 132 ky tu.
+#
+# CAU_DAI = 110 lay tu du lieu chu khong dat bua: trong 38 loi doc cua
+# cache-stale ma nguoi xem DA DUYET, cau dai nhat la 107 ky tu. Mode `tach` sinh
+# MOI CAU bang mot lan goi model rieng, nen do dai mot cau CHINH LA do dai mot
+# lan sinh - vuot khoi khoang da duoc duyet thi chat luong troi ve cuoi cau.
+CAU_DAI = 110
+
+
+def _cac_cau(t):
+    """Cat loi doc Y HET cach speak.py cat, de dem dung do dai mot lan sinh."""
+    try:
+        import sys
+        d = r"D:\omnivoice-test"
+        if d not in sys.path:
+            sys.path.insert(0, d)
+        import vitext
+        return vitext.prepare(t)
+    except Exception:
+        return [c.strip() for c in re.split(r"(?<=[.!?])\s+", t) if c.strip()]
+
+
+def _sau_phien_am(doc, n):
+    if not doc.get("phien_am"):
+        return n
+    try:
+        import phienam
+        return phienam.phien_am(n)
+    except Exception:
+        return n
+
+
+def check_cau_dai(doc, out):
+    if doc.get("theme") != "bench":
+        return
+    for i, sp in enumerate(doc.get("scenes") or [], 1):
+        n = sp.get("narration")
+        if not n:
+            continue
+        for c in _cac_cau(_sau_phien_am(doc, n)):
+            if len(c) > CAU_DAI:
+                out.append(("LOI", f"canh {i}",
+                            f"mot cau dai {len(c)} ky tu (nguong {CAU_DAI}, "
+                            f"dai nhat trong ban da duyet la 107). Mode tach "
+                            f"sinh moi cau mot lan goi model, cau dai thi chat "
+                            f"luong troi ve cuoi. Cat lam hai: {c[:55]}..."))
+
+
+def check_tu_la(doc, out):
+    """Tu khong phai am tiet Viet va CHUA duoc quyet dinh trong phienam.py."""
+    if doc.get("theme") != "bench" or not doc.get("phien_am"):
+        return
+    try:
+        import phienam
+    except Exception:
+        return
+    for i, sp in enumerate(doc.get("scenes") or [], 1):
+        n = sp.get("narration")
+        if not n:
+            continue
+        for w in re.findall(r"[A-Za-zA-Za-y\u00c0-\u1ef9]+", n):
+            k = w.lower()
+            if len(w) < 2 or phienam.la_am_tiet_viet(w):
+                continue
+            if k in phienam.TU_DIEN or k in phienam.GIU_GOC:
+                continue
+            out.append(("NGO", f"canh {i}",
+                        f"{w!r} chua co trong TU_DIEN cung chua trong "
+                        f"GIU_GOC - model se tu doan cach doc. Quyet dinh "
+                        f"trong src/phienam.py truoc khi render."))
+
+
 def main():
     import yaml
     if len(sys.argv) < 2:
@@ -558,6 +642,37 @@ def main():
         doc = yaml.safe_load(f)
     # Phep kiem narration chi ap cho engine omnivoice, nen phai ghi de duoc tu
     # dong lenh - khong thi khong test duoc ma cung khong soi truoc duoc.
+    if "--engine" in sys.argv:
+        doc["engine"] = sys.argv[sys.argv.index("--engine") + 1]
+    sys.exit(1 if report(doc, prefix="") else 0)
+
+
+if __name__ == "__main__":
+    main()
+
+
+def main():
+    """CLI. PHAI ton tai va PHAI thoat khac 0 khi co LOI.
+
+    Truoc do file nay khong con `main()`: `python src/lint.py <file>` chi nap
+    module roi thoat 0, khong kiem gi ca. Nguy hiem hon la khong co CLI, vi day
+    la lenh dau tien trong quy trinh o VIET-KICH-BAN.md - no bao "sach" cho moi
+    thu, ke ca 70 khung tu sinh con nguyen `{{SO}}`. Da mot lan dung chinh no de
+    "xac minh" 20 so da xong, va ket qua do vo nghia.
+
+    Chot chan luc render (`render.py` goi `lint.report`) van song, nhung no chi
+    IN ra loi roi chay tiep tru khi co `--strict`.
+    """
+    import yaml
+    args = [x for x in sys.argv[1:] if not x.startswith("-")]
+    if not args:
+        raise SystemExit(
+            "dung: python src/lint.py screenplays/<file>.yaml [--engine omnivoice]\n"
+            "      thoat 1 neu co LOI, 0 neu chi co canh bao")
+    with open(args[0], "r", encoding="utf-8") as f:
+        doc = yaml.safe_load(f)
+    # Phep kiem narration chi ap cho engine omnivoice nen phai ghi de duoc tu
+    # dong lenh, khong thi khong soi truoc duoc ma cung khong test duoc.
     if "--engine" in sys.argv:
         doc["engine"] = sys.argv[sys.argv.index("--engine") + 1]
     sys.exit(1 if report(doc, prefix="") else 0)
