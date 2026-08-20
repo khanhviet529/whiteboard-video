@@ -1,0 +1,160 @@
+# SO 96 - MUA 7 "BAM VA BI MAT".
+#   chu de   : ba tham so cua Argon2, va tham so nao that su quyet dinh
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 182
+#   do bang  : repro/bam_va_bi_mat.py  (ca `argon2_tham_so`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# CHO TRAI TRUC GIAC cua so nay - dieu kien de mot chu de mua "co che" duoc
+# nhan, xem Y-TUONG.md tuyen 4 - la HAI cho, va ca hai deu do duoc:
+#   1. HA so nhan (p=4 -> p=1) lam ham CHAM HON, 185,4 so 115,4 ms. Nguoc hoan
+#      toan voi truc giac "it luong thi nhanh hon".
+#   2. Bo nho la tham so an nhieu nhat: ha tu 64MB xuong 8MB con 0,20 lan chi
+#      phi, tuc mat 80% muc bao ve, va khong co canh bao nao.
+#
+# MO PHONG: `cot` thang TUYEN TINH (khong log): nam gia tri nam trong khoang
+# 22,9-409,4 ms, chenh 17,9 lan - duoi nguong 60 lan ma lint canh bao, va truc
+# tuyen tinh thi be cao doc duoc thanh ty le that.
+
+title: Ba tham số của Argon2, cái nào quyết định
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 96'
+tag: 'bảo mật · mô phỏng'
+footer: 'BỘ NHỚ LÀ THAM SỐ QUYẾT ĐỊNH  ·  HẠ NÓ LÀ MẤT 80% MỨC BẢO VỆ'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Ba tham số, chép từ mạng.
+    narration: Đoạn cấu hình này chép từ một câu trả lời trên mạng. Ba tham số, không ai trong đội biết mỗi cái làm gì. Đo lại thì nó chỉ tốn hai mươi ba phần nghìn giây.
+    caption: Ba tham số chép về. Một lần bấm mất 23 phần nghìn giây.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py argon2_tham_so
+    nguon: repro/bam_va_bi_mat.py
+    status: "22.9 ms"
+    lines:
+      - { cmd: "time_cost   = 3",    out: "ok",       state: ok }
+      - { cmd: "memory_cost = 8192", out: "8 MB",     state: bad }
+      - { cmd: "một lần bấm",        out: "22,9 ms",  state: bad }
+    verdict: HAI MƯƠI BA PHẦN NGHÌN GIÂY
+
+  # ================================================================ NHIP 2
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Cấu hình nào cũng chạy.
+    narration: Chỗ khó chịu là cấu hình nào cũng chạy. Đặt bộ nhớ tám hay hai trăm năm sáu thì đăng nhập vẫn đúng, không lỗi, không cảnh báo. Chỉ có mức bảo vệ là khác nhau.
+    caption: Cấu hình nào cũng chạy đúng. Chỉ mức bảo vệ khác nhau.
+    value: CẤU HÌNH NÀO CŨNG CHẠY ĐÚNG
+    size: 104
+    sub: Nên không có gì gãy để ai nhận ra
+
+  # ================================================================ NHIP 3
+  # Da van cach hieu hien nhien nhat: "so lan lap la tham so chinh".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Cái nào là cái chính.
+    narration: Ai cũng nghĩ số lần lặp là tham số chính, vì tên nó có chữ thời gian. Đo thật thì hạ số lần lặp chỉ bớt được một nửa chi phí, còn hạ bộ nhớ thì bớt tới bốn phần năm.
+    caption: Hạ số lần lặp bớt một nửa. Hạ bộ nhớ bớt bốn phần năm.
+    vs: TRONG KHI ĐÓ
+    box_h: 300
+    items:
+      - label: HẠ SỐ LẦN LẶP TỪ 3 XUỐNG 1
+        value: CÒN 0,49 LẦN CHI PHÍ
+        note: bớt một nửa, đúng như tên gọi
+        color: ok
+      - label: HẠ BỘ NHỚ TỪ 64MB XUỐNG 8MB
+        value: CÒN 0,20 LẦN CHI PHÍ
+        note: bớt bốn phần năm, và không ai báo gì
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết tham số nào thật sự giữ mật khẩu, và một chỗ trái ngược mà đo mới thấy. Giờ xem cả năm cấu hình xếp cạnh nhau.
+    caption: Tham số nào thật sự giữ mật khẩu, và một chỗ trái ngược.
+    items:
+      - text: Tham số nào thật sự làm kẻ dò tốn kém.
+        focus: true
+      - text: Một chỗ mà giảm đi lại làm hàm chạy chậm hơn.
+
+  # ================================================================ MO PHONG
+  # `cot` tra loi BAO NHIEU O MOI MUC. Bien la CAU HINH, khong phai thoi gian -
+  # nen khong loai mo phong nao cu ve duoc. Cot dau la moc, bon cot sau moi cai
+  # doi DUNG MOT tham so, nen mat doc ra dong gop cua tung tham so.
+  - scene: cot
+    chapter: QUAY CHẬM
+    head: Đổi một tham số một lần.
+    narration: Cột đầu là cấu hình mốc. Bốn cột sau, mỗi cột chỉ đổi đúng một tham số. Cột bộ nhớ tám là cột thấp nhất, và cột số nhân bằng một thì lại cao hơn cả mốc.
+    caption: Mỗi cột đổi đúng một tham số so với cột mốc.
+    truc: THỜI GIAN MỘT LẦN BẤM · MILI GIÂY
+    ghi: argon2id · máy rảnh · repro/ket-qua/mua-07-bam-va-bi-mat.txt
+    nguong: { gia: 115.4, nhan: "MỐC · 115,4 MS" }
+    cot:
+      - { nhan: "MỐC", gia: 115.4, value: "115,4", color: cool, note: "t3 m64 p4" }
+      - { nhan: "LẶP 1 LẦN", gia: 56.9, value: "56,9", color: hot, note: "0,49 lần" }
+      - { nhan: "NHỚ 8MB", gia: 22.9, value: "22,9", color: hot, note: "0,20 lần" }
+      - { nhan: "NHỚ 256MB", gia: 409.4, value: "409,4", color: ok, note: "3,55 lần" }
+      - { nhan: "NHÂN 1", gia: 185.4, value: "185,4", color: ok, note: "1,61 lần" }
+    verdict_at: 0.94
+    verdict: BỘ NHỚ ĂN NHIỀU NHẤT
+
+  # ================================================================ CHO LA
+  # Cho trai truc giac: HA so nhan lai lam CHAM hon. Day la cho giu nguoi xem,
+  # va no do duoc chu khong phai mot nhan xet.
+  - scene: statement
+    chapter: CHỖ LẠ
+    head: Giảm luồng thì chậm hơn.
+    narration: Cột cuối là chỗ lạ. Hạ số nhân từ bốn xuống một làm hàm chạy chậm hơn mốc, một phẩy sáu lần. Vì số nhân không phải số luồng thêm vào, nó là số phần mà cùng khối lượng việc được chia ra.
+    caption: Số nhân không thêm việc, nó chia việc ra để làm song song.
+    label: CHỖ LẠ
+    value: GIẢM SỐ NHÂN THÌ CHẠY CHẬM HƠN
+    size: 96
+    sub: Vì nó chia việc ra, không phải thêm việc vào
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là chỗ tham số bộ nhớ trông như một tuỳ chọn tiết kiệm. Hạ nó xuống thì máy chủ nhẹ đi thật, nhưng mức bảo vệ tụt theo đúng chừng đó mà không ai đo lại.
+    caption: Bộ nhớ trông như tuỳ chọn tiết kiệm, thật ra là mức bảo vệ.
+    label: THỦ PHẠM
+    value: THAM SỐ NHÌN NHƯ TUỲ CHỌN TIẾT KIỆM
+    size: 88
+    sub: Hạ nó là hạ mức bảo vệ, không phải hạ chi phí
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Đặt bộ nhớ trước.
+    narration: Quy tắc chỉ một câu. Chọn bộ nhớ trước, nhắm sáu mươi tư trở lên, rồi mới dùng số lần lặp để chỉnh cho vừa hai phần mười giây.
+    caption: Chọn bộ nhớ trước. Số lần lặp chỉ để chỉnh cho vừa.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Đặt bộ nhớ trước, số lần lặp chỉ để tinh chỉnh.
+    small: Dấu hiệu phát hiện sớm — in ba tham số ra log lúc khởi động, và đo thời gian một lần bấm ngay trên máy chạy thật. Cấu hình chép từ mạng mà không đo lại thì con số nào cũng có thể đúng hoặc sai.
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Tham số bộ nhớ trong cấu hình của bạn đang là bao nhiêu, và ai đã chọn con số đó? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã mở file cấu hình ra xem.
+    text: THAM SỐ BỘ NHỚ CỦA BẠN ĐANG LÀ BAO NHIÊU?
+    size: 84
+    hint: dưới 19 nghìn là đang chạy mức thấp nhất được khuyến nghị

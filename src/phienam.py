@@ -75,6 +75,20 @@ TU_DIEN = {
     "MVCC": "em vi xi xi",
     "LRU": "eo a diu",
     "CRUD": "cờ rớt",
+    # Nhom BAM VA BI MAT (mua 7). Ca nam muc deu la VIET TAT, tuc dung dien
+    # nguoi ta noi o dau bang nay: "viet tat thi model doc sai gan nhu chac
+    # chan nen phien am manh tay". Suy theo dung bang `CHU_CAI`, kiem lai bang
+    # `danh_van()`:
+    #   MD5     = em(M) di(D) nam(5)
+    #   SHA     = et(S) hat(H) ay(A)
+    #   HMAC    = hat(H) em(M) ay(A) xi(C)
+    # DAI TRUOC NGAN SAU da duoc `_bien()` lo, nen "SHA-256" khong bi "SHA"
+    # nuot mat phan so.
+    "MD5": "em đi năm",
+    "SHA-256": "ét hát ây hai năm sáu",
+    "SHA-1": "ét hát ây một",
+    "SHA": "ét hát ây",
+    "HMAC": "hát em ây xi",
     # --- ky hieu doc thanh chu
     "N+1": "en cộng một",
     "%": "phần trăm",

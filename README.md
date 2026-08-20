@@ -314,7 +314,7 @@ scenes:
 `caption` (phụ đề dưới) mặc định lấy luôn `narration`; ghi đè nếu muốn khác.
 `chips` vẽ dãy nhãn tiến độ ở góc trên phải: `- { label: THỨ TỰ, color: blue, done: true }`
 
-### 12 loại cảnh của theme `bench`
+### 17 loại cảnh của theme `bench`
 
 Mọi cảnh nhận thêm ba trường chung: `chapter` (tên chương, tự đánh số theo lần
 xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` (`hot` `ok` `cool`
@@ -330,6 +330,10 @@ xuất hiện đầu tiên), `head` (tiêu đề ngắn của cảnh), `accent` 
 | `compare` | Hai ô xếp dọc, có gạch nối `vs` ở giữa | `a{}`, `b{}`, `vs`, `bad`, `note` |
 | `ask` | Cảnh chốt: câu hỏi về hệ thống của chính người xem | `text`, `size`, `hint` |
 | `intro` | Mở màn: một câu hỏi trực tiếp, rồi tên video cỡ lớn | `hoi`, `title`, `sub`, `kicker` |
+| `code` | Hai đoạn code gần y hệt, đếm ba giây cho người xem chọn | `a{}`, `b{}`, `hoi`, `dem`, `ket`, `verdict` |
+
+Chín loại còn lại là cảnh **mô phỏng** — `gantt` `thac` `multiply` `queue` `cot`
+`topology` `ban_sao` `gop` — xem mục riêng phía dưới.
 
 ### ⚠ Số đo phải KIỂM CHỨNG ĐƯỢC, không chỉ được tuyên bố
 
@@ -408,7 +412,7 @@ Luồng `client → gateway → nginx → database` **không** nằm ở đây: 
 nếu bạn làm vậy. Chỗ còn trống là `statement`, `list`, `ask`. Nhãn tự co nhỏ
 cho vừa khung, nhưng vẫn nên soi bằng `--stills` trước khi render.
 
-### Bốn cảnh mô phỏng ⭐ — chọn theo CÂU HỎI, đừng chọn theo thói quen
+### Tám cảnh mô phỏng ⭐ — chọn theo CÂU HỎI, đừng chọn theo thói quen
 
 Đây là chỗ tool ăn đứt slide, và cũng là chỗ dễ làm video nhìn giống nhau nhất.
 Ba screenplay đầu tiên đều mở `probe > statement > statement > list > gantt` chỉ
@@ -418,9 +422,27 @@ hỏi khác nhau — hỏi trước xem cảnh của bạn đang trả lời câ
 | `scene` | Trả lời câu | Hình dạng | Trường chính |
 |---|---|---|---|
 | `gantt` | **KHI NÀO** — hai việc chồng lên nhau theo thời gian | hai đường ray ngang, đầu đọc chạy qua | `lanes`, `readout`, `counter`, `ruler`, `verdict_at` |
+| `thac` | **CÁI NÀO CHỜ CÁI NÀO** — chuỗi việc nối đuôi thành bậc thang | nhiều hàng, nhãn ở máng trái, đồng hồ tổng đếm lên | `hang[{nhan,at,w,color,bad,note}]`, `tong{key,gia,dv,le,nhan}`, `ruler`, `con` |
 | `multiply` | **BAO NHIÊU CÁI** — một thành rất nhiều | ô nguồn + lưới ô đầy dần + bộ đếm | `source{label,text}`, `count`, `cols`, `counter_key`, `chip` |
 | `queue` | **BAO NHIÊU THEO THỜI GIAN** — dồn ứ, không rút xuống | biểu đồ miền, cắt màu tại ngưỡng | `curve[]`, `capacity`, `ymax`, `marks[]`, `inbox{}`, `outbox{}` |
+| `cot` | **BAO NHIÊU Ở MỖI MỨC** — theo một biến *không phải thời gian* | cột dựng cạnh nhau, mọc lên lần lượt | `cot[{nhan,gia,value,color,note}]`, `truc`, `thang`, `nguong{}`, `ty_le{}`, `ghi` |
 | `topology` | **Ở ĐÂU** — tầng nào có, tầng nào không | các tầng xếp dọc, gói tin chạy dọc sống | `nodes[{name,sub,tag,color}]`, `from`, `to`, `miss_tag`, `packet` |
+| `ban_sao` | **MỖI BẢN SAO GIỮ GÌ** — N instance, mỗi cái một giá trị | 2–4 ô giống hệt nhau + một ô **sự thật** to hơn | `o[{nhan,buoc[{at,value,state}],note}]`, `that{}`, `nguong{}`, `nhan_chung`, `ruler` |
+| `gop` | **NHIỀU CÁI RA MỘT** — hai đầu vào khác nhau, một kết quả | hai thẻ trên, mũi tên chụm vào một thẻ dưới | `vao[{nhan,value,note}]`, `qua`, `ra{}`, `khac{}` |
+
+Bốn loại dưới (`thac` `cot` `ban_sao` `gop`) sinh ra từ một lần rà **292 chủ đề**
+trong [files/](files/) — xem [KE-HOACH-KHO-292.md](KE-HOACH-KHO-292.md) mục *"Cách
+xếp"* để biết phép đếm dẫn tới chúng. Ba điều phải nhớ khi dùng:
+
+- **`cot` với `thang: log`** — bắt buộc khi cột lớn nhất gấp cột nhỏ nhất quá 60
+  lần, không thì cột nhỏ cao dưới một pixel, tức biến mất. Cảnh tự in huy hiệu
+  `TRỤC LOG` vì trên trục log thì cột cao gấp đôi **không** còn nghĩa là giá trị
+  gấp đôi.
+- **`thac` phải là bậc thang** — hàng sau bắt đầu sau khi hàng trước xong. Chồng
+  lấn thì hình đang nói *ngược* lời đọc: chúng chạy song song, tức không ai chờ ai.
+  `lint` cảnh báo; cố ý thì đặt `chong_lan: true`.
+- **`ban_sao` sống nhờ ô `that`** — ba ô cùng đếm lên mà không có con số sự thật
+  bên cạnh thì người xem chỉ thấy ba con số nho nhỏ, không thấy chuyện gì sai.
 
 Trong `gantt`:
 
@@ -475,6 +497,12 @@ python src/render.py <yaml> --no-lint               # bỏ qua
 | `verdict_at` chốt trước khi bước cuối xong | CẢNH BÁO |
 | Khoảng > 14% thời lượng không bước nào chạy, không ô số nào đổi | CẢNH BÁO |
 | `caption` dài quá thẻ phụ đề (3 dòng ở 24px) | CẢNH BÁO |
+| `cot` thiếu `gia`, hoặc `thang: log` mà có `gia` bằng 0 | LOI |
+| `cot` chênh quá 60 lần mà trục tuyến tính — cột nhỏ biến mất | CẢNH BÁO |
+| `thac` có hàng chồng lấn — hình nói ngược lời đọc | CẢNH BÁO |
+| `thac` thiếu `tong` nên cảnh mô phỏng không có số nào đang đổi | CẢNH BÁO |
+| `ban_sao` thiếu ô `that` — mất con số sự thật để đối chiếu | CẢNH BÁO |
+| `gop` có mọi `vao.value` hiện y hệt nhau trên màn hình | LOI |
 
 Cảnh báo *"ô số đổi mà không bước nào vừa xong"* là cái đáng giá nhất: nó chính
 là kiểu sai làm mô phỏng **nói dối** người xem. Con số phải đổi **vì** một việc

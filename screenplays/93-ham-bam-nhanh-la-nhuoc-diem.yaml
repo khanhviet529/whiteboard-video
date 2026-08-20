@@ -1,0 +1,159 @@
+# SO 93 - MUA 7 "BAM VA BI MAT".
+#   chu de   : voi mat khau, ham bam NHANH la nhuoc diem
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 179
+#   do bang  : repro/bam_va_bi_mat.py  (ca `do_het_8_ky_tu`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# CHI DUNG MOT CA DO cho ca file nay (`do_het_8_ky_tu`), khong tron voi ca
+# `toc_do_bam` du hai ca do cung ba ham. Ly do: toc do bam dao theo tai may
+# (804.070 so 889.597 lan/giay trong CUNG mot luot chay), nen lay toc do cua ca
+# nay ma ghep voi bang thoi gian cua ca kia thi hai con so tren man hinh khong
+# chia ra nhau duoc - va nguoi xem lam phep chia do that.
+#
+# MO PHONG: `cot` thang log. Ba gia tri cach nhau nam bac (804.070 so 3,9) nen
+# truc tuyen tinh lam hai cot sau cao duoi mot pixel. `sc_cot` tu in huy hieu
+# TRUC LOG de khong ai doc be cao thanh ti le.
+
+title: Với mật khẩu, băm nhanh là nhược điểm
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 93'
+tag: 'bảo mật · mô phỏng'
+footer: 'NHANH LÀ ƯU ĐIỂM Ở MỌI CHỖ  ·  TRỪ ĐÚNG CHỖ NÀY'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Đo ba hàm băm mật khẩu.
+    narration: Ba hàm này đều dùng để băm mật khẩu, và tôi đo số lần bấm được trong một giây. Hàm đầu chạy tám trăm nghìn lần. Hàm cuối chạy được gần bốn lần.
+    caption: Tám trăm nghìn lần một giây, so với gần bốn lần.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py do_het_8_ky_tu
+    nguon: repro/bam_va_bi_mat.py
+    status: "3 hàm"
+    lines:
+      - { cmd: "sha256",         out: "804.070/giây", state: bad }
+      - { cmd: "argon2id 64MB",  out: "12,4/giây",    state: ok }
+      - { cmd: "bcrypt cost 12", out: "3,9/giây",     state: ok }
+    verdict: HAI TRĂM NGÀN LẦN CHÊNH NHAU
+
+  # ================================================================ NHIP 2
+  # Cho kho chiu: cham la loi o moi trang benchmark, nen nguoi ta CHON cai nhanh.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Cả nghề dạy chọn cái nhanh.
+    narration: Suốt cả nghề này, chậm là lỗi. Mọi bảng đo, mọi vòng tối ưu đều đẩy về phía nhanh hơn. Nên khi phải chọn hàm băm mật khẩu, tay tự chọn cái nhanh nhất.
+    caption: Cả nghề dạy chọn cái nhanh, nên tay tự chọn cái nhanh.
+    value: TAY TỰ CHỌN CÁI NHANH NHẤT
+    size: 112
+    sub: Và ở đúng chỗ này thì đó là chọn sai
+
+  # ================================================================ NHIP 3
+  # Da van cach giai thich hien nhien: "cham la ton tien server".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Chậm cho ai và cho ai.
+    narration: Một lần đăng nhập chậm thêm hai trăm năm sáu phần nghìn giây thì người dùng không nhận ra. Nhưng kẻ đang dò mật khẩu thì phải chờ đúng khoảng đó, nhân với từng lần thử một.
+    caption: Người dùng chờ một lần. Kẻ dò chờ từng lần thử.
+    vs: NHƯNG
+    box_h: 290
+    items:
+      - label: NGƯỜI DÙNG THẬT CHỜ
+        value: MỘT LẦN, 0,256 GIÂY
+        note: mỗi lần đăng nhập đúng một lần
+        color: ok
+      - label: KẺ ĐANG DÒ MẬT KHẨU CHỜ
+        value: 0,256 GIÂY MỖI LẦN THỬ
+        note: nhân với hàng tỉ lần
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết cách chọn hàm băm mật khẩu bằng một con số duy nhất, và cách kiểm lại con số đó trên máy mình. Giờ xem ba hàm đó xếp cạnh nhau.
+    caption: Một con số để chọn, và cách tự kiểm lại nó.
+    items:
+      - text: Một con số duy nhất để chọn hàm băm mật khẩu.
+        focus: true
+      - text: Cách tự đo lại nó trên máy mình trong mười phút.
+
+  # ================================================================ MO PHONG
+  # `cot` tra loi BAO NHIEU O MOI MUC. Bien la HAM BAM, khong phai thoi gian.
+  - scene: cot
+    chapter: QUAY CHẬM
+    head: Ba hàm, cùng một máy.
+    narration: Đây là ba hàm trên cùng một máy, trục dọc là số lần bấm được mỗi giây. Hàm đầu nhanh hơn hàm cuối hai trăm lẻ sáu nghìn lần, nên nó cũng cho kẻ dò đúng chừng ấy lượt thử.
+    caption: Nhanh hơn 206 nghìn lần, tức cho kẻ dò 206 nghìn lượt.
+    truc: SỐ LẦN BẤM ĐƯỢC MỖI GIÂY
+    thang: log
+    ghi: python một luồng · máy rảnh · repro/ket-qua/mua-07-bam-va-bi-mat.txt
+    cot:
+      - { nhan: "SHA-256", gia: 804070, value: "804.070", color: hot, note: "1,2 micro giây" }
+      - { nhan: "ARGON2ID 64MB", gia: 12.4, value: "12,4", color: ok, note: "81 mili giây" }
+      - { nhan: "BCRYPT COST 12", gia: 3.9, value: "3,9", color: ok, note: "256 mili giây" }
+    ty_le: { a: 0, b: 2, nhan: "CHÊNH 206.000 LẦN" }
+    verdict_at: 0.93
+    verdict: NHANH BAO NHIÊU, HỞ BẤY NHIÊU
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là chính cái ưu điểm. SHA-256 được thiết kế để bấm thật nhanh, vì nó sinh ra để kiểm tệp và ký dữ liệu. Đem đúng ưu điểm đó sang chỗ mật khẩu thì nó thành lỗ hở.
+    caption: Ưu điểm của nó, đặt sai chỗ, thành lỗ hở.
+    label: THỦ PHẠM
+    value: ĐẶT MỘT ƯU ĐIỂM VÀO SAI CHỖ
+    size: 104
+    sub: Nó sinh ra để kiểm tệp, không để giữ mật khẩu
+
+  # ================================================================ TANG 2
+  # Ba o so canh nhau cho thay cung MOT khong gian mat khau, chi doi ham bam.
+  # `counters` la chu ky hinh anh cua theme - ba o giong het bo cuc nen mat doc
+  # ra chenh lech ma khong can mot cau giai thich.
+  - scene: counters
+    chapter: THỦ PHẠM
+    head: Cùng một mật khẩu tám chữ.
+    narration: Cùng một mật khẩu tám chữ thường, tức hai trăm lẻ tám tỉ khả năng. Đổi hàm băm thì thời gian dò hết đổi từ ba ngày sang năm trăm năm, rồi sang một nghìn bảy trăm năm.
+    caption: Cùng một mật khẩu. Ba ngày, 534 năm, 1.694 năm.
+    items:
+      - { value: "3 NGÀY",     label: "SHA-256",        top: "804.070/giây", color: hot }
+      - { value: "534 NĂM",    label: "ARGON2ID 64MB",  top: "12,4/giây",    color: ok }
+      - { value: "1.694 NĂM",  label: "BCRYPT COST 12", top: "3,9/giây",     color: ok }
+    verdict: CÙNG MẬT KHẨU, KHÁC HẲN SỐ PHẬN
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Chọn theo thời gian mỗi lần.
+    narration: Quy tắc chỉ một câu. Chọn hàm băm mật khẩu bằng thời gian một lần bấm, không bằng tên hàm. Nhắm khoảng hai phần mười giây trên máy chạy thật.
+    caption: Chọn theo thời gian mỗi lần bấm, không theo tên hàm.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Nhắm 0,2 giây cho một lần bấm mật khẩu.
+    small: Dấu hiệu phát hiện sớm — đo thời gian một lần bấm ngay trên máy chạy thật, mỗi lần nâng cấu hình server thì đo lại. Máy nhanh lên mà tham số giữ nguyên nghĩa là mức bảo vệ đang tụt dần mà không ai thấy.
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Một lần bấm mật khẩu trên hệ thống của bạn mất bao lâu, và bạn đã đo nó bao giờ chưa? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã đo thật.
+    text: MỘT LẦN BẤM MẬT KHẨU CỦA BẠN MẤT BAO LÂU?
+    size: 84
+    hint: dưới mười phần nghìn giây là đang dùng sai hàm

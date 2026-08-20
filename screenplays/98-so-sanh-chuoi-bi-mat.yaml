@@ -1,0 +1,176 @@
+# SO 98 - MUA 7 "BAM VA BI MAT".
+#   chu de   : so sanh chuoi bi mat, va cho ro ri thong tin qua dong ho
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 185
+#   do bang  : repro/bam_va_bi_mat.py  (ca `timing`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# SO NAY LE RA DA BI VIET SAI, va cho suyt sai la cho dang gia nhat cua no.
+# Ban dau toi do `==` cua Python va DINH ket luan "ro ri do duoc". Do that thi
+# `==` KHONG ro ri o co 64 ky tu: 45,0 - 46,4 - 47,4 ns cho tien to trung 0, 16,
+# 63 ky tu, tuc 1,00 den 1,05 lan - nhieu cua may lon hon chenh lech can do.
+# Ly do: `==` cua CPython goi memcmp cua he dieu hanh, chay mot hai lenh SIMD.
+#
+# Cho ro ri THAT nam o vong lap TU VIET, va no ro ri tuyen tinh, do duoc rat ro:
+#   trung  0 ky tu   356,1 ns   1,00x
+#   trung  8 ky tu   824,9 ns   2,32x
+#   trung 16 ky tu  1441,8 ns   4,05x
+#   trung 32 ky tu  2478,7 ns   6,96x
+#   trung 48 ky tu  3343,3 ns   9,39x
+#   trung 63 ky tu  4155,9 ns  11,67x
+#
+# Nen kich ban KHONG duoc noi "dau bang la ro ri". No phai noi dung cai da do:
+# vong lap tu viet ro ri 11,67 lan, `==` thi khong do thay o co nay, va van
+# dung `compare_digest` vi ly do KHAC - xem canh 08.
+#
+# MO PHONG: `thac`. Sau hang = sau muc tien to, be rong TY LE VOI SO DO THAT
+# (356 ns -> 0,03 tren truc; 4156 ns -> 0,34). Bac thang moc dan la dung hinh
+# dang cua bug: moi lan doan trung them mot ky tu, cau tra loi ve cham hon.
+
+title: So sánh token bằng vòng lặp thì nó tự khai
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 98'
+tag: 'bảo mật · mô phỏng'
+footer: 'VÒNG LẶP TỰ VIẾT RÒ 11,67 LẦN  ·  DẤU BẰNG THÌ KHÔNG'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Hàm so sánh tự khai đáp án.
+    narration: Đây là một hàm so hai chuỗi bí mật, viết bằng vòng lặp, thấy khác là trả về ngay. Tôi đo thời gian nó chạy. Đoán trúng càng nhiều ký tự đầu thì nó trả lời càng chậm.
+    caption: Đoán trúng nhiều ký tự đầu thì hàm trả lời chậm hơn.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py timing
+    nguon: repro/bam_va_bi_mat.py
+    status: "11.67x"
+    lines:
+      - { cmd: "trùng 0 ký tự đầu",  out: "356 ns",   state: ok }
+      - { cmd: "trùng 32 ký tự đầu", out: "2.479 ns", state: warn }
+      - { cmd: "trùng 63 ký tự đầu", out: "4.156 ns", state: bad }
+    verdict: CHÍNH THỜI GIAN LÀ CÂU TRẢ LỜI
+
+  # ================================================================ NHIP 2
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Hàm đó không sai một chỗ nào.
+    narration: Hàm này viết đúng hoàn toàn. Nó trả về đúng đáp số, nó nhanh, và nó là cách ai cũng viết khi so sánh từng phần tử. Chỗ hở không nằm trong đáp số mà nằm ngoài nó.
+    caption: Đáp số đúng, chỗ hở nằm ngoài đáp số.
+    value: CHỖ HỞ KHÔNG NẰM Ở ĐÁP SỐ
+    size: 108
+    sub: Nó nằm ở thời gian trả lời
+
+  # ================================================================ NHIP 3
+  # Da van cach nghi ma dan Python hay co: "day bang cua CPython cung ro ri".
+  # Do THAT thi KHONG - va noi thang cho nay la cho lay long tin.
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Còn dấu bằng thì sao.
+    narration: Tôi tưởng dấu bằng cũng rò như vậy, và đo thì không phải. Ở chuỗi sáu mươi tư ký tự, dấu bằng cho một phẩy không năm lần, tức nằm trong nhiễu của máy.
+    caption: Vòng lặp rò 11,67 lần. Dấu bằng đo được 1,05 lần.
+    vs: TRONG KHI ĐÓ
+    box_h: 300
+    items:
+      - label: VÒNG LẶP TỰ VIẾT
+        value: RÒ 11,67 LẦN
+        note: 356 ns lên 4.156 ns theo tiền tố
+        color: hot
+      - label: DẤU BẰNG CỦA CPYTHON
+        value: 1,05 LẦN, KHÔNG ĐO THẤY
+        note: nó gọi memcmp, chạy một hai lệnh
+        color: ok
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ thấy cách kẻ tấn công dùng đúng cái đồng hồ đó để dò từng ký tự, và lý do thật để dùng hàm so riêng. Giờ xem vòng dò từng ký tự chạy.
+    caption: Cách dò từng ký tự, và lý do thật để dùng hàm so riêng.
+    items:
+      - text: Cách một cái đồng hồ đủ để dò ra cả chuỗi bí mật.
+        focus: true
+      - text: Lý do dùng hàm so riêng, và nó không phải lý do bạn nghĩ.
+
+  # ================================================================ MO PHONG
+  # `thac` tra loi CAI NAO CHO CAI NAO. Sau hang la sau vong do, be rong ty le
+  # voi so do that. Dong ho `tong` dem SO LAN GOI can thiet nen phai dat `le: 0`
+  # - de mac dinh 2 chu so thap phan thi no ra "2304,00 lan", tuc doc ra la sai.
+  - scene: thac
+    chapter: QUAY CHẬM
+    head: Dò từng ký tự một.
+    narration: Kẻ tấn công gửi từng phương án rồi bấm đồng hồ. Phương án nào làm hàm trả lời chậm hơn thì đúng thêm một ký tự. Mỗi bậc thang dưới đây là một ký tự đã lộ.
+    caption: Bậc thang dài thêm nghĩa là lộ thêm một ký tự.
+    ruler: ["0", "1.000 ns", "2.000 ns", "3.000 ns", "4.000 ns"]
+    tong: { key: SỐ LẦN GỌI ĐÃ DÙNG, gia: 2304, dv: " lần", le: 0, nhan: 36 phương án cho mỗi ký tự × 64 ký tự }
+    hang:
+      - { nhan: "trùng 0 ký tự", at: 0.00, w: 0.03, color: cool, note: "356 ns" }
+      - { nhan: "trùng 8 ký tự", at: 0.03, w: 0.06, color: cool }
+      - { nhan: "trùng 16 ký tự", at: 0.09, w: 0.10, color: cool, note: "1.442 ns" }
+      - { nhan: "trùng 32 ký tự", at: 0.19, w: 0.18, color: violet, note: "2.479 ns" }
+      - { nhan: "trùng 48 ký tự", at: 0.37, w: 0.26, color: violet }
+      - { nhan: "trùng 63 ký tự", at: 0.63, w: 0.34, bad: true, note: "4.156 ns" }
+    con: "mỗi bậc dài thêm là một ký tự đã lộ, và không log nào ghi"
+    verdict_at: 0.97
+    verdict: BẬC THANG CHÍNH LÀ CHUỖI BÍ MẬT
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là câu lệnh trả về sớm. Thấy khác một ký tự là hàm thoát ngay. Chính chỗ thoát sớm đó biến số ký tự đã trùng thành một khoảng thời gian, và khoảng đó đo được từ ngoài.
+    caption: Trả về sớm biến số ký tự đã trùng thành thời gian.
+    label: THỦ PHẠM
+    value: CÂU LỆNH TRẢ VỀ SỚM
+    size: 116
+    sub: Tối ưu ở mọi chỗ, trừ đúng chỗ này
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Dùng hàm so riêng.
+    narration: Quy tắc chỉ một câu. So chuỗi bí mật bằng hàm so thời gian không đổi mà thư viện chuẩn có sẵn, đừng bao giờ tự viết vòng lặp so.
+    caption: Dùng hàm so thời gian không đổi, đừng tự viết vòng lặp.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: So chuỗi bí mật bằng hàm so thời gian không đổi.
+    small: Dấu hiệu phát hiện sớm — tìm mọi chỗ so token, chữ ký hay mã xác thực trong code. Chỗ nào so bằng vòng lặp, so từng phần tử, hoặc so hai mảng byte thì đổi sang hàm chuẩn.
+
+  # ================================================================ NOI THAT
+  # Cho quan trong nhat cua so nay: LY DO dung compare_digest KHONG phai vi da
+  # do thay `==` ro ri. Noi that cho nay la cho lay long tin, va bo di thi video
+  # thanh mot lap luan khong dung voi chinh bang so cua no.
+  - scene: statement
+    chapter: CÒN LẠI
+    accent: gold
+    head: Nói cho hết.
+    narration: Nói cho hết. Tôi không đo được dấu bằng rò ở cỡ này, nên lý do dùng hàm so riêng không phải vì đã bắt được nó. Lý do là bạn không kiểm soát nổi mọi cỡ chuỗi và mọi bản cài đặt về sau.
+    caption: Dùng hàm chuẩn vì không kiểm soát nổi mọi trường hợp về sau.
+    label: KHÔNG CÓ 100%
+    value: DÙNG HÀM CHUẨN VÌ KHÔNG KIỂM SOÁT ĐƯỢC
+    size: 84
+    color: gold
+    sub: Không phải vì đã đo thấy dấu bằng rò
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Chỗ nào trong code của bạn đang so một chuỗi bí mật bằng vòng lặp tự viết? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã đi tìm thật.
+    text: CHỖ NÀO CỦA BẠN CÒN SO CHUỖI BÍ MẬT BẰNG VÒNG LẶP?
+    size: 76
+    hint: tìm chữ so sánh cạnh chữ token, chữ ký, mã xác thực

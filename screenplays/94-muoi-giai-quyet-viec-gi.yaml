@@ -1,0 +1,157 @@
+# SO 94 - MUA 7 "BAM VA BI MAT".
+#   chu de   : muoi giai quyet viec gi, va no KHONG lam mat khau manh hon
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 180
+#   do bang  : repro/bam_va_bi_mat.py  (ca `muoi`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# MOT CON SO trong ca do nay KHONG phai so do, va script in ro dieu do ra thanh
+# mot dong rieng: ty le 22% nguoi dung mat khau pho bien la THAM SO MO PHONG do
+# toi dat, khong phai thong ke. Nen kich ban khong duoc noi "hai muoi hai phan
+# tram nguoi dung dat mat khau pho bien" - no chi duoc noi "gia su" va noi ro
+# la gia su. Con 2.195 va 473 thi la so DEM THAT tu bang do.
+#
+# MO PHONG: `gop`. Ba dau vao PHAI khac nhau tren man hinh (lint.check_gop bao
+# LOI neu giong het), nen the hien ten ba nguoi dung khac nhau - phan giong nhau
+# la mat khau, va do moi la cai dang noi.
+
+title: Muối không làm mật khẩu mạnh hơn
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 94'
+tag: 'bảo mật · mô phỏng'
+footer: 'MUỐI KHÔNG LÀM MẬT KHẨU MẠNH HƠN  ·  NÓ CHẶN BẺ MỘT LẦN MỞ NHIỀU NGƯỜI'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Ba người, một dòng băm.
+    narration: Đây là bảng người dùng, cột mật khẩu đã băm hết. Ba dòng này là ba người khác nhau, ba địa chỉ khác nhau. Cột băm của họ giống nhau tới từng chữ.
+    caption: Ba người khác nhau. Cột băm giống nhau từng chữ.
+    heading: psql · select email, mk_bam
+    status: "3 dòng"
+    lines:
+      - { cmd: "an@shop.vn",   out: "8d969eef…", state: bad }
+      - { cmd: "binh@shop.vn", out: "8d969eef…", state: bad }
+      - { cmd: "cuc@shop.vn",  out: "8d969eef…", state: bad }
+    verdict: BẢNG TỰ CHỈ RA AI DÙNG CHUNG
+
+  # ================================================================ NHIP 2
+  # Cho kho chiu: bang van dung, van bam, khong ai thay day la van de.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Bảng vẫn đúng hoàn toàn.
+    narration: Bảng này không sai chỗ nào. Mật khẩu đã băm, không ai đọc ngược được, và đăng nhập vẫn chạy đúng. Chỗ hở nằm ở thứ mà chính cái bảng vừa nói ra.
+    caption: Bảng không sai chỗ nào. Nó chỉ nói ra một điều nó không nên nói.
+    value: BẢNG NÓI RA MỘT ĐIỀU
+    size: 118
+    sub: Rằng ba người này dùng chung mật khẩu
+
+  # ================================================================ NHIP 3
+  # Da van cach hieu pho bien nhat ve muoi: "muoi lam mat khau kho do hon".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Muối làm gì và không làm gì.
+    narration: Hầu hết hiểu muối là để mật khẩu khó dò hơn. Không phải. Mật khẩu một hai ba bốn năm sáu có muối hay không thì vẫn dò ra trong một phần nghìn giây.
+    caption: Muối không làm mật khẩu khó dò hơn chút nào.
+    vs: NHƯNG
+    box_h: 290
+    items:
+      - label: MUỐI CÓ LÀM MẬT KHẨU KHÓ DÒ HƠN
+        value: KHÔNG, KHÔNG CHÚT NÀO
+        note: dò một mật khẩu yếu vẫn nhanh y thế
+        color: hot
+      - label: MUỐI CHẶN ĐƯỢC CÁI GÌ
+        value: BẺ MỘT LẦN, DÙNG CHO NHIỀU NGƯỜI
+        note: và đó mới là cách người ta bẻ thật
+        color: ok
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết muối chặn đúng việc gì, và vì sao nó phải khác nhau ở từng bản ghi. Giờ xem ba người kia gộp về một dòng.
+    caption: Muối chặn đúng việc gì, và vì sao phải khác từng dòng.
+    items:
+      - text: Muối chặn đúng một việc, và đó là việc gì.
+        focus: true
+      - text: Vì sao một muối dùng cho cả bảng là vô nghĩa.
+
+  # ================================================================ MO PHONG
+  # `gop` - NHIEU CAI RA MOT. The `khac` la doi chung: cung ba nguoi do, them
+  # muoi rieng thi ra ba dong khac han, tuc loi khong nam o ham bam.
+  - scene: gop
+    chapter: QUAY CHẬM
+    head: Ba người gộp về một dòng.
+    narration: Ba người này đặt cùng một mật khẩu, chuyện rất thường. Băm không muối thì cả ba cho ra đúng một dòng. Bẻ được một dòng đó là mở được cả ba tài khoản cùng lúc.
+    caption: Bẻ một dòng, mở được cả ba tài khoản.
+    vao:
+      - { nhan: NGƯỜI DÙNG 1, value: "an@shop.vn · 123456", note: "tự đặt" }
+      - { nhan: NGƯỜI DÙNG 2, value: "binh@shop.vn · 123456", note: "tự đặt" }
+      - { nhan: NGƯỜI DÙNG 3, value: "cuc@shop.vn · 123456", note: "tự đặt" }
+    qua: SHA-256 KHÔNG MUỐI
+    ra: { nhan: CỘT MẬT KHẨU BĂM, value: "8d969eef6ecad3c2", note: "một dòng cho cả ba" }
+    khac: { nhan: "CÙNG BA NGƯỜI ĐÓ, MỖI DÒNG MỘT MUỐI RIÊNG", value: "BA DÒNG KHÁC HẲN NHAU" }
+    verdict_at: 0.9
+    verdict: MỘT DÒNG, BA TÀI KHOẢN
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là chỗ băm không có gì riêng cho từng bản ghi. Cùng đầu vào thì cùng đầu ra, đó là định nghĩa của hàm băm, nên chính nó biến bảng thành một danh sách nhóm.
+    caption: Cùng đầu vào thì cùng đầu ra, nên bảng thành danh sách nhóm.
+    label: THỦ PHẠM
+    value: KHÔNG CÓ GÌ RIÊNG TỪNG DÒNG
+    size: 106
+    sub: Cùng đầu vào thì cùng đầu ra
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Mỗi bản ghi một muối.
+    narration: Quy tắc chỉ một câu. Mỗi bản ghi một muối riêng, sinh ngẫu nhiên, lưu ngay cạnh mã băm. Muối không phải bí mật, nó chỉ cần khác nhau.
+    caption: Mỗi bản ghi một muối riêng. Muối không cần bí mật.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Mỗi bản ghi một muối riêng, sinh ngẫu nhiên.
+    small: Dấu hiệu phát hiện sớm — chạy một câu đếm gộp theo cột mã băm. Ra bất kỳ nhóm nào lớn hơn một là bảng đang không có muối, hoặc đang dùng chung một muối cho cả bảng.
+
+  # ================================================================ TANG 2
+  # Cai muoi KHONG chan duoc, va do la cho hay bi nham voi muoi.
+  - scene: probe
+    chapter: CHẶN
+    head: Còn khi cả bảng bị lấy?
+    narration: Muối chặn được chuyện dùng chung, nhưng cả bảng bị lấy thì kẻ kia vẫn dò từng dòng một được. Chặn tiếp thì cần một khoá bí mật nằm ngoài cơ sở dữ liệu, thường gọi là tiêu.
+    caption: Muối nằm trong bảng. Tiêu thì nằm ngoài bảng.
+    heading: muối · tiêu
+    status: "2 lớp"
+    lines:
+      - { cmd: "muối  lưu cạnh mã băm", out: "chặn dùng chung", state: ok }
+      - { cmd: "muối  chống dò từng dòng", out: "không chặn",    state: bad }
+      - { cmd: "tiêu  nằm ngoài database", out: "chặn dò offline", state: ok }
+    verdict: HAI THỨ, HAI VIỆC KHÁC NHAU
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Chạy một câu đếm gộp theo cột mã băm của bạn xem, có nhóm nào lớn hơn một không? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã chạy thật.
+    text: CÓ NHÓM NÀO LỚN HƠN MỘT TRONG CỘT MÃ BĂM?
+    size: 84
+    hint: có nhóm nghĩa là bảng chưa có muối riêng từng dòng

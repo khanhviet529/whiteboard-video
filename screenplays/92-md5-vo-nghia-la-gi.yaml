@@ -1,0 +1,159 @@
+# SO 92 - MUA 7 "BAM VA BI MAT".
+#   chu de   : "MD5 vo" nghia la gi, va no KHONG nghia la doc nguoc duoc
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 178
+#   do bang  : repro/bam_va_bi_mat.py  (ca `md5_trung`)
+#
+# CAP KHOI 128 BYTE trong script la cap noi tieng cua Wang & Yu (2004), khong
+# phai so bia va cung khong phai so cua toi. Script tu kiem lai bang chinh
+# hashlib va IN RA ket qua so sanh, nen neu no khong con trung thi bang so hien
+# ra sai ngay chu khong am tham dung so cu:
+#   6 byte khac nhau / 6 BIT tren 1024 / md5 trung / sha256 khong trung
+#
+# MO PHONG: `gop` - NHIEU CAI RA MOT, nguoc chieu voi `multiply`. Hai the dau
+# vao PHAI hien doan CHUA byte lech (2fcab587 so 2fcab507), khong duoc cat cung
+# mot doan dau giong nhau: lint.check_gop bao LOI neu hai `value` giong het, va
+# no bao dung - hai the giong nhau tren man hinh thi ca canh mat sach y.
+
+title: Hai tệp khác nhau, một mã băm MD5
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 92'
+tag: 'bảo mật · mô phỏng'
+footer: 'MD5 VỠ NGHĨA LÀ LÀM ĐƯỢC TỆP TRÙNG  ·  KHÔNG PHẢI ĐỌC NGƯỢC'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Hai tệp. Một mã băm.
+    narration: Hai tệp này khác nhau, và tôi kiểm lại rồi, chúng thật sự khác nhau. Bấm MD5 cả hai thì ra đúng một chuỗi giống nhau tới từng chữ.
+    caption: Hai tệp khác nhau. MD5 ra đúng một chuỗi.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py md5_trung
+    nguon: repro/bam_va_bi_mat.py
+    status: "6 / 1024 bit"
+    lines:
+      - { cmd: "md5(tệp A)", out: "79054025…", state: warn }
+      - { cmd: "md5(tệp B)", out: "79054025…", state: warn }
+      - { cmd: "A == B ?",   out: "False",     state: bad }
+    verdict: KHÁC NHAU MÀ CÙNG MỘT MÃ
+
+  # ================================================================ NHIP 2
+  # Cho kho chiu: ai cung nghe "MD5 vo roi" nhung hieu sai no vo o dau, nen van
+  # dung MD5 dung cho cai cho no vo.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Ai cũng nghe câu đó rồi.
+    narration: Câu MD5 vỡ rồi thì ai cũng nghe. Nhưng hầu hết hiểu là có người đọc ngược được mã băm. Hiểu như vậy nên vẫn dùng MD5 đúng vào chỗ nó vỡ.
+    caption: Hiểu sai chỗ nó vỡ, nên vẫn dùng đúng chỗ đó.
+    value: HIỂU SAI CHỖ NÓ VỠ
+    size: 122
+    sub: Nên vẫn dùng đúng vào chỗ đó
+
+  # ================================================================ NHIP 3
+  # Da van cach hieu ma 90% nguoi xem dang co: "vo la doc nguoc duoc".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Vỡ là vỡ cái nào.
+    narration: Có hai chuyện rất khác nhau. Đọc ngược một mã băm ra nội dung gốc thì tới giờ chưa ai làm được. Còn tự dựng hai tệp cho ra cùng một mã thì làm được từ hai nghìn lẻ tư.
+    caption: Đọc ngược thì chưa ai làm được. Dựng tệp trùng thì làm được từ 2004.
+    vs: NHƯNG
+    box_h: 290
+    items:
+      - label: ĐỌC NGƯỢC MÃ BĂM RA NỘI DUNG
+        value: CHƯA AI LÀM ĐƯỢC
+        note: và đây là cái mọi người tưởng
+        color: ok
+      - label: DỰNG HAI TỆP CHO CÙNG MỘT MÃ
+        value: LÀM ĐƯỢC TỪ 2004
+        note: đây mới là chỗ MD5 vỡ
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết chỗ nào MD5 vẫn dùng được bình thường, và chỗ nào tuyệt đối không. Giờ xem hai tệp đó lệch nhau ở đâu.
+    caption: Chỗ MD5 vẫn dùng được, và chỗ tuyệt đối không.
+    items:
+      - text: Chỗ MD5 vẫn dùng được, và vì sao chỗ đó không sao.
+        focus: true
+      - text: Chỗ nó biến một phép kiểm thành một lời hứa rỗng.
+
+  # ================================================================ MO PHONG
+  # `gop` - hai dau vao khac nhau, mot ket qua. The `khac` la doi chung: cung
+  # hai tep do, SHA-256 tach duoc chung ra, nen loi khong nam o dau vao.
+  - scene: gop
+    chapter: QUAY CHẬM
+    head: Chúng lệch nhau đúng sáu bit.
+    narration: Hai tệp dài một trăm hai tám ký tự. Chúng lệch nhau ở sáu chỗ, mỗi chỗ đúng một bit, tức sáu bit trên một nghìn không hai bốn. Vậy mà mã băm của cả hai ra y hệt nhau.
+    caption: Lệch 6 bit trên 1024. Mã băm vẫn y hệt.
+    vao:
+      - { nhan: TỆP A · ĐOẠN LỆCH, value: "2fcab587 12467eab", note: "byte thứ 19" }
+      - { nhan: TỆP B · ĐOẠN LỆCH, value: "2fcab507 12467eab", note: "lệch đúng 1 bit" }
+    qua: MD5
+    ra: { nhan: MÃ BĂM CỦA CẢ HAI, value: "79054025255fb1a2", note: "y hệt nhau" }
+    khac: { nhan: "CÙNG HAI TỆP ĐÓ, BẤM BẰNG SHA-256", value: "8d12236e… VÀ b9fef2a8…" }
+    verdict_at: 0.9
+    verdict: SÁU BIT, MỘT MÃ BĂM
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm không nằm trong tệp của bạn. Nó nằm ở chính phép kiểm. Câu cùng mã băm đã thôi không còn nghĩa là cùng nội dung, kể từ lúc có người dựng được cặp trùng.
+    caption: Cùng mã băm không còn nghĩa là cùng nội dung.
+    label: THỦ PHẠM
+    value: PHÉP KIỂM ĐÃ MẤT NGHĨA
+    size: 112
+    sub: Cùng mã băm không còn là cùng nội dung
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Chia theo ai chọn dữ liệu.
+    narration: Quy tắc chia theo một câu hỏi duy nhất. Dữ liệu đó do ai chọn. Nếu người ngoài chọn được nội dung thì MD5 hết dùng, còn nếu chỉ để bắt lỗi đường truyền thì nó vẫn đủ.
+    caption: Người ngoài chọn được nội dung thì MD5 hết dùng.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Người ngoài chọn được dữ liệu thì đừng dùng MD5.
+    small: Dấu hiệu phát hiện sớm — tìm mọi chỗ MD5 đứng cạnh một quyết định. Chữ ký, khoá phiên, gộp tệp trùng đều là chỗ đó. Còn kiểm tra tệp tải về có bị lỗi đường truyền hay không thì MD5 vẫn làm đúng việc.
+
+  # ================================================================ TANG 2
+  # Duong hong con lai, va no la cho nguoi xem hay dinh nhat: gop tep trung.
+  - scene: probe
+    chapter: CHẶN
+    head: Còn chỗ gộp tệp trùng?
+    narration: Chỗ này mới hay gặp. Bạn gộp tệp trùng bằng mã băm để tiết kiệm ổ đĩa. Người dùng tải lên tệp B, hệ thống thấy mã đã có nên bỏ qua, và từ đó tệp B trỏ vào nội dung của tệp A.
+    caption: Gộp tệp trùng bằng MD5 thì tệp B trỏ vào nội dung tệp A.
+    heading: api upload · md5 dedupe
+    status: "200 OK"
+    lines:
+      - { cmd: "POST /upload  tệp A", out: "đã lưu",       state: ok }
+      - { cmd: "POST /upload  tệp B", out: "trùng, bỏ qua", state: bad }
+      - { cmd: "GET  /file/B",        out: "nội dung của A", state: bad }
+    verdict: KHÔNG MỘT DÒNG LỖI NÀO
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Trong hệ thống của bạn, có chỗ nào lấy mã băm của tệp người dùng tải lên làm khoá không? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã tìm đúng chỗ.
+    text: CÓ CHỖ NÀO LẤY MÃ BĂM TỆP NGƯỜI DÙNG LÀM KHOÁ?
+    size: 80
+    hint: đó là chỗ người ngoài chọn được dữ liệu

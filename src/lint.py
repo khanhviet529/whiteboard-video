@@ -424,7 +424,11 @@ KHOA_CHU = ("status", "value", "text", "head", "verdict", "vs", "tag", "n",
             # giua luc render. `06:30` thanh 390, `1:2:3` thanh 3723.
             "label", "top", "note", "sub", "small", "body", "hint", "kicker",
             "ten", "nhan", "nut", "url", "so", "packet", "heading", "lenh",
-            "nguon", "title", "brand", "footer", "hoi")
+            "nguon", "title", "brand", "footer", "hoi",
+            # Bon loai canh mo phong them sau (`cot` `thac` `ban_sao` `gop`).
+            # `dv` la don vi cua dong ho `thac` (" s", " ms") - de tran thi
+            # YAML doc `dv: 5` ra int va `track_w()` no giua luc render.
+            "key", "truc", "ghi", "con", "nhan_chung", "qua", "dv")
 
 
 def check_kieu_chu(sp, idx, out):
@@ -509,7 +513,220 @@ def check_topology(sp, idx, out):
 
 
 # Loai canh chiem HET san dien - gan dao cu vao la de len noi dung.
-CANH_KIN = {"probe", "gantt", "queue", "topology", "multiply", "code"}
+def check_cot(sp, idx, out):
+    """`cot` khong tinh gi - no ve dung con so bạn khai, y nhu `gantt`.
+
+    Hai phep kiem o day deu la loi DA THAY khi dung canh nay lan dau:
+
+      thang tuyen tinh voi du lieu lech nhau hang tram lan -> cot nho nhat cao
+      duoi mot pixel, tuc bien mat. Nguoi xem chi thay MOT cot va khong hieu
+      canh dang so sanh cai gi.
+
+      moi cot mot mau tuy y -> mat het nghia. Trong theme nay mau la NGON NGU:
+      `hot` la cai sai, `ok` la cai dung. Hai cot deu `hot` thi khong con doi
+      chieu, ba mau khac nhau thi khong con tieu diem.
+    """
+    tag = f"cảnh {idx:02d} cot"
+    cot = sp.get("cot") or []
+    if len(cot) < 2:
+        out.append(("LOI", tag, "cần ít nhất 2 `cot`, một cột thì không so gì"))
+        return
+    if len(cot) > 5:
+        out.append(("CANH BAO", tag,
+                    f"{len(cot)} cột trên sân diễn rộng 960px — nhãn cột sẽ "
+                    f"dính nhau. Gộp bớt hoặc tách hai cảnh"))
+    gia = []
+    for i, c in enumerate(cot):
+        if "gia" not in c:
+            out.append(("LOI", tag, f"cột {i} thiếu `gia` (số, để tính chiều cao)"))
+            gia.append(0.0)
+            continue
+        try:
+            gia.append(float(c["gia"]))
+        except (TypeError, ValueError):
+            out.append(("LOI", tag,
+                        f"cột {i} có `gia: {c['gia']!r}` không phải số"))
+            gia.append(0.0)
+        if not c.get("nhan"):
+            out.append(("CANH BAO", tag, f"cột {i} thiếu `nhan`, người xem "
+                                         f"không biết cột đó là gì"))
+    duong = [g for g in gia if g > 0]
+    kieu = str(sp.get("thang", "tuyen")).lower()
+    if kieu == "log" and any(g <= 0 for g in gia):
+        out.append(("LOI", tag,
+                    "`thang: log` mà có cột `gia` bằng 0 hoặc âm — log không "
+                    "biểu diễn được, cột đó sẽ cao 0"))
+    if duong:
+        ty = max(duong) / min(duong)
+        if ty > 60 and kieu != "log":
+            out.append(("CANH BAO", tag,
+                        f"cột lớn nhất gấp {ty:,.0f} lần cột nhỏ nhất mà trục "
+                        f"tuyến tính — cột nhỏ sẽ cao dưới một pixel, tức biến "
+                        f"mất. Đặt `thang: log`".replace(",", ".")))
+        if ty < 1.25 and len(duong) > 1:
+            out.append(("CANH BAO", tag,
+                        f"cột cao nhất chỉ hơn cột thấp nhất {ty:.2f} lần — "
+                        f"mắt không đọc ra chênh lệch, cảnh này không nói gì"))
+    tl = sp.get("ty_le")
+    if tl:
+        for ten in ("a", "b"):
+            v = tl.get(ten)
+            if v is None or not 0 <= int(v) < len(cot):
+                out.append(("LOI", tag,
+                            f"`ty_le.{ten}: {v}` nằm ngoài danh sách "
+                            f"{len(cot)} cột (0..{len(cot) - 1})"))
+        if not tl.get("nhan"):
+            out.append(("CANH BAO", tag,
+                        "`ty_le` không có `nhan` nên vẽ một cái ngoặc trống"))
+    # `cool` KHONG tinh vao so mau: trong bang mau cua theme no la "luong
+    # chinh", tuc vai tro TRUNG TINH - dung cho cot MOC, cai cot khong phai
+    # dung cung khong phai sai. So 96 co dung ba mau va ca ba deu dung viec:
+    # cool cho moc, hot cho cau hinh yeu hon, ok cho cau hinh chac hon. Dem ca
+    # `cool` vao thi luat nay bao tren mot canh viet dung, va mot luat bao nham
+    # deu deu thi nguoi ta bo qua luon nhung lan bao dung.
+    mau = {str(c.get("color", "")).lower() for c in cot}
+    mau.discard("")
+    mau.discard("cool")
+    if len(mau) > 2:
+        out.append(("CANH BAO", tag,
+                    f"{len(mau)} màu khác nhau (chưa tính `cool` là màu mốc) — "
+                    f"trong theme này màu là ngôn ngữ (`hot` sai, `ok` đúng), "
+                    f"quá hai màu là mất tiêu điểm"))
+
+
+def check_thac(sp, idx, out):
+    """`thac` ke chuyen BAC THANG: moi hang cho hang tren xong moi chay.
+
+    Nen phep kiem chinh la kiem tinh bac thang. Neu cac hang chay chong lan
+    nhau thi hinh dang tro thanh mot khoi dac, va khoi dac thi noi dieu NGUOC
+    lai: rang chung chay song song, tuc khong ai phai cho ai.
+    """
+    tag = f"cảnh {idx:02d} thac"
+    hang = sp.get("hang") or []
+    if len(hang) < 3:
+        out.append(("LOI", tag,
+                    f"chỉ {len(hang)} hàng — dưới ba bậc thì không thành bậc "
+                    f"thang, dùng `gantt` hai lane cho rõ hơn"))
+    if len(hang) > 14:
+        out.append(("CANH BAO", tag,
+                    f"{len(hang)} hàng nhưng chỉ 14 hàng đầu được vẽ — phần "
+                    f"còn lại nên gộp thành một hàng kèm `con:`"))
+    truoc_end, truoc_ten = None, None
+    for i, h in enumerate(hang[:14]):
+        try:
+            at, w = float(h.get("at", 0.0)), float(h.get("w", 0.08))
+        except (TypeError, ValueError):
+            out.append(("LOI", tag, f"hàng {i} có `at`/`w` không phải số"))
+            continue
+        ten = str(h.get("nhan", "?"))
+        if at < 0 or at + w > 1.0001:
+            out.append(("LOI", tag,
+                        f"`{ten}` chạy tới {at + w:.2f} — tràn ra ngoài trục "
+                        f"(at + w phải ≤ 1.0)"))
+        if len(ten) > 30:
+            out.append(("CANH BAO", tag,
+                        f"`nhan` của hàng {i} dài {len(ten)} ký tự, máng trái "
+                        f"chỉ vẽ 30 ký tự đầu — viết ngắn hơn"))
+        if truoc_end is not None and at < truoc_end - 0.02 \
+                and not sp.get("chong_lan"):
+            out.append(("CANH BAO", tag,
+                        f"`{ten}` bắt đầu ở {at:.2f} khi `{truoc_ten}` chưa "
+                        f"xong ({truoc_end:.2f}) — hai hàng chồng lấn thì hình "
+                        f"nói NGƯỢC lời đọc: chúng đang chạy song song, không "
+                        f"ai chờ ai. Đúng ý thì đặt `chong_lan: true`"))
+        truoc_end, truoc_ten = at + w, ten
+    xau = [i for i, h in enumerate(hang[:14]) if h.get("bad")]
+    if len(xau) > 1:
+        out.append(("CANH BAO", tag,
+                    f"{len(xau)} hàng đánh `bad` — mỗi cảnh chỉ nên một hàng "
+                    f"đỏ, không thì mất tiêu điểm"))
+    tong = sp.get("tong")
+    if tong:
+        try:
+            float(tong.get("gia", 0))
+        except (TypeError, ValueError):
+            out.append(("LOI", tag,
+                        f"`tong.gia: {tong.get('gia')!r}` không phải số — đồng "
+                        f"hồ không đếm lên được"))
+    else:
+        out.append(("CANH BAO", tag,
+                    "không có `tong` nên cảnh mô phỏng này không có con số nào "
+                    "đang đổi — xem docstring đầu bench.py"))
+
+
+def check_ban_sao(sp, idx, out):
+    """`ban_sao` song nho O SU THAT. Bo no di thi canh chi la `counters` dong.
+
+    Phep kiem quan trong nhat o day: co `that` hay khong. Ba o cung dem len ma
+    khong co con so su that ben canh thi nguoi xem thay ba con so nho nho va
+    khong thay chuyen gi sai - dung cai bay ma canh nay sinh ra de chua.
+    """
+    tag = f"cảnh {idx:02d} ban_sao"
+    o = sp.get("o") or []
+    if len(o) < 2:
+        out.append(("LOI", tag, "cần ít nhất 2 `o`, một bản sao thì không có "
+                                "chuyện gì để kể"))
+    if len(o) > 4:
+        out.append(("CANH BAO", tag,
+                    f"{len(o)} ô nhưng chỉ 4 ô đầu được vẽ — bốn ô đã là mức "
+                    f"mà mỗi ô còn đọc được số"))
+    for i, oo in enumerate(o[:4]):
+        buoc = oo.get("buoc") or []
+        if not buoc:
+            out.append(("LOI", tag, f"ô {i} không có `buoc`, giá trị sẽ trống"))
+            continue
+        ats = [float(x.get("at", 0.0)) for x in buoc]
+        if ats != sorted(ats):
+            out.append(("LOI", tag,
+                        f"ô {i} có `at` không tăng dần {ats} — giá trị sẽ nhảy "
+                        f"sai thứ tự"))
+        if not oo.get("nhan"):
+            out.append(("CANH BAO", tag, f"ô {i} thiếu `nhan`"))
+    if not sp.get("that"):
+        out.append(("CANH BAO", tag,
+                    "thiếu ô `that` — không có con số sự thật bên cạnh thì ba "
+                    "bộ đếm nhỏ không nói lên điều gì sai, và cảnh này thành "
+                    "một `counters` biết chạy"))
+    if not sp.get("ruler"):
+        out.append(("CANH BAO", tag,
+                    "thiếu `ruler` nên các ô đổi số mà người xem không biết "
+                    "đang ở giây thứ bao nhiêu"))
+
+
+def check_gop(sp, idx, out):
+    """`gop`: hai dau vao KHAC NHAU ra mot ket qua. Chu KHAC NHAU la ban le.
+
+    Bay da thay ngay o ban thu dau tien: hai the dau vao deu ghi
+    `d131dd02c5e6eec4...` vi cat cung mot so ky tu dau. Tren man hinh chung
+    GIONG HET nhau, nen ca canh mat sach y - nguoi xem thay hai the giong nhau
+    ra mot ket qua, chuyen do hoan toan binh thuong.
+    """
+    tag = f"cảnh {idx:02d} gop"
+    vao = sp.get("vao") or []
+    if len(vao) < 2:
+        out.append(("LOI", tag, "cần ít nhất 2 `vao`, một đầu vào thì không "
+                                "có gì trùng nhau"))
+        return
+    if len(vao) > 3:
+        out.append(("CANH BAO", tag,
+                    f"{len(vao)} đầu vào nhưng chỉ 3 cái đầu được vẽ"))
+    if not sp.get("ra"):
+        out.append(("LOI", tag, "thiếu `ra`, không có kết quả để gộp về"))
+    val = [str(v.get("value", "")) for v in vao[:3]]
+    if len(set(val)) == 1:
+        out.append(("LOI", tag,
+                    f"mọi `vao.value` hiện y hệt nhau trên màn hình "
+                    f"(`{val[0]}`) — cả cảnh nói rằng hai đầu vào KHÁC nhau mà "
+                    f"cho ra một kết quả, nên phải cho thấy chỗ chúng khác. "
+                    f"Cắt đoạn chứa byte khác nhau, hoặc bôi đậm phần lệch"))
+    if not sp.get("khac"):
+        out.append(("CANH BAO", tag,
+                    "không có thẻ `khac` (đối chứng) — nó là chỗ cho thấy lỗi "
+                    "không nằm ở đầu vào mà ở phép biến đổi"))
+
+
+CANH_KIN = {"probe", "gantt", "queue", "topology", "multiply", "code",
+            "cot", "thac", "ban_sao", "gop"}
 
 
 def check_prop(sp, idx, out):
@@ -575,6 +792,14 @@ def check(doc):
             check_queue(sp, i, out)
         elif bench and sp.get("scene") == "topology":
             check_topology(sp, i, out)
+        elif bench and sp.get("scene") == "cot":
+            check_cot(sp, i, out)
+        elif bench and sp.get("scene") == "thac":
+            check_thac(sp, i, out)
+        elif bench and sp.get("scene") == "ban_sao":
+            check_ban_sao(sp, i, out)
+        elif bench and sp.get("scene") == "gop":
+            check_gop(sp, i, out)
         if bench:
             check_kieu_chu(sp, i, out)
         check_caption(sp, i, out)
@@ -651,7 +876,22 @@ def check_cau_dai(doc, out):
 
 
 def check_tu_la(doc, out):
-    """Tu khong phai am tiet Viet va CHUA duoc quyet dinh trong phienam.py."""
+    """Tu khong phai am tiet Viet va CHUA duoc quyet dinh trong phienam.py.
+
+    GOI THANG `phienam.tu_la()` chu khong tu do lai. Ban truoc do lai bang mot
+    vong lap rieng va no SAI: no ha chu ve chu thuong (`w.lower()`) roi tra
+    trong `TU_DIEN`, nhung khoa cua `TU_DIEN` viet HOA cho moi viet tat (`API`
+    `TTL` `SQL` `MD5`...). Nen moi viet tat DA khai trong tu dien deu bi bao la
+    "chua khai", con `tu_la()` thi so bang chu hoa nen khong bao.
+
+    Loi nay im lang tu dau vi ba screenplay duyet dau tien chua bat `phien_am`,
+    va 70 khung tu sinh thi `narration` con la `{{SO}}`. No lo ra o so 91 - file
+    dau tien vua bat `phien_am` vua co viet tat trong loi doc.
+
+    Bai hoc chung: co MOT cho quyet dinh mot tu la la hay khong. Hai cho thi
+    truoc sau gi cung lech, va cho lech se lech ve phia bao nham - tuc phia lam
+    nguoi viet bo qua ca nhung canh bao that.
+    """
     if doc.get("theme") != "bench" or not doc.get("phien_am"):
         return
     try:
@@ -662,12 +902,7 @@ def check_tu_la(doc, out):
         n = sp.get("narration")
         if not n:
             continue
-        for w in re.findall(r"[A-Za-zA-Za-y\u00c0-\u1ef9]+", n):
-            k = w.lower()
-            if len(w) < 2 or phienam.la_am_tiet_viet(w):
-                continue
-            if k in phienam.TU_DIEN or k in phienam.GIU_GOC:
-                continue
+        for w in sorted(set(phienam.tu_la(n)), key=str.lower):
             out.append(("NGO", f"canh {i}",
                         f"{w!r} chua co trong TU_DIEN cung chua trong "
                         f"GIU_GOC - model se tu doan cach doc. Quyet dinh "

@@ -1,0 +1,119 @@
+hieu chuan: 11.8 ms
+
+=== khong_gian ===
+  Bam mot chieu thi do het mat bao lau
+     SO DO   toc do sha256 tren may nay: 831.247 lan/giay
+     SO DO   do het 10.000 pin bon so: 6.5 ms
+     SUY RA  cac dong duoi = so kha nang / toc do do duoc:
+             pin 4 số                             10.000 kha nang  ->  0.0 giay
+             pin 6 số                          1.000.000 kha nang  ->  1.2 giay
+             6 chữ thường                    308.915.776 kha nang  ->  6.2 phut
+             8 chữ thường                208.827.064.576 kha nang  ->  2.9 ngay
+             8 chữ + số + ký tự      722.204.136.308.736 kha nang  ->  27.6 nam
+             (mot GPU that nhanh hon Python nay hang nghin lan)
+
+=== do_het_8_ky_tu ===
+  Do het mat khau 8 chu thuong mat bao lau, theo tung ham
+     khong gian: 8 chu thuong = 26^8 = 208.827.064.576 kha nang
+       sha256                           804.070 lan/giay  ->  3.0 ngay
+       argon2id t3 m64MB p4                12.4 lan/giay  ->  534 nam
+       bcrypt cost 12                       3.9 lan/giay  ->  1.694 nam
+
+=== so_dien_thoai ===
+  Bam so dien thoai roi coi la da an danh - do het mat bao lau
+     so that:  0901234567
+     sha256:   d99c7a104575ba7f7ec183dc043b8d1c44ebc2c0...
+     tim ra:   0901234567 sau 2.3 giay. thu 1.234.568 lan
+     ca dau so 090 chi co 10.000.000 kha nang
+     khong can bang tra cuu, khong can GPU, mot vong for la xong
+
+=== md5_trung ===
+  Hai tep 128 byte KHAC nhau, bam MD5 ra gi
+  A  md5(tệp A)                     -> 79054025255fb1a26e4bc422aef54eb4
+  B  md5(tệp B)                     -> 79054025255fb1a26e4bc422aef54eb4
+     hai tep khac nhau o 6 byte, vi tri [19, 45, 59, 83, 109, 123]
+     tong so BIT khac nhau: 6 tren 1024
+     doan lech dau tien  A: 2fcab58712467eab
+                         B: 2fcab50712467eab
+     md5 TRUNG NHAU: True
+     sha256 trung nhau: False
+     sha256(A) = 8d12236e5c4ed9f4e790db4d...
+     sha256(B) = b9fef2a8fc93b05e7701e971...
+
+=== toc_do_bam ===
+  Bam mot mat khau bao nhieu lan moi giay
+     sha256            889.597 lan/giay  (1124 ns moi lan)
+     bcrypt 12             3.6 lan/giay  (275 ms moi lan)
+     argon2id              8.0 lan/giay  (125 ms moi lan)
+     sha256 nhanh hon argon2id 111.102 lan
+     sha256 nhanh hon bcrypt12 245.078 lan
+
+=== muoi ===
+  10.000 ban ghi, 22% dung mat khau pho bien
+  A  sha256(mat khau)               -> 2195 ban ghi trung hash
+  B  sha256(muoi + mat khau)        -> 0 ban ghi trung hash
+     nhom trung lon nhat khong muoi: 473 nguoi cung mot hash
+     gia tri 22% la tham so mo phong, khong phai so do
+
+=== bcrypt_72 ===
+  Hai mat khau khac nhau, 72 byte dau giong het (80 va 85 byte)
+  A  checkpw(mat khau A[:72])       -> True
+  B  checkpw(mat khau B[:72])       -> True
+     A = MatKhauRatDaiCuaToi-xxxxxxxxxx...
+     B = MatKhauRatDaiCuaToi-xxxxxxxxxx...
+     hai chuoi khac nhau tu byte thu 73
+     khong cat tay ma dua ca 80 byte vao: ValueError: password cannot be longer than 72 bytes, truncate ma
+     ban bcrypt nay NEM loi thay vi cat am tham
+
+=== argon2_tham_so ===
+  Doi tung tham so, thoi gian bam doi bao nhieu
+     t=3  m=64MB  p=4      115.4 ms   (moc)
+     t=1  m=64MB  p=4       56.9 ms   (0.49x moc)
+     t=3  m=8MB   p=4       22.9 ms   (0.20x moc)
+     t=3  m=256MB p=4      409.4 ms   (3.55x moc)
+     t=3  m=64MB  p=1      185.4 ms   (1.61x moc)
+
+=== hmac_webhook ===
+  Ke tan cong sua so tien roi tu ky lai. Server nhan khong
+  A  chu ky = sha256(payload)       -> server nhan: True
+  B  chu ky = HMAC(khoa, payload)   -> server nhan: False
+     payload that: {"don":"A-1","so_tien":100000}
+     payload da sua: {"don":"A-1","so_tien":1}
+     cach A: ke tan cong bam lai payload moi la co chu ky hop le
+     cach B: khong co khoa thi khong ky lai duoc
+
+=== timing ===
+  So sanh token 64 ky tu, cach nao ro ri qua dong ho
+     cach 1 - `==` cua CPython (goi memcmp):
+        trung  0 ky tu dau      45.0 ns  (1.00x)
+        trung  8 ky tu dau      78.2 ns  (1.74x)
+        trung 16 ky tu dau      46.4 ns  (1.03x)
+        trung 32 ky tu dau      46.2 ns  (1.03x)
+        trung 48 ky tu dau      48.3 ns  (1.07x)
+        trung 63 ky tu dau      47.4 ns  (1.05x)
+     cach 2 - vong lap tu viet, tra ve ngay khi khac:
+        trung  0 ky tu dau     356.1 ns  (1.00x)
+        trung  8 ky tu dau     824.9 ns  (2.32x)
+        trung 16 ky tu dau    1441.8 ns  (4.05x)
+        trung 32 ky tu dau    2478.7 ns  (6.96x)
+        trung 48 ky tu dau    3343.3 ns  (9.39x)
+        trung 63 ky tu dau    4155.9 ns  (11.67x)
+     cach 3 - compare_digest     115.1 ns  (thiet ke de khong doi)
+     vong lap tu viet: trung 63 ky tu ton 11.7x so voi trung 0
+     `==`            : trung 63 ky tu ton 1.05x so voi trung 0
+
+=== token_36 ===
+  Token tu toString(36).substr(2,9) dai bao nhieu
+     sinh 200.000 token
+     token trung nhau: 0
+     ngan nhat 6 ky tu, dai nhat 9 ky tu
+       dai 6 ky tu:       6 token
+       dai 7 ky tu:     145 token
+       dai 8 ky tu:   5.318 token
+       dai 9 ky tu: 194.531 token
+
+=== hash_mot_chieu ===
+  Bam mot chieu, nhung khong gian nho thi do het duoc
+     sha256('4271') = 0b94cd5e95afb17f118c0ed090fa2621...
+     do het 10.000 pin: tim ra '4271' sau 6.5 ms
+     mot chieu KHONG co nghia la an toan khi dau vao it kha nang

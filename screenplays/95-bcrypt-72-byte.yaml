@@ -1,0 +1,165 @@
+# SO 95 - MUA 7 "BAM VA BI MAT".
+#   chu de   : gioi han 72 byte cua bcrypt, va hai kieu no lam hong he thong
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 181
+#   do bang  : repro/bam_va_bi_mat.py  (ca `bcrypt_72`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# CHO NAY DA DOI so voi moi bai viet cu ve chu de nay, va do la ly do so nay
+# dang lam: ban `bcrypt` moi NEM ValueError thay vi cat am tham. Nen bay bay gio
+# co HAI mat, va mat thu hai moi la mat hay gap:
+#   1. code tu cat `mk[:72]` de tranh exception -> hai mat khau khac nhau cung
+#      vao duoc, y nhu ngay xua
+#   2. code khong cat -> nguoi dat mat khau dai KHONG DANG NHAP NOI, va thuong
+#      la loi bi nuot trong mot `except Exception` roi bao "sai mat khau"
+#
+# MO PHONG: `cot` co `nguong`. Chon loai nay vi hinh dang cua bug la mot cai
+# TRAN: bon cot dau tang deu roi hai cot cuoi CUNG chieu cao - mat doc ra chan
+# tran truoc khi tai nghe xong cau giai thich. So byte thuc dung = min(do dai,
+# 72), tuc phep tinh ai cung tu kiem duoc.
+
+title: Mật khẩu dài hơn 72 byte thì bcrypt bỏ phần dư
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 95'
+tag: 'bảo mật · mô phỏng'
+footer: 'BCRYPT CHỈ ĐỌC 72 BYTE ĐẦU  ·  PHẦN DƯ KHÔNG ĐI VÀO MÃ BĂM'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Hai mật khẩu, một tài khoản.
+    narration: Người này đặt một mật khẩu dài tám mươi ký tự. Tôi lấy bảy mươi hai ký tự đầu của nó rồi gõ tiếp một đoạn khác hẳn vào, và hệ thống cho tôi vào ngay.
+    caption: Đổi phần cuối mật khẩu. Hệ thống vẫn cho vào.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py bcrypt_72
+    nguon: repro/bam_va_bi_mat.py
+    status: "2 mật khẩu"
+    lines:
+      - { cmd: "mật khẩu thật · 80 ký tự", out: "vào được", state: ok }
+      - { cmd: "đổi từ ký tự thứ 73",      out: "vào được", state: bad }
+      - { cmd: "hai chuỗi có bằng nhau?",  out: "False",    state: bad }
+    verdict: HAI CHUỖI KHÁC NHAU, CÙNG VÀO ĐƯỢC
+
+  # ================================================================ NHIP 2
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Mật khẩu dài hơn là yếu hơn.
+    narration: Chỗ trái ngược nằm ở đây. Người đặt mật khẩu càng dài càng tưởng mình an toàn hơn. Nhưng qua mốc bảy mươi hai thì mỗi ký tự thêm vào không còn tác dụng gì.
+    caption: Qua mốc 72, mỗi ký tự thêm vào không còn tác dụng gì.
+    value: DÀI HƠN MÀ KHÔNG CHẮC HƠN
+    size: 110
+    sub: Từ ký tự thứ 73 trở đi không tính nữa
+
+  # ================================================================ NHIP 3
+  # Da van cach hieu hien nhien: "chac thu vien bao loi chu".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Thư viện có báo gì không.
+    narration: Bản thư viện mới thì có báo, nó ném hẳn một lỗi ra. Nhưng nhiều đoạn code chữa lỗi đó bằng cách tự cắt chuỗi xuống bảy mươi hai ký tự. Cắt như vậy là quay về đúng chỗ cũ.
+    caption: Bản mới ném lỗi. Code tự cắt chuỗi thì quay về chỗ cũ.
+    vs: NHƯNG
+    box_h: 300
+    items:
+      - label: ĐƯA CẢ 80 KÝ TỰ VÀO
+        value: THƯ VIỆN NÉM LỖI
+        note: bản bcrypt mới không cắt âm thầm nữa
+        color: ok
+      - label: CODE TỰ CẮT XUỐNG 72 TRƯỚC
+        value: KHÔNG LỖI, VÀ SAI Y NHƯ CŨ
+        note: đây là cách nhiều đoạn code đang chữa
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết mốc bảy mươi hai chặn đúng ở đâu, và cách chữa mà không mở lại lỗ cũ. Giờ xem số ký tự thật sự đi vào mã băm.
+    caption: Mốc 72 chặn ở đâu, và cách chữa không mở lại lỗ cũ.
+    items:
+      - text: Số ký tự thật sự đi vào mã băm, theo từng độ dài.
+        focus: true
+      - text: Cách chữa đúng, và cách chữa làm hỏng đăng nhập.
+
+  # ================================================================ MO PHONG
+  # `cot` + `nguong`: bon cot, hai cot cuoi CHAM TRAN nen bang nhau. Do la ca
+  # noi dung - khong phai "dai hon thi manh hon cham lai" ma la "dai hon thi
+  # KHONG THEM GI".
+  - scene: cot
+    chapter: QUAY CHẬM
+    head: Bao nhiêu ký tự thật sự vào.
+    narration: Trục dọc là số ký tự thật sự đi vào mã băm. Mười hai ký tự thì vào đủ mười hai. Bốn mươi thì vào đủ bốn mươi. Nhưng tám mươi và hai trăm đều chỉ vào đúng bảy mươi hai.
+    caption: 80 và 200 ký tự đều chỉ vào đúng 72.
+    truc: SỐ KÝ TỰ THẬT SỰ ĐI VÀO MÃ BĂM
+    ghi: bcrypt · số ký tự vào = ít hơn giữa độ dài và 72
+    nguong: { gia: 72, nhan: "TRẦN CỦA BCRYPT · 72" }
+    cot:
+      - { nhan: "MẬT KHẨU 12", gia: 12, value: "12", color: ok }
+      - { nhan: "MẬT KHẨU 40", gia: 40, value: "40", color: ok }
+      - { nhan: "MẬT KHẨU 80", gia: 72, value: "72", color: hot, note: "bỏ 8 ký tự" }
+      - { nhan: "MẬT KHẨU 200", gia: 72, value: "72", color: hot, note: "bỏ 128 ký tự" }
+    ty_le: { a: 2, b: 3, nhan: "HAI CỘT NÀY BẰNG NHAU" }
+    verdict_at: 0.93
+    verdict: CHẠM TRẦN RỒI THÌ THÔI
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là một con số nằm trong thiết kế từ năm chín chín. Hàm này xếp đầu vào vào một khối cố định, và khối đó chỉ chứa được bảy mươi hai chỗ.
+    caption: Một con số nằm trong thiết kế, không phải một lỗi.
+    label: THỦ PHẠM
+    value: MỘT CON SỐ TRONG THIẾT KẾ
+    size: 106
+    sub: Không phải lỗi cài đặt, nên không có bản vá
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Băm trước rồi mới bcrypt.
+    narration: Quy tắc chỉ một câu. Băm mật khẩu bằng SHA-256 rồi mã hoá kết quả sang chữ, sau đó mới đưa vào hàm kia. Đầu vào lúc đó luôn gọn, không bao giờ chạm trần.
+    caption: Băm trước cho gọn, rồi mới đưa vào bcrypt.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Băm trước cho đầu vào gọn, đừng cắt chuỗi.
+    small: Dấu hiệu phát hiện sớm — tìm mọi chỗ cắt chuỗi mật khẩu trong code, và mọi chỗ bắt lỗi rộng quanh lời gọi băm. Chỗ thứ hai là chỗ biến lỗi độ dài thành thông báo sai mật khẩu.
+
+  # ================================================================ TANG 2
+  # Duong hong con lai, va no nguoc chieu: khong phai "vao duoc" ma "khong vao
+  # duoc". Day moi la mat hay gap nhat cua bay nay o ban thu vien moi.
+  - scene: probe
+    chapter: CHẶN
+    head: Còn mặt ngược lại?
+    narration: Mặt ngược lại hay gặp hơn. Người dùng dán một câu dài làm mật khẩu, thư viện ném lỗi, và code bắt lỗi rộng nên báo về là sai mật khẩu. Người đó gõ lại đúng bao nhiêu lần cũng không vào được.
+    caption: Lỗi độ dài bị nuốt thành thông báo sai mật khẩu.
+    heading: đăng nhập · except Exception
+    status: "401"
+    lines:
+      - { cmd: "mật khẩu 96 ký tự", out: "ValueError",      state: bad }
+      - { cmd: "except Exception",  out: "trả 401",         state: bad }
+      - { cmd: "người dùng thấy",   out: "sai mật khẩu",    state: bad }
+    verdict: LỖI ĐỘ DÀI THÀNH LỖI MẬT KHẨU
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Thử đăng nhập bằng một mật khẩu chín mươi sáu ký tự trên hệ thống của bạn xem nó trả về gì? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã thử thật.
+    text: MẬT KHẨU 96 KÝ TỰ THÌ HỆ THỐNG BẠN TRẢ VỀ GÌ?
+    size: 80
+    hint: ba khả năng, và cả ba đều nói lên một chuyện khác nhau

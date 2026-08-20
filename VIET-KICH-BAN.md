@@ -109,6 +109,8 @@ caption:   ...                       # caption giữ nguyên chữ TTL
 | **`label: 23:30` không có nháy** | YAML 1.1 đọc số cách nhau bằng dấu hai chấm theo **hệ lục thập phân**: `23:30` thành `1410`, `1:2:3` thành `3723`. Không báo lỗi gì, chỉ nổ giữa lúc render. Lạ hơn nữa: `06:30` thì lại giữ nguyên là chuỗi vì số 0 đứng đầu | Bọc nháy mọi giờ phút. `lint.py` giờ kiểm 30 khoá được vẽ thẳng ra màn hình |
 | `status: 504` không có nháy | YAML trả về `int`, `track_w()` nổ **giữa lúc render** — tức sau khi đã trả tiền cho cả vòng tổng hợp giọng nói | Bọc nháy. `lint.py` bắt được mọi khoá được vẽ thẳng ra màn hình mà bị đọc thành số |
 | Dấu `:` theo sau dấu cách trong scalar YAML | Vỡ file, `ScannerError` | Bỏ dấu hai chấm hoặc bọc nháy |
+| **`footer` dài quá ~58 ký tự** | Bị cắt mất đuôi phải **mà không có gì báo**. Đã thấy ở số 98 (65 ký tự) và 99 (83 ký tự). Cắt ở dòng chân là mất nửa câu kết luận của cả video, và nó lặng lẽ hơn mọi lỗi khác | Code đã tự hạ cỡ chữ 22→16. Vẫn nên viết dưới 58 ký tự để không phải đọc chữ nhỏ |
+| **Trộn số đo của HAI lượt chạy trong một video** | Tốc độ băm dao 804.070–966.181 lần mỗi giây giữa các lượt trong cùng một buổi. Lấy tốc độ của lượt này ghép bảng thời gian của lượt kia thì hai con số trên màn hình **không chia ra nhau được** — mà người xem làm phép chia đó thật | Một lượt chạy cho cả mùa, lưu ra `repro/ket-qua/mua-NN-*.txt`, mọi số trích từ đúng tệp đó. Ghi tên tệp vào đầu screenplay |
 | **Dấu phẩy trong giá trị của flow style `{ ... }`** | **Không báo lỗi.** Dấu phẩy là dấu tách, nên `{ note: nhanh hơn 1,07 lần }` cho ra `{'note': 'nhanh hơn 1', '07 lần': None}` — file vẫn parse, vẫn render, chỉ mất nửa câu trên màn hình | Bọc giá trị bằng nháy. `lint.py` bắt được: bất kỳ khoá nào có giá trị rỗng đều bị báo LỖI |
 
 ---
@@ -157,6 +159,24 @@ Hai điều nữa về sự đơn điệu:
   loại**. Giống lờ mờ là tệ nhất — mắt tưởng đang so sánh nhưng không so được.
 
 ---
+
+## Bẫy của bốn cảnh mô phỏng mới (`cot` `thac` `ban_sao` `gop`)
+
+Bốn loại này dựng trong một buổi cùng với mùa 7, nên mục dưới đây là bẫy **đã va
+phải khi viết chín kịch bản đầu tiên dùng chúng**, không phải bẫy suy đoán.
+
+| Bẫy | Bằng chứng | Cách tránh |
+|---|---|---|
+| **`gop` cắt hai đầu vào ở cùng một đoạn đầu** | Bản thử đầu tiên hiện `d131dd02c5e6eec4...` ở CẢ HAI thẻ, vì cắt 16 ký tự đầu mà chỗ lệch nằm ở byte 19. Trên màn hình hai thẻ **giống hệt nhau**, nên cả cảnh mất sạch ý: người xem thấy hai thứ giống nhau ra một kết quả, chuyện đó hoàn toàn bình thường | Cắt đoạn **chứa chỗ lệch**. `lint.check_gop` báo LOI nếu mọi `vao.value` giống nhau |
+| **`cot` trục tuyến tính với dữ liệu lệch mấy bậc** | 824.768 cạnh 3,0 thì cột thứ hai cao 0,0004 pixel, tức biến mất hẳn | `thang: log`. Lint cảnh báo khi chênh > 60 lần |
+| **`cot` để cột cao hết khung** | Nhãn giá trị vẽ ở `đỉnh cột − 46px`, nên cột cao hết khung thì nhãn của nó đè lên nhãn trục. Đã thấy `824.768` nằm chồng lên `SỐ LẦN BẤM MỖI GIÂY` | Đã sửa trong code: cột chỉ chiếm 82% chiều cao vùng vẽ. Không cần làm gì ở screenplay |
+| **`cot` 5 cột với nhãn dài** | Số 96 có nhãn `m256 · NHỚ 256MB`; ở 5 cột thì khe chỉ 187px nên nhãn hai cột cạnh nhau dính vào nhau — `sk.wrap` ngắt dòng được nhưng không cắt được một TỪ dài hơn khe, và `ttext` không clip | Code đã tự hạ cỡ chữ 21→15. Vẫn nên viết `nhan` **dưới 10 ký tự** ở 4–5 cột, đẩy chi tiết xuống `note` |
+| **`cot` nhãn `nguong` neo cứng một phía** | Neo phải thì đè lên nhãn giá trị của cột chạm trần — mà cột chạm trần chính là cột đang được nói tới. Neo trái thì gặp đúng lỗi đó ở số 96 (cột mốc nằm đầu tiên) | Đã sửa: viền có nền đặc, tự đặt trên khe có cột **thấp nhất**. Không cần làm gì ở screenplay |
+| **`thac` bề rộng hàng không tỷ lệ với số đo** | Số 98 lúc đầu chỉ đo 3 mức (0, 32, 63 ký tự) rồi **nội suy** ba mức còn lại để lấy bề rộng. Ba hàng trong video khi đó là số bịa | Đo đủ mọi mức xuất hiện trên màn hình. Đã sửa `ca_timing` để đo cả sáu mức |
+| **`thac` đồng hồ `tong` đếm số nguyên** | `tong` mặc định in 2 chữ số thập phân, nên bộ đếm *số lần thử* hiện ra `2304,00 lần` | Đặt `le: 0` cho mọi đồng hồ đếm; để mặc định cho đồng hồ thời gian |
+| **`thac` `con` là một câu, không phải một nhãn** | `mono()` không ngắt dòng và không clip, nên câu `con` của số 98 chạy ra ngoài khung mất chữ cuối | Code đã ngắt dòng tối đa 2 dòng. Vẫn nên viết `con` dưới 60 ký tự |
+| **`ban_sao` thiếu ô `that`** | Ba ô cùng đếm lên 98, 96, 97 mà không có ô sự thật thì người xem thấy ba con số nho nhỏ và **không thấy chuyện gì sai**. Có ô `NGƯỜI DÙNG ĐÃ GỬI THẬT · 291` bên cạnh thì mới thành một phát hiện | Luôn khai `that`. Lint cảnh báo nếu thiếu |
+| **Nhãn phụ đặt ở đáy ô số** | `_stat_box` xếp khoá và giá trị **căn giữa rồi đẩy xuống đáy hộp**, nên mọi nhãn phụ đặt ở đáy hộp đều bị con số đè lên. Đã thấy ở `thac.tong.nhan`, `ban_sao.that.note`, `gop.ra.note` | Đặt nhãn phụ **ngoài** hộp, hoặc đo chiều cao thực của số rồi đặt bên dưới. Cả ba chỗ đã sửa trong code |
 
 ## Bẫy khi viết cảnh mô phỏng mới
 

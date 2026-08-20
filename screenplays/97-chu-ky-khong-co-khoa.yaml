@@ -1,0 +1,182 @@
+# SO 97 - MUA 7 "BAM VA BI MAT".
+#   chu de   : chu ky bang bam noi dung thi ai cung ky lai duoc
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 184 (HMAC)
+#   do bang  : repro/bam_va_bi_mat.py  (ca `hmac_webhook`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# MO PHONG: `gantt` chu khong `gop`. Da can nhac ca hai va chon `gantt`, ly do:
+# cai dang gay tai hoa o day khong phai "hai thu ra mot" ma la THU TU - ke o
+# giua sua noi dung TRUOC roi ky lai SAU, va server chi kiem cai chu ky sinh sau
+# do. Bo thu tu di thi con lai mot cau noi suong; giu thu tu thi nguoi xem thay
+# dung khoanh khac chu ky duoc lam moi.
+#
+# Hai o so phia tren la thu bien bieu do thanh thi nghiem: SO TIEN doi 100.000
+# thanh 1 ngay luc buoc "sua so tien" xong, roi CHU KY doi thanh KHOP ngay luc
+# buoc "tu bam chu ky" xong. Ca hai moc deu khop voi mot buoc vua xong, nen
+# lint.check_gantt khong bao "o so doi ma khong co buoc nao xong".
+#
+# Be rong thanh do bang chinh `lint._fit_w`, khong uoc luong:
+#   "gửi 100.000 kèm ký" >= 0.275   "sửa số tiền"    >= 0.179
+#   "tự bấm chữ ký"      >= 0.207   "gửi vào server" >= 0.220
+
+title: Chữ ký webhook mà ai cũng ký lại được
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 97'
+tag: 'bảo mật · mô phỏng'
+footer: 'BĂM NỘI DUNG KHÔNG PHẢI CHỮ KÝ  ·  CHỮ KÝ CẦN MỘT KHOÁ RIÊNG'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Đơn 100 nghìn, ghi 1 đồng.
+    narration: Cổng thanh toán gửi về một đơn một trăm nghìn. Hệ thống của bạn kiểm chữ ký, thấy khớp, rồi ghi vào đơn đúng một đồng. Không có dòng lỗi nào cả.
+    caption: Chữ ký khớp. Số tiền ghi vào là một đồng.
+    heading: webhook · kiểm chữ ký
+    lenh: py repro/bam_va_bi_mat.py hmac_webhook
+    nguon: repro/bam_va_bi_mat.py
+    status: "200 OK"
+    lines:
+      - { cmd: "cổng gửi số tiền", out: "100.000",  state: ok }
+      - { cmd: "kiểm chữ ký",      out: "khớp",     state: ok }
+      - { cmd: "đơn ghi vào",      out: "1 đồng",   state: bad }
+    verdict: CHỮ KÝ KHỚP MÀ SỐ TIỀN SAI
+
+  # ================================================================ NHIP 2
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Phép kiểm vẫn chạy đúng.
+    narration: Chỗ khó chịu là phép kiểm không hề hỏng. Nó so mã băm của nội dung với chữ ký nhận được, và hai thứ đó khớp nhau thật. Nó chỉ đang trả lời một câu hỏi khác.
+    caption: Phép kiểm không hỏng. Nó trả lời một câu hỏi khác.
+    value: NÓ TRẢ LỜI MỘT CÂU KHÁC
+    size: 112
+    sub: Khớp thật, nhưng khớp cái gì với cái gì
+
+  # ================================================================ NHIP 3
+  # Da van cach hieu ma 90% nguoi xem dang co: "bam noi dung la da ky".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Băm nội dung chứng minh gì.
+    narration: Băm nội dung rồi so lại chỉ chứng minh được một điều, là nội dung không rơi rụng trên đường. Nó không chứng minh ai gửi, vì bất cứ ai cũng bấm lại được mã băm của nội dung mới.
+    caption: Nó chứng minh nội dung nguyên vẹn, không chứng minh ai gửi.
+    vs: NHƯNG
+    box_h: 300
+    items:
+      - label: BĂM NỘI DUNG CHỨNG MINH ĐƯỢC
+        value: NỘI DUNG KHÔNG RƠI RỤNG
+        note: đúng việc của một mã kiểm tra
+        color: ok
+      - label: NÓ KHÔNG CHỨNG MINH ĐƯỢC
+        value: AI LÀ NGƯỜI GỬI
+        note: vì ai cũng bấm lại được mã đó
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết một chữ ký thật khác mã kiểm tra ở chỗ nào, và một dòng để sửa. Giờ quay chậm đoạn gói tin đi từ cổng về máy bạn.
+    caption: Chữ ký thật khác mã kiểm tra ở chỗ nào, và một dòng sửa.
+    items:
+      - text: Một chữ ký thật khác mã kiểm tra ở đúng một chỗ.
+        focus: true
+      - text: Vì sao so chữ ký cũng phải so bằng hàm riêng.
+
+  # ================================================================ MO PHONG
+  # Hai lane, ke o giua chen vao GIUA duong. Lich lien mach, khong co khoang
+  # chet nao qua 14% - lint bat neu co.
+  - scene: gantt
+    chapter: QUAY CHẬM
+    head: Quay chậm đường về của gói tin.
+    narration: Cổng gửi đi một trăm nghìn kèm chữ ký. Trên đường về có người chen vào, sửa số tiền xuống một đồng, rồi tự bấm lại mã băm của nội dung mới. Máy chủ của bạn nhận được, so lại, và thấy khớp.
+    caption: Sửa nội dung rồi tự ký lại. Server so lại thì thấy khớp.
+    ruler: ["0", "10ms", "20ms", "30ms"]
+    lanes:
+      - label: CỔNG THANH TOÁN
+        color: cool
+        steps:
+          - { at: 0.02, w: 0.28, text: "gửi 100.000 kèm ký" }
+      - label: KẺ CHEN GIỮA ĐƯỜNG
+        color: violet
+        steps:
+          - { at: 0.32, w: 0.18, text: "sửa số tiền" }
+          - { at: 0.50, w: 0.21, text: "tự bấm chữ ký", bad: true }
+          - { at: 0.73, w: 0.23, text: "gửi vào server" }
+    readout:
+      - key: SỐ TIỀN TRONG GÓI
+        steps:
+          - { at: 0.00, value: "100.000", state: ok,   note: "cổng gửi đi" }
+          - { at: 0.50, value: "1",       state: bad,  note: "vừa bị sửa" }
+      - key: SERVER KIỂM CHỮ KÝ
+        steps:
+          - { at: 0.00, value: "CHƯA TỚI", state: empty, note: "đang trên đường" }
+          - { at: 0.71, value: "KHỚP",     state: bad,   note: "khớp với bản đã sửa" }
+    counter:
+      key: ĐƠN GHI SAI
+      from: 0.96
+      rate: 42
+      label: và không ai bắt được
+    verdict_at: 0.97
+    verdict: KHỚP VỚI BẢN ĐÃ BỊ SỬA
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là chỗ chữ ký được tính từ thứ mà ai cũng có. Người chen vào có nội dung, có cả cách bấm, nên có luôn chữ ký. Không có gì trong đó là của riêng hai bên.
+    caption: Chữ ký tính từ thứ ai cũng có, nên ai cũng ký được.
+    label: THỦ PHẠM
+    value: CHỮ KÝ TÍNH TỪ THỨ AI CŨNG CÓ
+    size: 100
+    sub: Không có gì riêng của hai bên trong đó
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Cho một khoá vào phép băm.
+    narration: Quy tắc chỉ một câu. Chữ ký phải tính bằng HMAC, tức là băm nội dung cộng một khoá chỉ hai bên biết. Thiếu khoá thì đó chỉ là một mã kiểm tra.
+    caption: Nội dung cộng một khoá riêng. Thiếu khoá thì chỉ là mã kiểm tra.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Chữ ký phải có một khoá chỉ hai bên biết.
+    small: Dấu hiệu phát hiện sớm — mở code kiểm chữ ký ra tìm biến khoá. Không thấy biến nào đọc từ cấu hình đi vào phép băm thì đó không phải chữ ký, dù tên hàm có chữ ký hay không.
+
+  # ================================================================ TANG 2
+  # Bay thu hai, ngay ben canh: co khoa roi nhung SO SANH bang dau bang.
+  - scene: probe
+    chapter: CHẶN
+    head: Có khoá rồi, so thế nào?
+    narration: Thêm khoá vào là chặn được đường trên. Nhưng còn một chỗ nữa, là cách so hai chữ ký với nhau. So bằng dấu bằng thông thường thì thời gian trả lời rò ra thông tin, và số sau nói về đúng chỗ đó.
+    caption: Có khoá rồi vẫn còn chỗ so sánh. Số sau nói về nó.
+    heading: kiểm chữ ký · hai lớp
+    status: "2 lớp"
+    lines:
+      - { cmd: "băm nội dung, không khoá", out: "ai cũng ký được", state: bad }
+      - { cmd: "HMAC có khoá riêng",       out: "chặn được",       state: ok }
+      - { cmd: "so bằng dấu bằng",         out: "rò thời gian",    state: warn }
+    verdict: CÒN MỘT CHỖ NỮA, Ở SỐ SAU
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Mở đoạn code kiểm chữ ký của bạn ra xem, trong phép băm đó có một khoá nào không? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã mở code ra xem.
+    text: TRONG PHÉP BĂM CHỮ KÝ CỦA BẠN CÓ MỘT KHOÁ KHÔNG?
+    size: 78
+    hint: không có khoá thì đó là mã kiểm tra, không phải chữ ký

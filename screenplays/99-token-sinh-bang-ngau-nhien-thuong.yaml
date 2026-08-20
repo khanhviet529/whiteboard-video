@@ -1,0 +1,168 @@
+# SO 99 - MUA 7 "BAM VA BI MAT". So cuoi mua.
+#   chu de   : doan mot dong sinh token pho bien nhat, va hai cho no hong
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 186
+#   do bang  : repro/bam_va_bi_mat.py  (ca `token_36`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
+#
+# MOT DIEU PHAI GIU CHO DUNG trong so nay: bo do KHONG chung minh duoc rang
+# `Math.random()` doan duoc. De chung minh cho do phai dung lai bo sinh
+# xorshift128+ cua V8 roi giai nguoc, viec do khong nam trong pham vi mot bo do
+# nua tieng, va toi khong lam. Nen video chia ro hai muc:
+#   DO DUOC   phan bo do dai token cua doan mot dong do - 200.000 token, va
+#             5.469 cai trong so do NGAN hon 9 ky tu (6 + 145 + 5.318)
+#   DAC TA    `Math.random()` duoc dac ta ghi ro la KHONG dung cho muc dich
+#             ma hoa. Day la su that muc "dac ta" theo Y-TUONG.md Cua 1, giong
+#             kieu `[10,9,1].sort()` - dung tren moi may, khong can do
+#
+# Canh 08 noi ro cho nay bang chinh chu "toi khong do duoc", chu khong muon lay
+# mot ket luan manh hon so do cua no.
+#
+# MO PHONG: `cot` thang log. Bon nhom cach nhau tu 6 den 194.531 token, tuc
+# nam bac - truc tuyen tinh lam ba cot dau bien mat han.
+
+title: Đoạn một dòng sinh token, và hai chỗ nó hỏng
+theme: bench
+he: giang_duong
+accent: hot
+domain: fe
+brand: 'BĂM VÀ BÍ MẬT · SỐ 99'
+tag: 'bảo mật · mô phỏng'
+footer: 'TOSTRING(36) CẮT MẤT SỐ 0 Ở CUỐI  ·  ĐỘ DÀI KHÔNG DO BẠN ĐẶT'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Token 9 ký tự, đôi khi 6.
+    narration: Đây là đoạn một dòng sinh chuỗi mã mà ai cũng chép. Nó phải ra chín ký tự. Tôi sinh hai trăm nghìn cái, và có những cái chỉ dài sáu ký tự.
+    caption: Phải ra 9 ký tự. Có những cái chỉ dài 6.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py token_36
+    nguon: repro/bam_va_bi_mat.py
+    status: "200.000"
+    lines:
+      - { cmd: "token dài 9 ký tự", out: "194.531", state: ok }
+      - { cmd: "token dài 8 ký tự", out: "5.318",   state: warn }
+      - { cmd: "token dài 6 ký tự", out: "6",       state: bad }
+    verdict: 5.469 CÁI NGẮN HƠN CHÍN KÝ TỰ
+
+  # ================================================================ NHIP 2
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Nó không hỏng bao giờ.
+    narration: Đoạn này không bao giờ ném lỗi. Nó luôn trả về một chuỗi, luôn khác nhau, và tự tay bạn thử vài lần thì lần nào cũng ra chín ký tự. Nên nó đi qua mọi vòng kiểm.
+    caption: Không bao giờ ném lỗi, nên nó đi qua mọi vòng kiểm.
+    value: THỬ VÀI LẦN THÌ LẦN NÀO CŨNG ĐÚNG
+    size: 92
+    sub: Phải sinh vài nghìn cái mới thấy
+
+  # ================================================================ NHIP 3
+  # Da van cach hieu hien nhien: "chac tai cat chuoi sai chi so".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Không phải lỗi cắt chuỗi.
+    narration: Chỗ hỏng không nằm ở phép cắt chuỗi. Nó nằm ở phép đổi số thực sang hệ ba mươi sáu. Phép đó bỏ hết số không ở cuối, y như cách chín phẩy mười viết thành chín phẩy một.
+    caption: Phép đổi hệ bỏ hết số 0 ở cuối, nên chuỗi ngắn lại.
+    vs: THẬT RA
+    box_h: 300
+    items:
+      - label: AI CŨNG ĐOÁN LÀ
+        value: CẮT CHUỖI SAI CHỈ SỐ
+        note: và đó là chỗ không có lỗi gì
+        color: ok
+      - label: CHỖ HỎNG THẬT LÀ
+        value: ĐỔI HỆ BỎ SỐ 0 Ở CUỐI
+        note: chuỗi ngắn lại trước khi bị cắt
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ biết đoạn đó ngắn đi bao nhiêu lần trên hai trăm nghìn cái, và một chỗ hỏng nữa nặng hơn hẳn. Giờ xem phân bố độ dài của cả hai trăm nghìn chuỗi.
+    caption: Nó ngắn đi bao nhiêu lần, và chỗ hỏng nặng hơn.
+    items:
+      - text: Phân bố độ dài thật của hai trăm nghìn token.
+        focus: true
+      - text: Một chỗ hỏng nữa, nặng hơn chuyện độ dài rất nhiều.
+
+  # ================================================================ MO PHONG
+  # `cot` tra loi BAO NHIEU O MOI MUC. Bien la DO DAI TOKEN. Truc log vi bon
+  # nhom cach nhau nam bac; `sc_cot` tu in huy hieu TRUC LOG.
+  - scene: cot
+    chapter: QUAY CHẬM
+    head: Hai trăm nghìn token, xếp theo độ dài.
+    narration: Đây là hai trăm nghìn chuỗi mã xếp theo độ dài. Gần hết đúng chín ký tự. Nhưng năm nghìn bốn trăm sáu chín cái ngắn hơn, và sáu cái trong đó chỉ có sáu ký tự.
+    caption: 5.469 cái ngắn hơn 9 ký tự, 6 cái chỉ có 6.
+    truc: SỐ TOKEN SINH RA · TRÊN 200.000 CÁI
+    thang: log
+    ghi: mô phỏng đúng phép toString(36).substr(2,9) · repro/ket-qua/mua-07-bam-va-bi-mat.txt
+    cot:
+      - { nhan: "DÀI 6 KÝ TỰ", gia: 6, value: "6", color: hot, note: "2 tỉ khả năng" }
+      - { nhan: "DÀI 7 KÝ TỰ", gia: 145, value: "145", color: hot }
+      - { nhan: "DÀI 8 KÝ TỰ", gia: 5318, value: "5.318", color: hot }
+      - { nhan: "DÀI 9 KÝ TỰ", gia: 194531, value: "194.531", color: ok, note: "đúng như mong đợi" }
+    ty_le: { a: 0, b: 3, nhan: "1 TRÊN 32.422" }
+    verdict_at: 0.93
+    verdict: NGẮN ĐI MÀ KHÔNG BÁO GÌ
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm là chỗ độ dài chuỗi đi ra từ một phép đổi hệ, chứ không phải từ một con số bạn đặt. Bạn không hề đặt độ dài nào cả, bạn chỉ cắt lấy chín ký tự nếu có.
+    caption: Bạn không đặt độ dài. Bạn cắt lấy 9 nếu có.
+    label: THỦ PHẠM
+    value: ĐỘ DÀI ĐI RA TỪ PHÉP ĐỔI HỆ
+    size: 100
+    sub: Không phải từ một con số bạn đặt
+
+  # ================================================================ CHAN
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Xin đủ số byte rồi mã hoá.
+    narration: Quy tắc chỉ một câu. Xin đủ lượng ngẫu nhiên từ thư viện mã hoá. Rồi đổi sang chữ bằng một phép có độ dài cố định, để độ dài là do bạn đặt.
+    caption: Xin đủ byte từ thư viện mã hoá, rồi đổi sang chữ.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Độ dài token phải do bạn đặt, không do phép đổi hệ.
+    small: Dấu hiệu phát hiện sớm — chạy một câu đếm gộp theo độ dài cột token trong cơ sở dữ liệu. Ra nhiều hơn một giá trị độ dài là đang dùng đúng đoạn một dòng này.
+
+  # ================================================================ TANG 2 + NOI THAT
+  # Cho hong THU HAI, nang hon han, va o day phai noi ro muc bang chung: day la
+  # DAC TA chu khong phai so do cua toi. Khong duoc noi manh hon the.
+  - scene: probe
+    chapter: CÒN LẠI
+    accent: gold
+    head: Còn chỗ hỏng nặng hơn.
+    narration: Chỗ hỏng thứ hai nặng hơn nhiều. Hàm ngẫu nhiên thường của JavaScript được đặc tả ghi rõ là không dùng cho mục đích mã hoá. Tôi không đo được nó đoán ra sao, nhưng đặc tả nói vậy là đủ để đổi.
+    caption: Đặc tả ghi rõ hàm đó không dành cho bí mật.
+    heading: hai mức bằng chứng
+    status: "2 mức"
+    lines:
+      - { cmd: "độ dài token ngắn đi",    out: "tôi đo được",   state: bad }
+      - { cmd: "không dùng cho mã hoá",   out: "đặc tả ghi rõ", state: bad }
+      - { cmd: "đoán được dãy tiếp theo", out: "tôi chưa đo",   state: warn }
+    verdict: HAI MỨC BẰNG CHỨNG, KHÔNG TRỘN
+
+  # ================================================================ CAU HOI
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Chạy một câu đếm gộp theo độ dài cột mã phiên của bạn xem, ra mấy giá trị khác nhau? Trả lời giúp tôi ở phần bình luận.
+    caption: Ra hơn một giá trị là bạn đang dùng đúng đoạn đó.
+    text: CỘT TOKEN CỦA BẠN CÓ MẤY ĐỘ DÀI KHÁC NHAU?
+    size: 84
+    hint: hơn một giá trị nghĩa là độ dài không do bạn đặt

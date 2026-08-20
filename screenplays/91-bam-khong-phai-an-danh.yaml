@@ -1,0 +1,176 @@
+# SO 91 - MUA 7 "BAM VA BI MAT". Xem KE-HOACH-KHO-292.md.
+#   chu de   : bam mot chieu KHONG co nghia la an danh
+#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 177
+#   do bang  : repro/bam_va_bi_mat.py  (ca `so_dien_thoai`, `khong_gian`)
+#   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt  <- MOT luot chay duy nhat
+#              MOI con so duoi day lay tu dung luot do. Tron so cua hai luot la
+#              sai: toc do bam dao 800.000-966.000 lan/giay theo tai may, nen
+#              hai luot cho hai bang thoi gian khong khop nhau.
+#
+# MOI CON SO trong file nay den tu mot trong hai cho, khong co so thu ba:
+#   DO DUOC  2,3 giay / 1.234.568 lan thu / 831.247 lan bam moi giay
+#            -> `py repro/bam_va_bi_mat.py so_dien_thoai khong_gian`, may ranh
+#   SUY RA   cot thoi gian do het cua canh 07 = so kha nang / toc do do duoc.
+#            Canh do GHI RO dieu nay trong `ghi:` de nguoi xem tu kiem phep chia.
+#
+# HAI CANH MO PHONG, va chung phai KHAC HAN LOAI nhau (`multiply` roi `cot`),
+# khong duoc "giong lo mo" - xem VIET-KICH-BAN.md muc "Bay lon nhat". Canh 06
+# xen vao giua de hai canh mo phong khong dung canh nhau.
+
+title: Băm số điện thoại rồi, vẫn đọc lại được
+theme: bench
+he: giang_duong
+accent: hot
+domain: be
+brand: 'BĂM VÀ BÍ MẬT · SỐ 91'
+tag: 'bảo mật · mô phỏng'
+footer: 'BĂM MỘT CHIỀU  ·  NHƯNG MIỀN GIÁ TRỊ ĐẾM ĐƯỢC'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  # ================================================================ NHIP 1
+  # Loi that, ba dong, dong cuoi vo ly. Chua he lo nguyen nhan.
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Cột số điện thoại đã băm.
+    narration: Bảng khách hàng của bạn không lưu số điện thoại, nó chỉ lưu mã băm của số đó. Cả đội gọi như thế là đã ẩn danh. Tôi dò ra số gốc trong hai phẩy ba giây.
+    caption: Chỉ lưu mã băm, không lưu số. Dò ra số gốc sau 2,3 giây.
+    heading: python · bam_va_bi_mat.py
+    lenh: py repro/bam_va_bi_mat.py so_dien_thoai
+    nguon: repro/bam_va_bi_mat.py
+    status: "2.3 s"
+    lines:
+      - { cmd: "sha256(\"0901234567\")", out: "d99c7a10…", state: ok }
+      - { cmd: "dò cả đầu số 090",       out: "1.234.568 lần", state: warn }
+      - { cmd: "số gốc tìm lại được",    out: "0901234567",    state: bad }
+    verdict: BĂM RỒI VẪN ĐỌC LẠI ĐƯỢC
+
+  # ================================================================ NHIP 2
+  # Cho kho chiu: khong ai goi day la lo hong, nen khong ai va.
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Không ai gọi đây là lỗ hổng.
+    narration: Chuyện này không ai gọi là lỗ hổng, vì không có lệnh nào lỗi và không dòng log nào đỏ. Bảng vẫn đúng, mã băm vẫn là mã băm, chỉ có điều nó không giấu được gì.
+    caption: Không lệnh nào lỗi, nên không ai đi vá.
+    value: KHÔNG CÓ LỆNH NÀO LỖI
+    size: 118
+    sub: Nên nó đi qua hết mọi vòng review
+
+  # ================================================================ NHIP 3
+  # Da van cach giai thich ma 90% nguoi xem dang nghi: "chac do thuat toan yeu".
+  - scene: compare
+    chapter: HIỆN TRƯỜNG
+    head: Thuật toán không hề yếu.
+    narration: Chỗ yếu không nằm ở thuật toán. SHA-256 tới giờ vẫn chưa ai đọc ngược lại được. Cái yếu là số khả năng của thứ bạn đem đi băm.
+    caption: Thuật toán vẫn nguyên. Số khả năng thì chỉ có 10 triệu.
+    vs: NHƯNG
+    box_h: 290
+    items:
+      - label: THUẬT TOÁN BĂM
+        value: CHƯA AI ĐỌC NGƯỢC ĐƯỢC
+        note: SHA-256 vẫn còn nguyên
+        color: ok
+      - label: SỐ KHẢ NĂNG CỦA MỘT ĐẦU SỐ
+        value: 10 TRIỆU
+        note: một vòng for là hết
+        color: hot
+
+  # ================================================================ NHIP 4 + 5
+  - scene: list
+    chapter: HIỆN TRƯỜNG
+    head: Hết video này bạn có gì
+    narration: Bạn sẽ có một cách đo mức an toàn của mã băm mà không cần hỏi ai, và biết chỗ nào băm vẫn đúng việc. Giờ xem vòng dò đó chạy thật một lượt.
+    caption: Một cách đo, và chỗ băm vẫn đúng việc.
+    items:
+      - text: Cách đo — đếm số khả năng, đừng hỏi thuật toán nào.
+        focus: true
+      - text: Chỗ băm vẫn đúng việc, và chỗ nó không giấu nổi gì.
+
+  # ================================================================ MO PHONG 1
+  # `multiply` tra loi BAO NHIEU CAI. O dau xanh la lan thu dau tien, 1.234.567
+  # o do sau la phan con lai - ty le do doc duoc trong nua giay, khong can mot
+  # cau giai thich nao.
+  - scene: multiply
+    chapter: QUAY CHẬM
+    head: Vòng dò chạy thật.
+    narration: Đây là vòng dò. Mỗi ô là một số điện thoại đã thử, đi từ số nhỏ nhất của đầu số đó. Hơn một triệu hai trăm nghìn lần sau, có một số cho ra đúng mã băm kia.
+    caption: Mỗi ô là một số đã thử. Hơn 1,2 triệu lần thì khớp.
+    source:
+      label: MỘT MÃ BĂM DUY NHẤT
+      text: d99c7a104575ba7f7ec183dc043b8d1c
+    counter_key: SỐ LẦN THỬ
+    count: 1234568
+    cols: 40
+    chip: MỖI Ô LÀ MỘT SỐ ĐIỆN THOẠI ĐÃ THỬ
+    verdict_at: 0.92
+    verdict: "1.234.568 LẦN, 2,3 GIÂY"
+
+  # ================================================================ THU PHAM
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm không phải hàm băm. Thủ phạm là miền giá trị của thứ đem băm. Số điện thoại có mười chữ số, mà ba chữ đầu thì ai cũng đoán được.
+    caption: Thủ phạm là miền giá trị, không phải hàm băm.
+    label: THỦ PHẠM
+    value: MIỀN GIÁ TRỊ ĐẾM ĐƯỢC
+    size: 116
+    sub: Ba chữ số đầu thì ai cũng đoán ra
+
+  # ================================================================ MO PHONG 2
+  # `cot` tra loi BAO NHIEU O MOI MUC - bien o day la DO DAI dau vao, khong phai
+  # thoi gian, nen khong loai mo phong nao cu ve duoc. Thang log vi bon gia tri
+  # cach nhau tam chin bac; huy hieu TRUC LOG do `sc_cot` tu in.
+  #
+  # `ghi:` la cho quan trong nhat cua canh nay: no noi ro day la PHEP CHIA tu
+  # mot toc do do duoc, khong phai bon phep do rieng. Bo dong do di thi bang so
+  # thanh mot loi tuyen bo.
+  - scene: cot
+    chapter: QUAY CHẬM
+    head: Đổi thứ đem băm thì đổi hẳn.
+    narration: Vẫn tốc độ máy đó, chỉ đổi thứ đem băm. Sáu chữ thường mất sáu phút. Thêm hai chữ nữa thành gần ba ngày, thêm chữ số và ký tự lạ vào thì thành gần ba mươi năm.
+    caption: Cùng một tốc độ, đổi đầu vào thì đổi hẳn.
+    truc: THỜI GIAN DÒ HẾT · TÍNH BẰNG GIÂY
+    thang: log
+    ghi: suy từ tốc độ 831.247 lần mỗi giây, đo cùng một lượt với cảnh 01
+    cot:
+      - { nhan: "PIN 6 SỐ", gia: 1.203, value: "1,2 GIÂY", color: hot }
+      - { nhan: "6 CHỮ THƯỜNG", gia: 371.6, value: "6,2 PHÚT", color: hot }
+      - { nhan: "8 CHỮ THƯỜNG", gia: 251220, value: "2,9 NGÀY", color: ok }
+      - { nhan: "8 CHỮ + SỐ + KÝ TỰ", gia: 868815000, value: "27,6 NĂM", color: ok }
+    ty_le: { a: 0, b: 3, nhan: "CÁCH NHAU 722 TRIỆU LẦN" }
+    verdict_at: 0.93
+    verdict: MIỀN GIÁ TRỊ QUYẾT ĐỊNH HẾT
+
+  # ================================================================ QUY TAC
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Đếm trước khi tin.
+    narration: Quy tắc chỉ một câu. Trước khi băm cái gì, đếm xem nó có bao nhiêu khả năng. Dưới một tỉ thì coi như bạn đang lưu chính bản gốc.
+    caption: Đếm số khả năng trước. Dưới một tỉ thì coi như lưu bản gốc.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Đếm số khả năng trước khi tin vào mã băm.
+    small: Dấu hiệu phát hiện sớm — rà mọi cột đang băm mà miền giá trị đếm được — số điện thoại, ngày sinh, mã đơn. Muốn ẩn danh thật thì phải thêm một khoá bí mật vào, chứ không phải băm trần.
+
+  # ================================================================ CAU HOI
+  # Cau hoi KIEM TRA CO CHE: tra loi duoc thi phai tu dem duoc mien gia tri cua
+  # chinh bang minh, khong tra cuu duoc o dau.
+  - scene: ask
+    chapter: CÒN LẠI
+    head: Câu hỏi cuối.
+    narration: Trong cơ sở dữ liệu của bạn, cột nào đang băm một thứ chỉ có vài triệu khả năng? Trả lời giúp tôi ở phần bình luận.
+    caption: Trả lời được là bạn đã đếm thật.
+    text: CỘT NÀO CỦA BẠN ĐANG BĂM MỘT THỨ ĐẾM ĐƯỢC?
+    size: 84
+    hint: đếm số khả năng rồi chia cho tám trăm nghìn

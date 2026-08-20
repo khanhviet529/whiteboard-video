@@ -62,6 +62,10 @@ cho **cả bốn tuyến**, không riêng tuyến 1.
 | `multiply` | BAO NHIÊU CÁI | một câu thành N câu, một render thành N render — lưới ô đầy dần |
 | `queue` | BAO NHIÊU THEO THỜI GIAN | hàng đợi dâng lên và không rút, biểu đồ cắt màu tại ngưỡng |
 | `topology` | Ở ĐÂU | tầng nào có, **tầng nào không** — gói tin dừng giữa đường |
+| `cot` | BAO NHIÊU Ở MỖI MỨC | một đại lượng theo một biến **không phải thời gian** — cỡ dữ liệu, tham số cấu hình, hàm nào |
+| `thac` | CÁI NÀO CHỜ CÁI NÀO | chuỗi việc nối đuôi thành bậc thang, đồng hồ tổng đếm lên |
+| `ban_sao` | MỖI BẢN SAO GIỮ GÌ | N instance mỗi cái một giá trị, cộng một ô **sự thật** để đối chiếu |
+| `gop` | NHIỀU CÁI RA MỘT | hai đầu vào khác nhau cho ra cùng một kết quả |
 | `counters` | — | một giá trị **không đổi** qua nhiều mốc thời gian |
 | `compare` | — | hai vế đặt cạnh nhau, con số này bên con số kia |
 | `probe` | — | ba dòng shell, dòng cuối vô lý |
@@ -87,6 +91,27 @@ Trường `domain:` (`fe` `be` `database` `infra`) không phải cửa lọc, ch
 | [double-charge.yaml](screenplays/double-charge.yaml) | 1 | be | Khách bấm một lần, trừ tiền hai lần | `topology` + `race` (theme `phongtoi`) |
 | [async-song-song.yaml](screenplays/async-song-song.yaml) | 2 | be | Thêm async, nhanh hơn được 0,04 giây | `gantt` ×2 (một luồng / hai tiến trình) |
 | [pool-can.yaml](screenplays/pool-can.yaml) | 1 | be | 1/3 request lỗi, database dùng 1,1% sức | `topology` (chết ở POOL) + `queue` (70 chờ, 10 chỗ) |
+
+### Mùa 7 — BĂM VÀ BÍ MẬT (9 số, từ kho 292 chủ đề trong `files/`)
+
+Xem [KE-HOACH-KHO-292.md](KE-HOACH-KHO-292.md). Cả mùa đo bằng một lượt chạy duy
+nhất của [repro/bam_va_bi_mat.py](repro/bam_va_bi_mat.py), kết quả lưu ở
+[repro/ket-qua/mua-07-bam-va-bi-mat.txt](repro/ket-qua/mua-07-bam-va-bi-mat.txt).
+
+| Screenplay | Tuyến | Triệu chứng | Mô phỏng |
+|---|---|---|---|
+| [91](screenplays/91-bam-khong-phai-an-danh.yaml) | 2 | Cột số điện thoại đã băm, dò ra số gốc trong 2,3 giây | `multiply` (1.234.568 ô) + `cot` log |
+| [92](screenplays/92-md5-vo-nghia-la-gi.yaml) | 4 | Hai tệp lệch 6 bit trên 1024, cùng một mã băm MD5 | `gop` ⭐ |
+| [93](screenplays/93-ham-bam-nhanh-la-nhuoc-diem.yaml) | 2 | 804.070 lần mỗi giây so với 3,9 lần mỗi giây | `cot` log + `counters` |
+| [94](screenplays/94-muoi-giai-quyet-viec-gi.yaml) | 2 | 2.195 bản ghi trùng hash, nhóm lớn nhất 473 người | `gop` (ba người, một dòng) |
+| [95](screenplays/95-bcrypt-72-byte.yaml) | 3 | Hai mật khẩu khác nhau cùng đăng nhập được | `cot` + `nguong` (trần 72) |
+| [96](screenplays/96-argon2-ba-tham-so.yaml) | 4 | Hạ bộ nhớ còn 0,20 lần chi phí mà không ai báo | `cot` (5 cột, đổi một tham số một lần) |
+| [97](screenplays/97-chu-ky-khong-co-khoa.yaml) | 1 | Đơn 100 nghìn, chữ ký khớp, ghi vào 1 đồng | `gantt` (kẻ chen giữa đường) |
+| [98](screenplays/98-so-sanh-chuoi-bi-mat.yaml) | 4 | Vòng lặp tự viết rò 11,67 lần; `==` thì không đo thấy | `thac` ⭐ |
+| [99](screenplays/99-token-sinh-bang-ngau-nhien-thuong.yaml) | 1 | 5.469 trên 200.000 token ngắn hơn 9 ký tự | `cot` log |
+
+Bốn loại cảnh mô phỏng mới (`cot` `thac` `ban_sao` `gop`) sinh ra từ mùa này —
+xem Cửa 2 phía trên, bảng đã cập nhật đủ tám loại.
 
 ---
 
