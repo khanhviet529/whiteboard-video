@@ -165,10 +165,45 @@ def stills(doc, plan, only=None):
         tail = max(FADE, getattr(THEME, "WIPE_OUT", 0.0))
         t = item["dur"] - tail - 0.10
         img = render_scene_frame(bg, els, t)
-        img.convert("RGB").resize((W, H), Image.LANCZOS).save(
+        _thu_nho(img).save(
             os.path.join(outdir, f"scene-{i:02d}-{item['spec']['scene']}.png"))
         print(f"  stills: canh {i:02d} -> {item['spec']['scene']}")
     print("xuat tai:", outdir)
+
+
+_DA_CANH_BAO_SS = False
+
+
+def _thu_nho(img):
+    """W*SS x H*SS -> W x H. Bat buoc goi o MOI frame khong dung lai duoc.
+
+    Do tren may nay (PIL 12, anh 2160x3840): LANCZOS 73,7 ms - reduce(2) 7,3 ms,
+    tuc 10 lan. Voi video 2 phut @30fps la 265s so voi 26s chi rieng buoc nay,
+    nhan len so tien trinh song song.
+
+    `reduce(n)` lay trung binh khoi n*n - dung la bo loc ma supersample can. LANCZOS
+    o dung ty le 1/n thi lam viec khac: no sharpening/ringing o bien, nen cho `max`
+    lech 34-37/255 do duoc giua hai cach nam o pixel bien chinh la LANCZOS vot qua,
+    khong phai reduce lam nhoe. Do lai tren hai canh nhieu chu nhat (probe mono nho,
+    statement chu lon): gradient trung binh lech 0,2-0,7%, tuc trong nhieu.
+
+    `reduce` nhan MOI so nguyen, khong rieng 2 - nen dieu kien la "SS nguyen" chu
+    khong phai "SS == 2". Vach nhanh/cham o day la 10 lan: neu ai doi SS thanh mot
+    so khong nguyen roi im lang roi ve LANCZOS thi render cham 10x ma khong co gi
+    bao. Vi vay nhanh roi ve co in canh bao mot lan.
+    """
+    global _DA_CANH_BAO_SS
+    rgb = img.convert("RGB")
+    if rgb.size == (W, H):
+        return rgb                      # SS=1: khong co gi de thu nho
+    if isinstance(SS, int) and SS > 1 and rgb.size == (W * SS, H * SS):
+        return rgb.reduce(SS)
+    if not _DA_CANH_BAO_SS:
+        _DA_CANH_BAO_SS = True
+        print(f"  (canh bao: SS={SS!r} khong phai so nguyen >1, hoac anh "
+              f"{rgb.size} khong khop {(W * SS, H * SS)} - roi ve LANCZOS, "
+              f"cham hon ~10 lan moi frame)")
+    return rgb.resize((W, H), Image.LANCZOS)
 
 
 # --------------------------------------------------------------- dung song song
@@ -183,8 +218,13 @@ def stills(doc, plan, only=None):
 # lan canh khac nen chia theo canh se lech tai nang.
 _W = {}
 
+# Ghi de tu dong lenh. Tien trinh con tren Windows la spawn nen KHONG thua huong
+# bien module cua tien trinh cha - phai truyen qua `initargs` cua Pool.
+_PRESET = "medium"
+_FPS = FPS
 
-def _worker_init(theme_name, doc, specs):
+
+def _worker_init(theme_name, doc, specs, preset, fps):
     """Moi tien trinh tu dung lai theme va phan tu - closure khong pickle duoc."""
     use_theme(theme_name)
     _W["doc"] = doc
@@ -193,6 +233,8 @@ def _worker_init(theme_name, doc, specs):
     _W["bg"] = THEME.background()
     _W["built"] = [THEME.build(sp, d, doc) for sp, d in specs]
     _W["durs"] = [d for _, d in specs]
+    _W["preset"] = preset
+    _W["fps"] = fps
 
 
 def _worker_chunk(job):
@@ -205,15 +247,17 @@ def _worker_chunk(job):
         bounds.append((acc, acc + d))
         acc += d
 
+    fps = _W["fps"]
     w = imageio_ffmpeg.write_frames(
-        path, (W, H), fps=FPS, codec="libx264", pix_fmt_in="rgb24",
+        path, (W, H), fps=fps, codec="libx264", pix_fmt_in="rgb24",
         macro_block_size=1, ffmpeg_log_level="error",
-        output_params=["-crf", "18", "-pix_fmt", "yuv420p", "-preset", "medium"])
+        output_params=["-crf", "18", "-pix_fmt", "yuv420p",
+                       "-preset", _W["preset"]])
     w.send(None)
     last_sig = last_bytes = None
     reused = 0
     for n in range(a, b):
-        t = n / FPS
+        t = n / fps
         si = 0
         while si < len(bounds) - 1 and t >= bounds[si][1]:
             si += 1
@@ -227,7 +271,7 @@ def _worker_chunk(job):
         img = render_scene_frame(bg, els, local)
         if FADE > 0 and local > dur - FADE:
             img = Image.blend(bg, img, clamp((dur - local) / FADE))
-        last_bytes = img.convert("RGB").resize((W, H), Image.LANCZOS).tobytes()
+        last_bytes = _thu_nho(img).tobytes()
         last_sig = sig
         w.send(last_bytes)
     w.close()
@@ -248,7 +292,7 @@ def render_parallel(doc, plan, nframes, jobs, theme_name):
     t0 = time.time()
     print(f"  dung {len(parts)} doan song song tren {jobs} tien trinh...")
     with mp.Pool(jobs, initializer=_worker_init,
-                 initargs=(theme_name, doc, specs)) as pool:
+                 initargs=(theme_name, doc, specs, _PRESET, _FPS)) as pool:
         done = []
         for k, path, n, reused in pool.imap_unordered(_worker_chunk, parts):
             done.append((k, path))
@@ -273,9 +317,9 @@ def render(doc, plan, out_path, use_audio, jobs=1, theme_name=None):
     import imageio_ffmpeg
 
     total = sum(p["dur"] for p in plan)
-    nframes = int(round(total * FPS))
-    print(f"\ntong: {total:.2f}s = {nframes} frame @ {FPS}fps"
-          f"  (ve o {W*SS}x{H*SS} roi thu nho)")
+    nframes = int(round(total * _FPS))
+    print(f"\ntong: {total:.2f}s = {nframes} frame @ {_FPS}fps"
+          f"  (ve o {W*SS}x{H*SS} roi thu nho, preset {_PRESET})")
 
     # ---- audio: im lang + giong doc + im lang, noi lien mach
     audio_path = None
@@ -304,9 +348,10 @@ def render(doc, plan, out_path, use_audio, jobs=1, theme_name=None):
 
     tmp_video = os.path.join(BUILD, "video-noaudio.mp4")
     writer = imageio_ffmpeg.write_frames(
-        tmp_video, (W, H), fps=FPS, codec="libx264", pix_fmt_in="rgb24",
+        tmp_video, (W, H), fps=_FPS, codec="libx264", pix_fmt_in="rgb24",
         macro_block_size=1, ffmpeg_log_level="error",
-        output_params=["-crf", "18", "-pix_fmt", "yuv420p", "-preset", "medium"])
+        output_params=["-crf", "18", "-pix_fmt", "yuv420p",
+                       "-preset", _PRESET])
     writer.send(None)
 
     bounds = []
@@ -321,7 +366,7 @@ def render(doc, plan, out_path, use_audio, jobs=1, theme_name=None):
     t0 = time.time()
 
     for n in range(nframes):
-        t = n / FPS
+        t = n / _FPS
         si = 0
         while si < len(bounds) - 1 and t >= bounds[si][1]:
             si += 1
@@ -339,7 +384,7 @@ def render(doc, plan, out_path, use_audio, jobs=1, theme_name=None):
         if FADE > 0 and local > dur - FADE:
             a = clamp((dur - local) / FADE)
             img = Image.blend(bg, img, a)
-        frame = img.convert("RGB").resize((W, H), Image.LANCZOS)
+        frame = _thu_nho(img)
         last_bytes = frame.tobytes()
         last_sig = sig
         writer.send(last_bytes)
@@ -395,9 +440,9 @@ def main():
     ap.add_argument("--strict", action="store_true",
                     help="dung lai neu kiem thay LOI")
     # Ghi de cau hinh giong tu CLI -> doi giong khong phai nhan ban screenplay.
-    # `omnivoice` la ten cu, tts.config() tu doi thanh `voicestudio`.
-    ap.add_argument("--engine",
-                    choices=["edge", "voicestudio", "omnivoice"])
+    # `omnivoice` la ten cu, tts.config() tu doi thanh `voicestudio`. `edge` da
+    # bo khoi tool - de trong day thi tts.config() bao loi kem huong dan.
+    ap.add_argument("--engine", choices=["voicestudio", "omnivoice"])
     ap.add_argument("--voice")
     ap.add_argument("--style",
                     help="chi con y nghia voi duong WSL cu; voicestudio bo qua")
@@ -414,6 +459,24 @@ def main():
     ap.add_argument("--vs-api",
                     help="URL backend VoiceStudio (mac dinh $VS_API hoac "
                          "http://127.0.0.1:3900)")
+    # Hai co toi uu thoi gian dung.
+    #
+    # `--preset`: preset nhanh tat bot phan tich nen chat luong TREN MOI BIT giam;
+    # CRF giu muc tieu chat luong, nen ket qua la chat luong xap xi bang nhau va
+    # FILE TO HON. Noi "khong doi chat luong" la noi tat: neu co luc so dung luong
+    # giua hai luot render ma quen preset khac nhau thi con so se gay nham.
+    #
+    # `--fps`: it frame hon nen nhanh hon, nhung hat thoi gian tho hon (50ms o
+    # 20fps so voi 33ms o 30fps). Thoi luong canh sinh tu audio (so thuc) con so
+    # frame la round(tong * FPS), nen phan du lam tron lon hon -> audio co the lech
+    # hinh mot chut. O 30fps do duoc khop 0,00s. Chi dung cho ban nhap; dung dung
+    # `--fps 20` cho ban cuoi roi di do sync.
+    ap.add_argument("--preset", default="medium",
+                    help="x264 preset: veryfast cho ban nhap (file to hon, chat "
+                         "luong xap xi), medium cho ban cuoi")
+    ap.add_argument("--fps", type=int,
+                    help="ghi de FPS (mac dinh 30). 20 cho ban nhap - dung dung "
+                         "cho ban cuoi vi lam tron thoi luong tho hon")
     ap.add_argument("-j", "--jobs", type=int, default=1,
                     help="so tien trinh dung frame song song (0 = tu chon theo so nhan)")
     a = ap.parse_args()
@@ -427,6 +490,13 @@ def main():
                  ("seed", a.seed)):
         if v is not None:
             doc[k] = v
+    # `--voice` phai ghi de CA `omni_voice:` khai trong screenplay. Khong lam vay
+    # thi tren 89 screenplay dang khai `omni_voice: namtre_v2`, co `--voice
+    # namtre_v3` la MOT NO-OP IM LANG: tts.config() doc `omni_voice` truoc, nen
+    # gia tri tren dong lenh bi bo qua ma khong co dong canh bao nao. Doi lai:
+    # cai gi go tren dong lenh thi thang.
+    if a.voice is not None:
+        doc["omni_voice"] = a.voice
     theme_name = a.theme or doc.get("theme", "whiteboard")
     use_theme(theme_name)
     use_audio = not a.no_audio and not a.stills
@@ -487,6 +557,10 @@ def main():
     out = a.out or os.path.join(OUT, stem + ".mp4")
     # Chua het nhan: encode cua ffmpeg trong moi tien trinh cung an CPU, lay het
     # nhan thi cac tien trinh gianh nhau va cham hon.
+    global _PRESET, _FPS
+    _PRESET = a.preset
+    if a.fps:
+        _FPS = a.fps
     jobs = a.jobs if a.jobs > 0 else max(1, (os.cpu_count() or 2) - 2)
     render(doc, plan, out, use_audio, jobs=jobs, theme_name=theme_name)
 

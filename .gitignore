@@ -12,3 +12,6 @@ __pycache__/
 # --- node: bench-js chi de DO, khong phai san pham. Cai lai bang npm i.
 bench-js/node_modules/
 bench-js/package-lock.json
+
+# anh chup tam khi sua file - khong bao gio commit
+*.bak

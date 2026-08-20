@@ -115,8 +115,7 @@ def main():
     ap.add_argument("file", help="file txt, moi dong mot phuong an")
     ap.add_argument("--screenplay", default="screenplays/cache-stale.yaml",
                     help="lay cau hinh giong (speed/pause_scale/...) tu day")
-    ap.add_argument("--engine",
-                    choices=["edge", "voicestudio", "omnivoice"])
+    ap.add_argument("--engine", choices=["voicestudio", "omnivoice"])
     ap.add_argument("--voice")
     # Hai co nay chi con y nghia voi duong WSL cu; voicestudio bo qua.
     ap.add_argument("--style")
@@ -129,6 +128,9 @@ def main():
                  ("mode", a.tts_mode)):
         if v is not None:
             doc[k] = v
+    # Xem ghi chu trong render.py: `--voice` phai thang `omni_voice:` cua file.
+    if a.voice is not None:
+        doc["omni_voice"] = a.voice
     cfg = tts.config(doc)
 
     with open(a.file, "r", encoding="utf-8") as f:

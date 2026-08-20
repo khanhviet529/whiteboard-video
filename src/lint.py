@@ -195,6 +195,51 @@ def check_caption(sp, idx, out):
                 f"24px — viết `caption` riêng ngắn hơn `narration`"))
 
 
+# Tag CO THAT trong app nhung chi `longform_parser.py` + `ssml_lite.py` parse
+# (Audiobook, Stories). `generation.py` khong import ssml_lite, nen tren duong
+# `/generate` chung bi doc thanh tieng. Bao loi rieng vi nguoi doc tai lieu se
+# thay chung ton tai va khong hieu vi sao khong chay.
+_TAG_LONGFORM = ("slow", "fast", "emphasis", "spell", "voice")
+
+
+def check_tag(sp, idx, out):
+    """Bat tag la trong `narration`. LOI chu khong phai canh bao.
+
+    Ly do phai la LOI: tag khong nam trong bo model biet thi KHONG bi bo di - no
+    bi DOC THANH TIENG. Do that: them `[excited]` vao mot cau lam audio dai them
+    0,73 giay, vi model doc chu "excited". Khong co dong canh bao nao tu backend.
+
+    Day la bay se gap thuong xuyen khi sinh kich ban bang AI: moi model viet
+    script deu quen tay `[excited]` `[whispers]` `[angry]` kieu ElevenLabs. Chan o
+    lint la cach duy nhat re - phat hien qua audio thi da mat mot luot render.
+
+    `[[...]]` la ghi de phat am cua VoiceStudio, hop le, nen bo qua truoc khi do.
+    """
+    n = sp.get("narration") or ""
+    if not n or "[" not in n:
+        return
+    tag = f"cảnh {idx:02d}"
+    # bo `[[...]]` truoc de khong bao dong gia
+    con = re.sub(r"\[\[.*?\]\]", "", n)
+    for m in re.finditer(r"\[([^\[\]]*)\]", con):
+        noi_dung = m.group(1).strip().lower()
+        if noi_dung in ("laughter", "sigh"):
+            continue
+        if re.fullmatch(r"pause(\s+\d+(?:\.\d+)?\s*(ms|s)?)?", noi_dung):
+            continue
+        goc = noi_dung.lstrip("/").split(":")[0]
+        if goc in _TAG_LONGFORM:
+            out.append(("LOI", tag,
+                        f"tag `[{m.group(1)}]` CO THAT nhung chi Audiobook/Stories "
+                        f"parse (`/longform/render`); `/generate` khong parse nen "
+                        f"no se bi ĐỌC THÀNH TIẾNG. Dùng `speed:` ở cấp cảnh thay thế"))
+        else:
+            out.append(("LOI", tag,
+                        f"tag `[{m.group(1)}]` khong co trong bo model biet - "
+                        f"no se bi ĐỌC THÀNH TIẾNG. Chỉ dùng `[laughter]`, `[sigh]`, "
+                        f"`[pause 400ms]`; xem VIET-KICH-BAN.md mục tag phi ngôn ngữ"))
+
+
 def check_narration(sp, idx, out, engine):
     """Bay doc sai cua engine `voicestudio` - CHI kiem khi dung engine do.
 
@@ -259,8 +304,7 @@ def check_narration(sp, idx, out, engine):
 def _cau(text):
     """Tach cau y het luc sinh giong, de vi tri cau tinh ra dung."""
     try:
-        sys.path.insert(0, os.path.join("D:", os.sep, "omnivoice-test"))
-        import vitext
+        import vitext   # cung thu muc src/, khong con tro sang repo khac
         return vitext.prepare(text)
     except Exception:
         return [c.strip() for c in re.split(r"(?<=[.!?…])\s+", text) if c.strip()]
@@ -519,7 +563,7 @@ def check(doc):
     check_cau_dai(doc, out)
     check_tu_la(doc, out)
     check_yaml_cat(doc, out)
-    engine = doc.get("engine", "edge")
+    engine = doc.get("engine", "voicestudio")
     # Ten canh KHONG duy nhat giua cac theme: `phongtoi` cung co `topology` va
     # `compare` nhung schema khac han (nodes co toa do `at`, co `packets`). Chay
     # kiem tra cua bench len file phongtoi thi bao loi hang loat va sai het.
@@ -534,6 +578,7 @@ def check(doc):
         if bench:
             check_kieu_chu(sp, i, out)
         check_caption(sp, i, out)
+        check_tag(sp, i, out)
         check_narration(sp, i, out, engine)
         check_doc_ro(sp, i, out, engine)
         if bench:
@@ -573,11 +618,7 @@ CAU_DAI = 110
 def _cac_cau(t):
     """Cat loi doc Y HET cach speak.py cat, de dem dung do dai mot lan sinh."""
     try:
-        import sys
-        d = r"D:\omnivoice-test"
-        if d not in sys.path:
-            sys.path.insert(0, d)
-        import vitext
+        import vitext   # cung thu muc src/, khong con tro sang repo khac
         return vitext.prepare(t)
     except Exception:
         return [c.strip() for c in re.split(r"(?<=[.!?])\s+", t) if c.strip()]

@@ -1,0 +1,167 @@
+{
+  "giong1_nam_hoihop": {
+    "file": "giong/giong1_nam_hoihop.wav",
+    "ref_text": "Anh ta dừng lại trước cánh cửa. Bên trong không một tiếng động. Anh đưa tay lên nắm đấm cửa, và rồi… nó tự mở ra.",
+    "instruct_goc": "male, middle-aged, low pitch",
+    "nguon": "styles/hoihop_CU.wav",
+    "dur": 6.56,
+    "f0_median": 152.0,
+    "f0_p10_p90": [
+      122.6,
+      176.0
+    ]
+  },
+  "giong2_nu_quangcao": {
+    "file": "giong/giong2_nu_quangcao.wav",
+    "ref_text": "Bạn có biết không? Làn da mất nước mỗi ngày, nhất là khi trời hanh khô.",
+    "instruct_goc": "female, young adult, moderate pitch",
+    "nguon": "styles/quangcao_MOI.wav",
+    "dur": 4.19,
+    "f0_median": 297.1,
+    "f0_p10_p90": [
+      226.3,
+      394.3
+    ],
+    "ghi_chu": "đã cắt từ 12.72s xuống cho ổn định và nhanh hơn"
+  },
+  "nam_caotuoi": {
+    "file": "giong/nam_caotuoi.wav",
+    "ref_text": "Xin chào, tôi là giọng đọc thử nghiệm. Hôm nay trời đẹp, chúng ta cùng bắt đầu nhé.",
+    "instruct_goc": "male, elderly, low pitch",
+    "nguon": "voices/nam_caotuoi.wav",
+    "dur": 4.95,
+    "f0_median": 155.1,
+    "f0_p10_p90": [
+      136.3,
+      189.2
+    ]
+  },
+  "nam_tramtrong": {
+    "file": "giong/nam_tramtrong.wav",
+    "ref_text": "Xin chào, tôi là giọng đọc thử nghiệm. Hôm nay trời đẹp, chúng ta cùng bắt đầu nhé.",
+    "instruct_goc": "male, middle-aged, very low pitch",
+    "nguon": "voices/nam_tramtrong.wav",
+    "dur": 4.9,
+    "f0_median": 117.9,
+    "f0_p10_p90": [
+      96.1,
+      143.0
+    ]
+  },
+  "nam_tre": {
+    "file": "giong/nam_tre.wav",
+    "ref_text": "Xin chào, tôi là giọng đọc thử nghiệm. Hôm nay trời đẹp, chúng ta cùng bắt đầu nhé.",
+    "instruct_goc": "male, young adult, moderate pitch",
+    "nguon": "voices/nam_tre.wav",
+    "dur": 4.88,
+    "f0_median": 170.6,
+    "f0_p10_p90": [
+      145.1,
+      233.1
+    ]
+  },
+  "nu_trungnien": {
+    "file": "giong/nu_trungnien.wav",
+    "ref_text": "Xin chào, tôi là giọng đọc thử nghiệm. Hôm nay trời đẹp, chúng ta cùng bắt đầu nhé.",
+    "instruct_goc": "female, middle-aged, low pitch",
+    "nguon": "voices/nu_trungnien.wav",
+    "dur": 4.84,
+    "f0_median": 245.5,
+    "f0_p10_p90": [
+      226.4,
+      289.1
+    ]
+  },
+  "modes_quangcao_CU": {
+    "file": "giong/modes_quangcao_CU.wav",
+    "ref_text": "Bạn có biết không? Làn da mất nước mỗi ngày, nhất là khi trời hanh khô.",
+    "instruct_goc": "female, young adult, moderate pitch",
+    "nguon": "modes/quangcao_CU.wav",
+    "dur": 6.88,
+    "f0_median": 304.0,
+    "f0_p10_p90": [
+      235.0,
+      396.6
+    ],
+    "ghi_chu": "đã cắt từ 12.47s"
+  },
+  "modes_tintuc_LIEN": {
+    "file": "giong/modes_tintuc_LIEN.wav",
+    "ref_text": "Theo báo cáo mới công bố, doanh thu quý ba đạt một tỷ năm trăm triệu đồng, tăng mười hai phẩy bảy phần trăm so với cùng kỳ năm ngoái.",
+    "instruct_goc": "male, middle-aged, low pitch",
+    "nguon": "modes/tintuc_LIEN.wav",
+    "dur": 6.28,
+    "f0_median": 155.6,
+    "f0_p10_p90": [
+      121.0,
+      190.4
+    ],
+    "ghi_chu": "đã cắt từ 12.45s"
+  },
+  "modes_hoihop_CU": {
+    "file": "giong/modes_hoihop_CU.wav",
+    "ref_text": "Anh ta dừng lại trước cánh cửa. Bên trong không một tiếng động. Anh đưa tay lên nắm đấm cửa, và rồi… nó tự mở ra.",
+    "instruct_goc": "male, middle-aged, low pitch",
+    "nguon": "modes/hoihop_CU.wav",
+    "dur": 6.6,
+    "f0_median": 162.9,
+    "f0_p10_p90": [
+      125.6,
+      187.1
+    ]
+  },
+  "modes_hoihop_LIEN": {
+    "file": "giong/modes_hoihop_LIEN.wav",
+    "ref_text": "Anh ta dừng lại trước cánh cửa. Bên trong không một tiếng động. Anh đưa tay lên nắm đấm cửa, và rồi… Nó tự mở ra.",
+    "instruct_goc": "male, middle-aged, low pitch",
+    "nguon": "modes/hoihop_LIEN.wav",
+    "dur": 6.77,
+    "f0_median": 154.7,
+    "f0_p10_p90": [
+      114.9,
+      191.0
+    ]
+  },
+  "modes_hoihop_TACH": {
+    "file": "giong/modes_hoihop_TACH.wav",
+    "ref_text": "Anh ta dừng lại trước cánh cửa. Bên trong không một tiếng động.",
+    "instruct_goc": "male, middle-aged, low pitch",
+    "nguon": "modes/hoihop_TACH.wav",
+    "dur": 4.75,
+    "f0_median": 153.8,
+    "f0_p10_p90": [
+      96.9,
+      195.8
+    ],
+    "ghi_chu": "đã cắt từ 9.53s"
+  },
+  "namtre_v2": {
+    "file": "giong/namtre_v2.wav",
+    "ref_text": "Khi hiểu được cơ chế này, bạn sẽ debug nhanh hơn và tránh lặp lại lỗi tương tự trong những dự án sau.",
+    "instruct_goc": "male, young adult, moderate pitch",
+    "nguon": "ketqua/08_nam_tre.wav câu 4 (người dùng chọn)",
+    "dur": 5.36,
+    "f0_median": 147.7,
+    "f0_p10_p90": [
+      122.0,
+      189.5
+    ],
+    "jitter": 0.0422,
+    "ghi_chu": "câu 1 bị loại vì ngắt nghỉ sai ở 'đoạn code'"
+  },
+  "namtre_v3": {
+    "file": "giong/namtre_v3.wav",
+    "ref_text": "Mỗi sáng, bà thường ngồi bên hiên nhà, lặng lẽ nhìn ra phía cánh đồng.",
+    "instruct_goc": "male, young adult, moderate pitch",
+    "nguon": "sinh mới từ voices/nam_tre.wav",
+    "dur": 4.0,
+    "f0_median": 163.9,
+    "f0_p10_p90": [
+      130.2,
+      205.5
+    ],
+    "jitter": 0.0445,
+    "hf_ratio": 0.1241,
+    "ghi_chu": "nội dung trung tính, KHÔNG trùng văn bản bài giảng (bản v2 trùng câu 4 nên sinh artifact)"
+  }
+}

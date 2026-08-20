@@ -46,8 +46,8 @@ còn chính câu đó nằm cuối lời đọc ba câu thì chạy ×0,95. Đã
 vì thử câu lẻ: người dùng báo một câu nghe không rõ trong video, thử riêng thì
 thấy ổn, và suýt đổ lỗi cho cách diễn đạt. `thu_cau.py` giờ in sẵn bảng hệ số đó.
 
-| Render đầy đủ | `python src/render.py <f> ... -j 10` | ~12 phút (edge) / ~40 phút (voicestudio trên CPU, vài phút trên T4) |
-| Dò sạn trong bản đã render | `python D:/omnivoice-test/soi_san.py out/<f>.mp4` | tức thì |
+| Render đầy đủ | `python src/render.py <f> ... -j 10` | ~3,4 phút dựng hình (đo thật, `-j 10`) + thời gian sinh giọng |
+| Dò sạn trong bản đã render | `python src/soi_san.py out/<f>.mp4` | tức thì |
 
 Sau khi render, nghe lại và ghi mốc giây của chỗ nghe cộm. Tai người vẫn bắt được
 những lỗi mà thước đo bỏ sót — đã có trường hợp cùng một câu sinh hai lần, chỉ số
@@ -57,7 +57,7 @@ lệch 2% mà tai phân biệt rõ.
 
 ## Bẫy khi viết lời đọc
 
-Toàn bộ mục này chỉ áp cho engine `voicestudio`. Với `edge-tts` thì cả đoạn được đọc
+Toàn bộ mục này áp cho engine `voicestudio` — engine duy nhất còn lại. (Trước đây `edge-tts` đọc cả đoạn
 một lần nên không gặp. Lý do gốc: `mode: tach` sinh **từng câu một lần gọi model
 riêng**, nên mỗi câu tự quyết mọi thứ và không có ngữ cảnh từ câu bên cạnh.
 
@@ -101,7 +101,7 @@ caption:   ...                       # caption giữ nguyên chữ TTL
 |---|---|---|
 | Sửa tham số giọng ở chỗ khác YAML | Không có tác dụng gì. `tts.config()` chỉ đưa giá trị khai trong YAML vào **khoá cache**, nên render sau dùng lại audio cũ | Khai trong screenplay: `speed:` `num_step:` `seed:`. (`speak.py` và `pause_scale` đã bỏ cùng đường WSL) |
 | Tưởng cache lưu theo từng câu | Khoá tính trên **toàn bộ narration của cảnh**. Sửa một chữ là cả cảnh sinh lại | Đã sửa thì gộp câu cho triệt để, giữ nguyên vài câu không bảo toàn được gì |
-| `min_duration` canh theo edge-tts | Giọng clone đọc gọn hơn, khung cứng để lại 3,9–4,9 giây im lặng ở cuối cảnh | Bỏ `min_duration`, để thời lượng chạy theo audio |
+| `min_duration` canh theo giọng cũ | Giọng clone đọc gọn hơn, khung cứng để lại 3,9–4,9 giây im lặng ở cuối cảnh | Bỏ `min_duration`, để thời lượng chạy theo audio |
 | Quên `pre_pad` / `post_pad` | Mặc định 0,45 + 0,85 = 1,3 giây **mỗi điểm cắt**. Video 13 cảnh mất 15,6 giây chỉ để im lặng, đo được là 24% thời lượng | Khai `pre_pad: 0.35` và `post_pad: 0.55` |
 | `caption` để trống | Nó mặc định lấy luôn `narration`, mà thẻ phụ đề chỉ vừa ~3 dòng ở cỡ 24px | Viết `caption` riêng, ngắn hơn `narration` |
 | ~~**Giọng, style và mode để trên dòng lệnh**~~ *(hết hiệu lực 2026-08-20)* | Từng là bẫy đắt nhất: `--style camhung --tts-mode tach` là cả cơ chế kiểm soát chất lượng của `say.py` (`contour`, `retry=2`, chỉ nhánh `tach` có vòng thử lại). Sau khi đổi sang engine `voicestudio`, `style`/`mode`/`pause_scale` **không còn tác dụng** — `/generate` không có tham số tương ứng, `tts.config()` in cảnh báo rồi bỏ qua. Vòng thử lại còn lại là cổng `_nghiem_thu` ở mức **video**, và nó đổi seed mỗi vòng | Khai trong screenplay: `omni_voice:` `speed:` `num_step:` `seed:`. Chạy `--engine voicestudio` là đủ |
@@ -196,6 +196,101 @@ Hai điều nữa về sự đơn điệu:
 
 ---
 
+## Tag phi ngôn ngữ: cười, thở dài, khoảng nghỉ
+
+Model nhận **13 tag** viết trong `narration`. Nhưng với tiếng Việt chỉ **hai cái
+dùng được**, phần còn lại (`[question-ah]`, `[surprise-oh]`,
+`[dissatisfaction-hnn]`…) được tài liệu upstream ghi rõ là *tuned for
+Mandarin-flavored speech* — đừng dùng.
+
+| Tag | Dùng được với tiếng Việt | Đo trên `namtre_v2` |
+|---|:---:|---|
+| `[laughter]` | ✅ | thêm ~0,8 giây tiếng cười |
+| `[sigh]` | ✅ | thêm ~0,5 giây tiếng thở dài |
+| `[pause 400ms]` | ✅ | im lặng thật, ghép vào — mọi engine đều hiểu |
+| `[[Nuh-VAD-uh]]` | ✅ | ghi đè phát âm, không phải biểu cảm |
+| 11 tag còn lại | ❌ | tinh chỉnh cho tiếng Trung |
+
+### Nhóm tag CÓ THẬT nhưng không dùng được ở đây
+
+Chỗ dễ nhầm nhất, vì đọc code hoặc tài liệu upstream sẽ thấy chúng tồn tại:
+
+| Tag | Thật ra làm gì | Vì sao không dùng được |
+|---|---|---|
+| `[slow]…[/slow]` | speed ≈ 0,85 | chỉ **Audiobook / Stories** parse |
+| `[fast]…[/fast]` | speed ≈ 1,15 | (`/longform/render`, `/audiobook`) |
+| `[emphasis]…[/emphasis]` | speed ≈ 0,92 + cờ nhấn | |
+| `[spell]…[/spell]` | đọc từng chữ cái | |
+| `[voice:TÊN]` | đổi người kể giữa dòng | |
+
+Chúng nằm ở `backend/services/ssml_lite.py` và `longform_parser.py`. Nhưng
+`generation.py` — endpoint `/generate` mà tool này gọi — **không import
+`ssml_lite`**. Nên gõ `[slow]` vào screenplay là model đọc chữ *"slow"*.
+
+Thay thế: đổi tốc độ thì khai `speed:` ở **cấp cảnh** (cùng clip mẫu nên vẫn đúng
+một người, và `GIONG_KEYS` cho ghi đè theo cảnh). Còn `[spell]` thì `phien_am: true`
+đã giải quyết cho viết tắt.
+
+`lint.py` báo riêng nhóm này bằng thông báo khác — *"CÓ THẬT nhưng chỉ
+Audiobook/Stories parse"* — để đọc dòng lỗi là hiểu ngay, không phải đi tra lại.
+
+### ⚠ Bẫy đắt nhất: tag lạ KHÔNG bị bỏ, nó bị ĐỌC THÀNH TIẾNG
+
+Đo thật: cùng một câu, thêm `[excited]` vào giữa thì audio dài thêm **0,73 giây**
+— vì model đọc luôn chữ *"excited"*. Tag không nằm trong 13 cái kia đều như vậy.
+
+Hệ quả: **đừng bao giờ dán script viết cho ElevenLabs hoặc AI khác vào đây.**
+Chúng đầy `[excited]` `[whispers]` `[angry]` `[sarcastic]`, và video sẽ có người
+đọc mấy từ tiếng Anh đó giữa câu tiếng Việt. Không có dòng cảnh báo nào — lint
+cũng không bắt được, vì với lint thì đó chỉ là văn bản.
+
+Chỉ gõ đúng hai tag: `[laughter]`, `[sigh]`. Ngoài ra là `[pause Nms]`.
+
+### Cách đặt
+
+```yaml
+- scene: statement
+  narration: >
+    Tôi tưởng cache sẽ tự hết hạn đúng lúc. [sigh] Hoá ra không.
+    Cả nghìn request cùng lao vào database trong một giây. [laughter]
+```
+
+- Đặt **sau dấu câu**, không chèn giữa mệnh đề.
+- **Thời lượng cảnh tự giãn theo.** Pipeline đo duration THẬT của audio rồi mới
+  chốt thời lượng cảnh, nên thêm tag không phải chỉnh `duration` hay `min_duration`.
+- **Tag vào khoá cache**, nên sửa tag chỉ sinh lại đúng cảnh đó.
+- Nghe thử một cảnh: `python src/render.py <f> --audio-only --scenes N`.
+
+### Liều lượng
+
+Đây là kênh 90 số, cùng một người kể. Một tiếng thở dài trong một video là điểm
+nhấn; xuất hiện ở cả 90 video thì thành **tật nói**. Đề xuất trần: **tối đa một
+tag mỗi video**, và chỉ khi nội dung thật sự có chỗ cho nó —
+
+- `[sigh]` khớp nhịp *hậu quả*: vừa kể xong cái giá phải trả.
+- `[laughter]` khớp câu tự trào: "tôi từng tin là…", "hoá ra không".
+
+Không có tag nào cho vui vẻ / hào hứng / tức giận. Muốn đổi sắc thái thì dùng
+**dấu câu và độ dài câu** — dấu ba chấm, gạch ngang, câu ngắn đứng một mình đều
+đổi nhịp và ngữ điệu thật, và tài liệu upstream gọi đây là đòn *"cheap,
+underrated"*.
+
+### Vì sao không có `[breath]`, `[excited]`, và cường độ
+
+Base model không có. `[breath]` chỉ CosyVoice 3 có; cảm xúc có cường độ chỉ
+IndexTTS2 có. **Cả hai engine đó đều không hỗ trợ tiếng Việt** — CosyVoice 3 có
+`zh en ja ko yue de es fr it ru`, IndexTTS 2.5 có 5 thứ tiếng ZH/EN/JA/ES/AR và
+tài liệu của nó ghi *"ambiguous Latin text defaults to English"*, tức đưa tiếng
+Việt vào là nó đọc như tiếng Anh. Cài chúng không giải được gì cho kênh này.
+
+### Tuyệt đối không đặt tag vào clip mẫu
+
+Clip mẫu (`giong/*.wav`) phải **trung tính**. Zero-shot clone copy cả *cách diễn*
+của clip, nên một clip mẫu có tiếng cười sẽ làm **mọi câu trong 90 video** mang
+giọng cười. Tag thuộc về `narration` của từng cảnh, không thuộc về giọng.
+
+---
+
 ## Checklist trước khi render
 
 1. `python src/lint.py screenplays/<f>.yaml --engine voicestudio` sạch.
@@ -206,6 +301,9 @@ Hai điều nữa về sự đơn điệu:
 6. Đã khai `speed`, `pre_pad`, `post_pad` trong YAML (`pause_scale` không còn tác dụng).
 7. Số liệu trong video đã đo hoặc suy ra được, không có số bịa.
 8. Đã nghe thử bằng `--audio-only --scenes N` những cảnh mới viết.
+9. Không có tag nào ngoài `[laughter]`, `[sigh]`, `[pause Nms]` trong `narration`
+   — tag lạ bị **đọc thành tiếng**, xem mục tag phi ngôn ngữ.
+10. Tối đa một tag cảm xúc mỗi video.
 
 ## Chọn giọng — quyết định một lần cho cả 90 số
 
@@ -217,7 +315,7 @@ theo kiểu từng video — chỉnh câu chữ, chỉnh vị trí câu, sinh l�
 thì 90 video là 90 lần ngồi nghe, không nhân lên được.
 
 Cách chữa đúng nằm ở trên nguồn: sinh CÙNG MỘT ĐOẠN với cả 13 mẫu giọng có
-trong `D:/omnivoice-test/giong/`, nghe một lượt, chốt một giọng cho cả kênh.
+trong `giong/`, nghe một lượt, chốt một giọng cho cả kênh.
 Script sinh nằm trong lịch sử phiên; file kết quả ở `out/thu/`.
 
 Số đo cao tần cuối cụm của 13 mẫu gốc, để tham khảo chứ KHÔNG để quyết định:

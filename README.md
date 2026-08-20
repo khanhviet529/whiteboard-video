@@ -87,7 +87,7 @@ tô thanh đó thành đỏ và thêm vệt sáng — mỗi cảnh chỉ nên c�
 ## Cài đặt
 
 **Không cần cài gì.** Toàn bộ phụ thuộc đã có sẵn trong Python trên máy này:
-`PIL`, `numpy`, `yaml`, `edge_tts`, `imageio_ffmpeg` (kèm luôn bản ffmpeg riêng
+`PIL`, `numpy`, `yaml`, `imageio_ffmpeg` (kèm luôn bản ffmpeg riêng
 nên không cần ffmpeg trên PATH).
 
 Python ở `D:\Downloads\Python311\python.exe` (không có trên PATH — gọi full path).
@@ -145,28 +145,38 @@ khi hài lòng mới render full.
 
 ## Hai engine giọng đọc
 
-Chọn bằng `engine:` ở đầu screenplay, hoặc ghi đè từ CLI.
+Chỉ còn **một** engine. Không cần khai `engine:` nữa — mặc định là `voicestudio`.
 
-| | `edge` *(mặc định)* | `voicestudio` |
-|---|---|---|
-| Nguồn | edge-tts, miễn phí, qua mạng | backend VoiceStudio qua HTTP `/generate` |
-| Chạy ở đâu | dịch vụ Microsoft | `$VS_API` — máy này (`:3900`) hoặc Colab T4 qua tunnel |
-| Tốc độ sinh | ~1 giây/câu | RTF ~0,25 trên T4 · 10–30 trên CPU |
-| Giọng | 2 giọng Microsoft | giọng **clone từ mẫu**, tự nhiên hơn |
-| Định dạng ra | mp3 → 48k stereo | 24k **mono** → 48k stereo |
-| Tái lập | không | **có** — ghim `seed:` là re-render ra đúng audio cũ |
-| Giấy phép | dùng được thương mại | ⚠ xem mục giới hạn ở cuối file |
+| | `voicestudio` |
+|---|---|
+| Nguồn | backend VoiceStudio qua HTTP `POST /generate` |
+| Chạy ở đâu | `$VS_API` — máy này (`:3900`) hoặc Colab T4 qua tunnel |
+| Tốc độ sinh | RTF ~0,25 trên T4 · **>54 trên CPU máy này** (không dùng được) |
+| Giọng | clone từ đoạn mẫu trong `giong/manifest.json` (trong repo này) |
+| Định dạng ra | 24k mono → 48k stereo |
+| Tái lập | **có** — ghim `seed:` là re-render ra đúng audio cũ |
 
 `omnivoice` vẫn nhận làm tên cũ: `tts.config()` tự đổi thành `voicestudio`, nên
-89 screenplay đang khai không phải sửa.
+screenplay đang khai không phải sửa.
+
+**Hai engine đã bỏ khỏi tool:**
+
+| Bỏ | Vì |
+|---|---|
+`edge` (edge-tts) | nhanh (~1 giây/câu) nhưng **giọng không đạt yêu cầu** — chính vì thế kho giọng clone `omnivoice-test` mới ra đời. Khai `engine: edge` giờ báo lỗi kèm hướng dẫn |
+`omnivoice` qua WSL/`say.py` | giọng hay nhiễu, không có seed nên sinh lại là xổ số, và nạp lại model mỗi lần gọi |
+
+Vòng lặp nhanh để chốt câu chữ, sau khi bỏ `edge`: trỏ `VS_API` sang backend có
+GPU rồi thêm `--audio-only` — bỏ hẳn bước dựng frame, còn khoảng **40 giây** cho
+cả video.
 
 ```bash
-# edge (mặc định)
+# mặc định đã là voicestudio, không cần cờ nào
 python src/render.py screenplays/cache-stale.yaml
+# -> out/cache-stale.mp4
 
-# voicestudio — screenplay tự khai đủ bộ nên dòng lệnh chỉ cần một cờ
-python src/render.py screenplays/cache-stale.yaml --engine voicestudio
-# -> out/cache-stale-voicestudio.mp4   (tên có hậu tố để không ghi đè bản edge)
+# nghe lại lời đọc, bỏ dựng hình — vòng lặp nhanh nhất
+python src/render.py screenplays/cache-stale.yaml --audio-only
 
 # trỏ sang backend khác (tunnel Colab đổi URL mỗi session)
 python src/render.py screenplays/cache-stale.yaml --engine voicestudio \
@@ -183,7 +193,7 @@ seed: 12345              # ghim de re-render ra dung audio cu (tuy chon)
 # `style`, `mode`, `pause_scale` KHONG con tac dung - xem banner o muc duoi
 ```
 
-Kho giọng là `D:\omnivoice-test\giong\manifest.json` (13 giọng, mỗi giọng gồm
+Kho giọng là `giong/manifest.json` trong repo này (13 giọng, mỗi giọng gồm
 file wav + `ref_text`). Tên giọng **không** tự do — `namtre_va` không tồn tại, có
 `namtre_v2` / `namtre_v3` / `nam_tre`. Khai sai thì `tts.config()` dừng ngay và in
 cả danh sách. Đổi kho bằng `$VS_VOICES`.
@@ -507,7 +517,7 @@ src/
 ├── phongtoi.py  THEME nền tối + 13 loại cảnh (kèm 2 mô phỏng)
 ├── brutal.py    THEME brutalist
 ├── scenes.py    THEME whiteboard
-├── tts.py       edge-tts + đo duration + nối track audio
+├── tts.py       gọi /generate + đo duration + nối track audio
 └── render.py    CLI, chọn theme, vòng lặp frame, encode
 
 research/        công cụ soi bằng mắt — dùng thường xuyên khi chỉnh style
@@ -634,15 +644,16 @@ Theme `bench` tự khai bố cục riêng (hằng số ở đầu `bench.py`), k
   VoiceStudio rồi phục vụ bản sửa đó qua mạng** — render video ở máy mình không
   thuộc trường hợp đó. Hai hướng dự phòng đã khảo sát trong
   `D:\omnivoice-test\CLAUDE.md`: VieNeu-TTS (Apache 2.0 cả trọng số) hoặc Azure
-  Speech free tier. Engine `edge` mặc định không vướng.
+  Speech free tier.
 - **`voicestudio` nhanh hay chậm tuỳ `$VS_API` trỏ vào đâu.** Máy này không có
   GPU rời (Intel UHD, CUDA không dùng được) nên backend chạy local vẫn là CPU:
   một video 2 phút mất khoảng nửa tiếng, y như đường WSL cũ. Trỏ sang Colab T4
   thì RTF ~0,25 — cùng video còn vài phút. `prefetch()` in `device` ngay dòng đầu
-  nên biết mình đang ở nhánh nào. Vẫn nên dùng `edge` để chốt kịch bản, xong mới
-  đổi engine.
-- Phụ đề bám theo cả câu, chưa highlight theo từng từ. edge-tts có trả
-  `WordBoundary` với offset từng từ nên làm được, chỉ là chưa dùng.
+  nên biết mình đang ở nhánh nào. Chốt kịch bản bằng `--audio-only` trỏ vào
+  backend GPU, xong mới dựng hình.
+- Phụ đề bám theo cả câu, chưa highlight theo từng từ. `/generate` không trả
+  timestamp từng từ; muốn làm thì phải cho WAV qua ASR (`/transcribe` của
+  VoiceStudio trả word-level timing với WhisperX).
 - Nội dung do người viết, tool không tự sinh screenplay. Muốn tự sinh thì bọc
   thêm một lớp gọi Claude API xuất ra YAML đúng schema trên.
 
