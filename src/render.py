@@ -9,6 +9,7 @@ Toi uu: frame nao co trang thai y het frame truoc thi dung lai frame cu,
 khong ve lai. Video kieu nay giu hinh rat nhieu nen tiet kiem dang ke.
 """
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -28,7 +29,7 @@ from style import FPS, H, SS, W, clamp
 # theme -> module dung de dung canh. Moi module tu lo `background()`, `build()`
 # va hang so FADE (0 = cat thang khong mo dan).
 THEMES = {"bench": "bench", "phongtoi": "phongtoi", "brutalist": "brutal",
-          "whiteboard": "scenes"}
+          "whiteboard": "scenes", "net_ve": "net_ve"}
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD = os.path.join(ROOT, "build")
@@ -80,18 +81,40 @@ def load(path):
     return doc
 
 
+# Truong giong mot CANH duoc phep ghi de len cap document. Can cho video co
+# hai nhan vat: em mot giong, chi mot giong khac.
+GIONG_KEYS = ("engine", "voice", "omni_voice", "style", "mode", "speed",
+              "num_step", "pause_scale", "rate", "pitch", "phien_am",
+              "seed", "guidance_scale")
+
+
+def cfg_canh(doc, sp):
+    rieng = {k: sp[k] for k in GIONG_KEYS if k in sp}
+    return tts.config({**doc, **rieng} if rieng else doc)
+
+
 def prepare(doc, use_audio):
     """Sinh TTS, do duration, chot thoi luong tung canh."""
     cache = os.path.join(BUILD, "tts")
-    cfg = tts.config(doc)
+    cfgs = [cfg_canh(doc, sp) for sp in doc["scenes"]]
     if use_audio:
-        # Gom TAT CA cau vao mot lan sinh truoc vong lap. Voi engine omnivoice
-        # thi day khong phai toi uu ma la bat buoc: nap model ~8s + warmup ~14s
-        # moi process, goi 13 lan la nem di vai phut cho khong.
-        tts.prefetch([sp.get("narration", "") for sp in doc["scenes"]], cache, cfg)
+        # Gom cau theo TUNG cau hinh giong roi sinh moi nhom mot lan. Voi
+        # duong WSL cu day la bat buoc (nap model ~8s + warmup ~14s moi
+        # process). Voicestudio la server thuong tru nen khong con bat buoc,
+        # nhung van gom: moi cau hinh giong la mot doan mau khac va mot khoa
+        # cache khac, in theo nhom thi doc log de hon.
+        nhom = {}
+        for sp, c in zip(doc["scenes"], cfgs):
+            nhom.setdefault(json.dumps(c, sort_keys=True, ensure_ascii=False),
+                            [c, []])[1].append(sp.get("narration", ""))
+        for i, (c, texts) in enumerate(nhom.values(), 1):
+            if len(nhom) > 1:
+                print(f"  --- giong {i}/{len(nhom)}: {c.get('voice')} "
+                      f"/ {c.get('style', '-')}")
+            tts.prefetch(texts, cache, c)
     pre, post = pads(doc)
     plan = []
-    for i, sp in enumerate(doc["scenes"], 1):
+    for i, (sp, cfg) in enumerate(zip(doc["scenes"], cfgs), 1):
         wav, adur = (None, 0.0)
         if use_audio:
             wav, adur = tts.speak(sp.get("narration", ""), cache, cfg)
@@ -358,8 +381,9 @@ def main():
     ap.add_argument("--scene", type=int, help="chi lam canh so N (voi --stills)")
     ap.add_argument("--no-audio", action="store_true")
     # Vong lap nghe: bo han buoc dung frame (~10 phut) va chi sinh dung canh dang
-    # sua. Voi engine omnivoice, sinh 1 cau mat ~2 phut so voi ~45 phut ca video,
-    # nen day la cach duy nhat de thu loi doc nhieu lan trong mot buoi.
+    # sua. Voi voicestudio tren GPU, sinh 1 cau mat vai giay so voi ~45 phut
+    # ca video, nen day la cach duy nhat de thu loi doc nhieu lan trong mot
+    # buoi.
     ap.add_argument("--audio-only", action="store_true",
                     help="chi xuat wav loi doc, khong dung video")
     ap.add_argument("--scenes",
@@ -371,20 +395,36 @@ def main():
     ap.add_argument("--strict", action="store_true",
                     help="dung lai neu kiem thay LOI")
     # Ghi de cau hinh giong tu CLI -> doi giong khong phai nhan ban screenplay.
-    ap.add_argument("--engine", choices=["edge", "omnivoice"])
+    # `omnivoice` la ten cu, tts.config() tu doi thanh `voicestudio`.
+    ap.add_argument("--engine",
+                    choices=["edge", "voicestudio", "omnivoice"])
     ap.add_argument("--voice")
-    ap.add_argument("--style")
+    ap.add_argument("--style",
+                    help="chi con y nghia voi duong WSL cu; voicestudio bo qua")
     ap.add_argument("--tts-mode", choices=["lien", "tach"],
-                    help="omnivoice: lien = ca doan mot lan (nhanh hon ~2,4 lan)")
-    ap.add_argument("--num-step", type=int, help="omnivoice: it hon = nhanh hon")
+                    help="chi con y nghia voi duong WSL cu; voicestudio bo qua")
+    ap.add_argument("--num-step", type=int,
+                    help="voicestudio: it hon = nhanh hon (mac dinh 16)")
+    # Ghim seed = tai lap duoc dung audio cu. Duong WSL khong co, nen truoc day
+    # doi mot chu trong narration la ca canh sinh lai mot giong khac.
+    ap.add_argument("--seed", type=int,
+                    help="voicestudio: ghim seed de re-render ra dung audio cu")
+    # Doi dich khong can dat bien moi truong: --vs-api tien hon khi tunnel Colab
+    # doi URL moi lan mo lai session.
+    ap.add_argument("--vs-api",
+                    help="URL backend VoiceStudio (mac dinh $VS_API hoac "
+                         "http://127.0.0.1:3900)")
     ap.add_argument("-j", "--jobs", type=int, default=1,
                     help="so tien trinh dung frame song song (0 = tu chon theo so nhan)")
     a = ap.parse_args()
 
     os.makedirs(BUILD, exist_ok=True)
     doc = load(a.screenplay)
+    if a.vs_api:
+        tts.VS_API = a.vs_api.rstrip("/")
     for k, v in (("engine", a.engine), ("voice", a.voice), ("style", a.style),
-                 ("mode", a.tts_mode), ("num_step", a.num_step)):
+                 ("mode", a.tts_mode), ("num_step", a.num_step),
+                 ("seed", a.seed)):
         if v is not None:
             doc[k] = v
     theme_name = a.theme or doc.get("theme", "whiteboard")

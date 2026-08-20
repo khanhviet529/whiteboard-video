@@ -1,17 +1,23 @@
 """Sinh giong doc tieng Viet. Hai engine, chon bang `engine:` trong screenplay.
 
-    engine: edge        (mac dinh) edge-tts, mien phi, nhanh, khong can cai gi
-    engine: omnivoice   OmniVoice qua WSL - giong clone tu mau, tu nhien hon
+    engine: edge          (mac dinh) edge-tts, mien phi, nhanh, khong can cai gi
+    engine: voicestudio   backend VoiceStudio qua HTTP - giong clone tu mau
+
+`engine: omnivoice` van nhan, la ten cu cua duong nay va tu doi thanh
+voicestudio - nen 89 screenplay dang khai khong phai sua. Duong WSL/say.py da bo
+han: giong hay bi nhieu, khong co seed nen sinh lai la xo so, va moi lan goi
+phai nap lai model.
 
 Mat xich quan trong nhat cua tool khong doi: sinh audio TRUOC, do duration THAT,
 roi lay do lam thoi luong canh. Khong bao gio canh timing bang tay.
 
 Hai engine khac nhau o mot cho anh huong toi thiet ke:
 
-  edge       goi tung cau, nhanh (~1s/cau), goi lai bao nhieu lan cung duoc
-  omnivoice  nap model ~8s + warmup, RTF 10-30 tren CPU. Goi tung cau la tu sat:
-             13 cau = 13 lan nap model. Nen phai GOM het cau con thieu vao MOT
-             lan goi process -> xem `prefetch()`.
+  edge         goi tung cau, nhanh (~1s/cau), goi lai bao nhieu lan cung duoc
+  voicestudio  backend thuong tru, model nam san trong RAM/VRAM. Khong con chi
+               phi nap model moi lan goi nhu duong WSL cu, nen sinh TUNG CAU la
+               duoc - khong phai gom batch, va loi mot cau khong keo ca luot.
+               Tren GPU T4 do duoc RTF ~0.25; tren CPU thi 10-30, cham nhu cu.
 
 Ket qua cache theo hash (noi dung + toan bo cau hinh giong), nen doi mot canh
 thi chi sinh lai dung cau do.
@@ -20,10 +26,11 @@ import asyncio
 import hashlib
 import json
 import os
-import re
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 import wave
 
 import imageio_ffmpeg
@@ -39,24 +46,92 @@ EDGE_VOICES = {
     "male": "vi-VN-NamMinhNeural",
 }
 
-# ------------------------------------------------------------------- omnivoice
-# Duong dan lay tu D:\omnivoice-test\say.ps1 - giu dong bo neu ben do doi.
-OMNI_DISTRO = "Ubuntu"
-OMNI_PY = "/root/omnivoice-env/bin/python"
-OMNI_SAY = "/mnt/d/omnivoice-test/say.py"
-OMNI_HF = "/mnt/d/hf-cache"     # khong truyen thi model 2,45 GB tai lai vao VHDX
-OMNI_DEFAULT_VOICE = "namtre_v3"
-OMNI_DEFAULT_STYLE = "tunhien"
+# ---------------------------------------------------------------- voicestudio
+# Backend VoiceStudio (FastAPI). Doi dich bang bien moi truong, khong sua code:
+#   VS_API=http://127.0.0.1:3900           backend chay tren may nay
+#   VS_API=https://xxx.trycloudflare.com   backend chay tren Colab T4 qua tunnel
+VS_API = os.environ.get("VS_API", "http://127.0.0.1:3900").rstrip("/")
+VS_TIMEOUT = float(os.environ.get("VS_TIMEOUT", "1800"))
+
+# Kho giong clone: manifest cua D:\omnivoice-test, moi giong co file wav va
+# ref_text. Gui CA HAI sang /generate - ref_text giup model can chinh dung doan
+# mau, thieu no thi clone kem hon. Duong WSL cu khong gui truong nay.
+VS_VOICES = os.environ.get("VS_VOICES", r"D:\omnivoice-test\giong\manifest.json")
+
+# Nguoi dung nghe bon giong tren cung mot doan roi chon. Quyet dinh mot lan cho
+# ca 90 so, xem VIET-KICH-BAN.md muc "chon giong".
+VS_DEFAULT_VOICE = "namtre_v2"
+
+# Khai TUONG MINH thay vi nhan mac dinh cua backend. Upstream co hai mac dinh khac
+# nhau cho cung mot model - `/generate` dung 16, con duong audiobook dung 32
+# ("quality" preset cua model). Nhan ngam thi mot lan upstream doi mac dinh la ca
+# 90 video sinh lai voi chat luong khac ma khong ai biet. Va vi no nam trong cfg
+# nen no vao KHOA CACHE: doi gia tri o day la sinh lai, dung nhu ky vong.
+VS_DEFAULT_NUM_STEP = 16
+
+# say.py co `style`, `mode`, `pause_scale`; /generate khong co cai nao. Tuyet doi
+# KHONG doi chung sang `instruct`: instruct la tu vung thiet ke tieng Anh da qua
+# validator, nhet "camhung" vao la 400 "Unsupported instruct items". Sac thai bay
+# gio den tu doan MAU (ref_audio), khong tu tham so.
+VS_BO_QUA = ("style", "mode", "pause_scale")
+
+_VOICES = None
+_DA_NOI = set()
+_DA_KIEM = set()
 
 
-def _to_wsl(path):
-    """D:\\a\\b -> /mnt/d/a/b. say.ps1 lam viec nay bang PowerShell; o day tu lam
-    vi ta goi wsl.exe truc tiep (Python truyen argv sach hon PowerShell)."""
-    p = os.path.abspath(path)
-    m = re.match(r"^([A-Za-z]):[\\/](.*)$", p)
+def _kho_giong():
+    global _VOICES
+    if _VOICES is None:
+        try:
+            with open(VS_VOICES, encoding="utf-8") as f:
+                _VOICES = json.load(f)
+        except Exception as e:
+            raise SystemExit(f"khong doc duoc kho giong {VS_VOICES}: {e}")
+    return _VOICES
+
+
+def _mau_giong(ten):
+    """Ten giong -> (duong_dan_wav, ref_text). Bao kem danh sach neu sai ten."""
+    reg = _kho_giong()
+    m = reg.get(ten)
     if not m:
-        return p.replace("\\", "/")
-    return f"/mnt/{m.group(1).lower()}/" + m.group(2).replace("\\", "/")
+        raise SystemExit(f"khong co giong {ten!r} trong {VS_VOICES}.\n"
+                         f"co: {', '.join(sorted(reg))}")
+    goc = os.path.dirname(os.path.dirname(os.path.abspath(VS_VOICES)))
+    wav = os.path.join(goc, str(m["file"]).replace("/", os.sep))
+    if not os.path.exists(wav):
+        raise SystemExit(f"giong {ten!r} tro toi file khong ton tai: {wav}")
+    return wav, m.get("ref_text") or None
+
+
+def kiem_backend():
+    """Goi /health mot lan truoc khi sinh. Tra ve dict, hoac dung han neu chet.
+
+    Ly do phai co: mot luot render 90 canh la vai chuc phut. Truoc day duong WSL
+    that bai ngay o cau dau nen biet lien; bay gio dich la mot URL - tunnel Colab
+    het han hay quen bat backend deu chi lo ra khi da doi. Kiem truoc mot lan.
+
+    In ca `device` vi day la cho de sai am tham nhat: cung mot URL, cung mot ket
+    qua, chi khac cpu voi cuda la thoi gian render lech 40 lan.
+    """
+    global _DA_KIEM
+    try:
+        with urllib.request.urlopen(f"{VS_API}/health", timeout=10) as r:
+            tt = json.load(r)
+    except Exception as e:
+        raise SystemExit(
+            f"khong goi duoc {VS_API}/health ({type(e).__name__}: {e}).\n"
+            f"  May nay: cd D:\\Project\\VoiceStudio && bun run dev\n"
+            f"  Colab:   dat VS_API=https://<ten>.trycloudflare.com")
+    if VS_API not in _DA_KIEM:
+        _DA_KIEM.add(VS_API)
+        print(f"  backend: {VS_API}  device={tt.get('device')}  "
+              f"v{tt.get('version')}")
+        if str(tt.get("device", "")).startswith("cpu"):
+            print("  (device=cpu - sinh giong se cham nhu duong WSL cu; "
+                  "tro VS_API sang may co GPU neu render ca video)")
+    return tt
 
 
 # ---------------------------------------------------------------- cau hinh giong
@@ -64,35 +139,47 @@ def config(doc):
     """Doc cau hinh giong tu screenplay. Dung lam ca khoa cache."""
     doc = doc or {}
     eng = str(doc.get("engine", "edge")).lower()
-    if eng not in ("edge", "omnivoice"):
-        raise SystemExit(f"engine khong biet: {eng!r}. Co: edge, omnivoice")
+    if eng in ("omnivoice", "voicestudio", "vs"):
+        eng = "voicestudio"
+    if eng not in ("edge", "voicestudio"):
+        raise SystemExit(f"engine khong biet: {eng!r}. Co: edge, voicestudio")
     if eng == "edge":
         return {"engine": "edge",
                 "voice": doc.get("voice", "female"),
                 "rate": doc.get("rate", "+6%"),
                 "pitch": doc.get("pitch", "+0Hz")}
-    # `voice:` trong screenplay la ten giong cua EDGE (female/male). Omnivoice
-    # dung ten giong clone (namtre_v2, nu_tre...), khong biet nhung ten do.
+    # `voice:` trong screenplay la ten giong cua EDGE (female/male). Engine
+    # voicestudio dung ten giong clone trong kho (namtre_v2, namtre_v3...),
+    # khong biet nhung ten do.
     #
-    # Bat o day chu khong de say.py bao, va cang khong tu thay bang giong mac
-    # dinh: thay ngam thi doi luon KHOA CACHE, nen lan render sau se sinh lai
-    # het ma khong ai hieu vi sao.
+    # Bat o day chu khong de backend bao, va cang khong tu thay bang giong mac
+    # dinh: thay ngam thi doi luon KHOA CACHE, nen lan render sau se sinh lai het
+    # ma khong ai hieu vi sao.
     # `omni_voice:` de screenplay khai duoc CA HAI engine cung luc: `voice:` cho
-    # edge, `omni_voice:` cho omnivoice. Khong co no thi giong omnivoice chi
-    # song tren dong lenh, va mot lan quen `--voice` la ra mot video khac han -
-    # da mat mot luot render vi dung chuyen do.
-    v = doc.get("omni_voice") or doc.get("voice", OMNI_DEFAULT_VOICE)
+    # edge, `omni_voice:` cho voicestudio. Giu nguyen ten khoa cu de 89 screenplay
+    # da viet khong phai sua.
+    v = doc.get("omni_voice") or doc.get("voice", VS_DEFAULT_VOICE)
     if v in ("female", "male", "nu", "nam"):
         raise SystemExit(
-            f"screenplay khai `voice: {v}` - do la ten giong cua edge-tts, "
-            f"omnivoice khong co.\n"
-            f"Chay lai kem `--voice {OMNI_DEFAULT_VOICE}` (hoac ten giong khac; "
-            f"xem `py D:/omnivoice-test/say.py --list`).")
-    cfg = {"engine": "omnivoice", "voice": v,
-           "style": doc.get("style", OMNI_DEFAULT_STYLE)}
-    for k in ("num_step", "speed", "pause_scale", "mode"):
+            f"screenplay khai `voice: {v}` - do la ten giong cua edge-tts, kho "
+            f"giong clone khong co.\n"
+            f"Them `omni_voice: {VS_DEFAULT_VOICE}` (hoac ten khac trong "
+            f"{VS_VOICES}).")
+    cfg = {"engine": "voicestudio", "voice": v,
+           "num_step": doc.get("num_step", VS_DEFAULT_NUM_STEP)}
+    for k in ("speed", "seed", "guidance_scale", "effect_preset",
+              "denoise", "postprocess"):
         if doc.get(k) is not None:
             cfg[k] = doc[k]
+    # style/mode/pause_scale la khai niem cua say.py. Noi to mot lan chu khong bo
+    # im: 89 screenplay dang khai chung, va am thanh ra SE khac ban da duyet truoc
+    # day. Khong cho vao cfg vi chung khong con anh huong audio - de vao thi khoa
+    # cache doi ma tieng khong doi.
+    bo = tuple(k for k in VS_BO_QUA if doc.get(k) is not None)
+    if bo and bo not in _DA_NOI:
+        _DA_NOI.add(bo)
+        print(f"  (voicestudio bo qua: {', '.join(bo)} "
+              f"- sac thai lay tu doan mau ref_audio)")
     # Tat mac dinh. Ba screenplay dau da viet phien am thang vao `narration`,
     # bat len se doi khoa cache va sinh lai audio DA DUYET.
     if doc.get("phien_am"):
@@ -131,7 +218,7 @@ def _wav_path(cache_dir, text, cfg):
 def _to_48k_stereo(src, dst):
     """Chuan hoa ve 48k stereo. Ghi ra file TAM roi doi ten.
 
-    Bat buoc: omnivoice tra ve 24k mono, con `concat()` ghi thang byte nen moi
+    Bat buoc: /generate tra ve 24k mono, con `concat()` ghi thang byte nen moi
     doan phai cung dinh dang. Ghi truc tiep vao `dst` thi mot lan ffmpeg fail
     se de lai file hong nam mai trong cache.
     """
@@ -192,66 +279,94 @@ def _edge_one(text, cache_dir, cfg):
         f"khong sinh duoc giong doc sau {TRIES} lan: {last}\n  cau: {text[:70]}…")
 
 
-# ------------------------------------------------------------------ omnivoice
-def _omni_batch(texts, cache_dir, cfg):
-    """Sinh NHIEU cau trong MOT lan goi process.
+# ---------------------------------------------------------------- voicestudio
+def _multipart(fields, duong_wav, du_lieu):
+    """Dong goi multipart/form-data bang stdlib.
 
-    say.py nhan nhieu text va ghi ra `<base>_1.wav`, `<base>_2.wav`... theo dung
-    thu tu tham so (khi chi co MOT text thi ghi thang vao `-o`). Ta dua vao mot
-    ten tam roi doi tung file sang ten cache that.
-
-    Phai gom nhu vay vi nap model mat ~8s va cau dau moi process con them warmup
-    ~14s; goi tung cau thi rieng chi phi co dinh da vuot thoi gian sinh.
+    Khong dung `requests`: Python cua tool khong co goi do, va them mot phu thuoc
+    chi de POST mot file la khong dang.
     """
-    # Ten TAM phai rieng cho tung tien trinh. Hai lan render chay cung luc deu
-    # ghi vao `<cache>/_omni_batch_1.wav`, nen chung DE LEN NHAU va lan nao doi
-    # ten truoc thi lay phai audio cua lan kia. Da xay ra that: mot luot render
-    # va mot luot sinh bo chuan chay song song, cung ghi 6 file dau tien.
-    base = os.path.join(cache_dir, f"_omni_batch_{os.getpid()}.wav")
-    for f in _batch_files(base, len(texts)):
-        if os.path.exists(f):
-            os.remove(f)
+    bd = "----wbv" + hashlib.sha1(os.urandom(16)).hexdigest()[:16]
+    out = bytearray()
+    for k, v in fields.items():
+        out += (f"--{bd}\r\n"
+                f'Content-Disposition: form-data; name="{k}"\r\n\r\n').encode()
+        out += str(v).encode("utf-8") + b"\r\n"
+    out += (f"--{bd}\r\n"
+            f'Content-Disposition: form-data; name="ref_audio"; '
+            f'filename="{os.path.basename(duong_wav)}"\r\n'
+            f"Content-Type: audio/wav\r\n\r\n").encode()
+    out += du_lieu + b"\r\n"
+    out += f"--{bd}--\r\n".encode()
+    return bytes(out), f"multipart/form-data; boundary={bd}"
 
-    cmd = ["wsl.exe", "-d", OMNI_DISTRO, "--", "env", f"HF_HOME={OMNI_HF}",
-           OMNI_PY, OMNI_SAY]
-    cmd += list(texts)
-    cmd += ["--voice", str(cfg["voice"]), "--style", str(cfg["style"]),
-            "-o", _to_wsl(base)]
-    for k, flag in (("num_step", "--num-step"), ("speed", "--speed"),
-                    ("pause_scale", "--pause-scale"), ("mode", "--mode")):
+
+def _vs_one(text, cache_dir, cfg, seed=None):
+    """Sinh MOT cau qua POST /generate, ghi thang vao cache.
+
+    /generate tra ve WAV bytes truc tiep, kem header X-Audio-Duration /
+    X-Gen-Time / X-Seed. Ghi ra file tam roi `_to_48k_stereo` doi ten - cung
+    duong nhu edge, nen `concat()` khong phan biet duoc engine nao sinh.
+    """
+    wav_mau, ref_text = _mau_giong(cfg["voice"])
+    fields = {"text": text, "language": "Vietnamese"}
+    if ref_text:
+        fields["ref_text"] = ref_text
+    for k in ("num_step", "speed", "guidance_scale", "effect_preset"):
         if cfg.get(k) is not None:
-            cmd += [flag, str(cfg[k])]
+            fields[k] = cfg[k]
+    for k, api in (("denoise", "denoise"),
+                   ("postprocess", "postprocess_output")):
+        if cfg.get(k) is not None:
+            fields[api] = "true" if cfg[k] else "false"
+    s = seed if seed is not None else cfg.get("seed")
+    if s is not None:
+        fields["seed"] = int(s)
 
-    print(f"  omnivoice: sinh {len(texts)} cau trong 1 lan goi "
-          f"(giong={cfg['voice']} style={cfg['style']})...")
-    t0 = time.time()
-    r = subprocess.run(cmd, capture_output=True)
-    out = r.stdout.decode("utf-8", "replace")
-    err = r.stderr.decode("utf-8", "replace")
-    for ln in out.splitlines():
-        if ln.strip().startswith("["):
-            print("   ", ln.strip())
-    if r.returncode != 0:
-        raise RuntimeError(
-            f"say.py that bai (ma {r.returncode}).\n{(err or out)[-1500:]}")
+    with open(wav_mau, "rb") as f:
+        body, ctype = _multipart(fields, wav_mau, f.read())
+    req = urllib.request.Request(f"{VS_API}/generate", data=body,
+                                 headers={"Content-Type": ctype})
+    try:
+        with urllib.request.urlopen(req, timeout=VS_TIMEOUT) as r:
+            audio = r.read()
+            gen = r.headers.get("X-Gen-Time")
+            dung = r.headers.get("X-Seed")
+    except urllib.error.HTTPError as e:
+        chi_tiet = e.read().decode("utf-8", "replace")[:800]
+        raise RuntimeError(f"/generate tra ve HTTP {e.code}\n{chi_tiet}\n"
+                           f"  cau: {text[:70]}...")
+    except urllib.error.URLError as e:
+        raise SystemExit(
+            f"khong ket noi duoc backend VoiceStudio tai {VS_API} "
+            f"({e.reason}).\n"
+            f"  May nay: cd D:\\Project\\VoiceStudio && bun run dev\n"
+            f"  Colab:   dat VS_API=https://<ten>.trycloudflare.com")
+    # Guard hop dong: `/generate` la route NOI BO cua upstream, khong phai API
+    # cong khai on dinh. Da co tien le phan ky ngay trong upstream - audiobook.py
+    # ghi "take's pinned seed silently did nothing here while /generate honored
+    # it". Neu mot ban nang cap ngung ton trong seed thi ta mat tinh tai lap ma
+    # khong co dau hieu nao, va vong sinh lai o `_nghiem_thu` cung thanh vo dung.
+    # Bat ngay tai lan goi dau, khong doi den luc phat hien qua audio.
+    if s is not None and dung is not None and str(dung) != str(int(s)):
+        raise SystemExit(
+            f"backend khong ton trong seed: gui {int(s)}, tra ve {dung}.\n"
+            f"  Ghim seed la co so de re-render ra dung audio cu, va la dieu kien\n"
+            f"  de vong sinh lai o nghiemthu.py cai thien duoc gi.\n"
+            f"  Kiem lai phien ban backend tai {VS_API}/health truoc khi render.")
+    if len(audio) < MIN_AUDIO:
+        raise RuntimeError(f"/generate tra ve {len(audio)}B "
+                           f"- cau: {text[:70]}...")
 
-    made = _batch_files(base, len(texts))
-    missing = [f for f in made if not os.path.exists(f)]
-    if missing:
-        raise RuntimeError(
-            f"say.py chay xong nhung thieu {len(missing)}/{len(texts)} file.\n"
-            f"{(out + err)[-1500:]}")
-    for text, src in zip(texts, made):
-        _to_48k_stereo(src, _wav_path(cache_dir, text, cfg))
-        os.remove(src)
-    print(f"  omnivoice: xong trong {(time.time() - t0) / 60:.1f} phut")
-
-
-def _batch_files(base, n):
-    if n == 1:
-        return [base]
-    b, ext = os.path.splitext(base)
-    return [f"{b}_{i + 1}{ext}" for i in range(n)]
+    tmp = os.path.join(cache_dir, f"_vs_{os.getpid()}.wav")
+    with open(tmp, "wb") as f:
+        f.write(audio)
+    try:
+        _to_48k_stereo(tmp, _wav_path(cache_dir, text, cfg))
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    return gen, dung
 
 
 # --------------------------------------------------------------------- API
@@ -271,13 +386,20 @@ def prefetch(texts, cache_dir, cfg):
         # VAN chay cong nghiem thu du khong sinh cau nao. Chi do thi rat nhanh,
         # va cong phai la thu quyet dinh cuoi cung - khong the vi audio nam san
         # trong cache ma bo qua. Cache co the la ban sinh tu truoc khi co cong.
-        if cfg["engine"] == "omnivoice" and want:
+        if cfg["engine"] == "voicestudio" and want:
             _nghiem_thu(want, cache_dir, cfg)
         return
     print(f"  giong doc: {len(want) - len(missing)}/{len(want)} cau co san, "
           f"can sinh {len(missing)} cau")
-    if cfg["engine"] == "omnivoice":
-        _omni_batch(missing, cache_dir, cfg)
+    if cfg["engine"] == "voicestudio":
+        kiem_backend()
+        t0 = time.time()
+        for n, t in enumerate(missing, 1):
+            gen, dung = _vs_one(t, cache_dir, cfg)
+            print(f"    [{n}/{len(missing)}] {gen or '?'}s"
+                  f"{f' seed={dung}' if dung else ''}")
+        print(f"  voicestudio: xong {len(missing)} cau trong "
+              f"{(time.time() - t0) / 60:.1f} phut")
         _nghiem_thu(want, cache_dir, cfg)
     else:
         for t in missing:
@@ -288,8 +410,10 @@ def prefetch(texts, cache_dir, cfg):
 def _nghiem_thu(texts, cache_dir, cfg):
     """Do audio vua sinh, sinh lai nhung cau xau nhat neu ca video truot.
 
-    Day la thu thay viec ngoi nghe tung doan. Model khong co seed nen lan sinh
-    lai that su khac - da do duoc cung mot cau ra 5,71 va 4,71 khoi/giay.
+    Day la thu thay viec ngoi nghe tung doan. /generate CO seed, nen sinh lai ma
+    khong doi seed se ra y het file cu va vong lap khong bao gio cai thien: moi
+    vong phai doi seed. Co `seed` trong screenplay thi cong them so vong, khong
+    co thi de trong cho server tu chon.
 
     Gac o muc VIDEO chu khong muc cau: xem `nghiemthu.py`, muc "ban dau toi
     thiet ke sai". Tom tat: tieu chi muc cau tu choi sach ca ban da duyet.
@@ -307,8 +431,9 @@ def _nghiem_thu(texts, cache_dir, cfg):
         return
     do = [nt.do(p) for p in duong]
     dat, ty, xau = nt.nghiem_thu(do)
-    print(f"  nghiem thu: {ty:.2f} lo chet/phut "
-          f"(nguong {nt.LO_MOI_PHUT}) -> {'DAT' if dat else 'TRUOT'}")
+    n_tho = sum(m.get("tho_dem", 0) for m in do)
+    print(f"  nghiem thu: {ty:.2f} lo chet/phut (nguong {nt.LO_MOI_PHUT})"
+          f" | {n_tho} cuc nhieu -> {'DAT' if dat else 'TRUOT'}")
     if dat or not xau:
         return
 
@@ -320,7 +445,11 @@ def _nghiem_thu(texts, cache_dir, cfg):
         print(f"  sinh lai vong {vong + 1}: {len(chon)} cau xau nhat")
         os.makedirs(tam, exist_ok=True)
         try:
-            _omni_batch([texts[i] for i in chon], tam, cfg)
+            goc_seed = cfg.get("seed")
+            for i in chon:
+                _vs_one(texts[i], tam, cfg,
+                        seed=(int(goc_seed) + vong + 1)
+                        if goc_seed is not None else None)
         except Exception as e:
             print(f"  (sinh lai that bai: {e})")
             break
@@ -336,8 +465,9 @@ def _nghiem_thu(texts, cache_dir, cfg):
             else:
                 os.remove(moi)
         dat, ty, xau = nt.nghiem_thu(do)
-        print(f"  sau vong {vong + 1}: {ty:.2f} lo chet/phut "
-              f"-> {'DAT' if dat else 'van TRUOT'}")
+        n_tho = sum(m.get("tho_dem", 0) for m in do)
+        print(f"  sau vong {vong + 1}: {ty:.2f} lo chet/phut"
+              f" | {n_tho} cuc nhieu -> {'DAT' if dat else 'van TRUOT'}")
         if dat:
             break
     if os.path.isdir(tam):
@@ -396,7 +526,7 @@ def concat(segments, out_path):
 
 
 if __name__ == "__main__":
-    # thu nhanh mot cau: python src/tts.py omnivoice "Xin chao"
+    # thu nhanh mot cau: python src/tts.py voicestudio "Xin chao"
     eng = sys.argv[1] if len(sys.argv) > 1 else "edge"
     txt = sys.argv[2] if len(sys.argv) > 2 else "Xin chào, kiểm tra giọng đọc."
     cfg = config({"engine": eng})

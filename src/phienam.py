@@ -85,6 +85,22 @@ TU_DIEN = {
     "pool": "pun",
     "timeout": "tai mao",
     "list": "lít",
+    # Nguoi dung nghe ra o so 72 canh 2 ("khong mot dong log do"): tu ngan,
+    # la, nam giua dong chay tieng Viet -> model tu doan cach doc.
+    "log": "lốc",
+    # Sau tu duoi day chi NGHE chu khong hien tren man hinh, nen phien am theo
+    # cach dan trong nghe doc. Da nghe kiem mot luot o `out/thu-tu/`. Hai ung
+    # vien cua cung luot do bi bac: `javascript` va `production`, xem GIU_GOC.
+    "email": "i meo",
+    "code": "cốt",
+    "python": "pai thon",
+    "file": "phai",
+    "test": "tét",
+    "review": "ri viu",
+    # `is` la chu de chinh cua so 54 nen no duoc doc rat nhieu lan. Hai ky tu,
+    # tu la -> dung cai bay cua `log`. "ít" la cach dan trong noi. CHUA co tai
+    # nguoi xac nhan, nghe o bo chuan luot sau truoc khi render so 54.
+    "is": "ít",
 }
 
 # --- UNG VIEN, CHUA AP -----------------------------------------------------
@@ -95,15 +111,8 @@ TU_DIEN_THU = {
     # `eager load` chua co khung cau trong bo chuan nen chua duoc nghe. Them
     # khung vao `research/bo_chuan_giong.py` roi chay lai moi quyet dinh duoc.
     "eager load": "i gờ lâu",
-    # Hai tu TRUNG TAM cua ca mua 3 ma bo chuan dau tien bo sot. `set` viet
-    # theo chinh ta tieng Viet doc thanh "sét", nen model dung giua hai cach
-    # doc cua cung mot chuoi ky tu.
-    # Gap khi viet mua 1 va mua 3. Chua duoc nghe, chua ap.
-    "Python": "pai thơn",
-    "code": "cốt",
-    "test": "tét",
-    "file": "phai",
-    "email": "i meo",
+    # Nam muc `Python`, `code`, `test`, `file`, `email` tung nam o day da duoc
+    # nghe va chuyen han sang TU_DIEN, khong con lap lai o duoi nua.
 }
 
 # --- DA NGHE va QUYET DINH GIU NGUYEN CHU GOC ------------------------------
@@ -122,7 +131,29 @@ GIU_GOC = ("database", "nginx", "query", "redis", "request", "transaction",
            # nam trong cung mot cau. Nguoi dung nghe tung cap va chon nhu vay.
            # Thuoc do cung nghieng ve ban goc cua `set`: ban phien am sinh them
            # mot lo 120ms ma ban goc khong co.
-           "set")
+           "set",
+           # Ba tu nay HIEN TREN MAN HINH duoi dang code (None, .lower(),
+           # EXPLAIN) nen loi doc phai khop voi chu nguoi xem dang nhin.
+           "none", "lower", "explain",
+           # `javascript` tung duoc phien am thanh "gia va sơ críp" va nguoi
+           # xem nghe ra tieng nhieu ngay: `críp` KHONG PHAI am tiet tieng
+           # Viet (khong co phu am dau `cr`), nen model phai phat ra mot thu
+           # nam ngoai von am cua no - dung cai loi ma tu dien sinh ra de
+           # chua. Giu chu goc: canh 3 so 72 tung doc "JavaScript" khong
+           # phien am va khong ai keu.
+           "javascript",
+           # `production` tung duoc phien am thanh "pờ rô đắc sần" - hop le
+           # ve am tiet nhung bon am cho mot tu, nghe le the. Nguoi dung chon
+           # giu chu goc, cung cach da chon cho `database` va `set`.
+           "production",
+           # `join` hien tren man hinh trong doan code `"".join(...)` nen loi
+           # doc phai khop voi chu nguoi xem dang nhin - cung luat voi `none`.
+           "join")
+
+# CHO HO DA BIET: `la_am_tiet_viet` nhan nham vai tu tieng Anh la am tiet Viet
+# hop le, vi no chi kiem phu am dau va phu am cuoi chu khong kiem phan van.
+# Da thay: `key` va `set`. Ca hai deu doc ra tam duoc nen chua chua; nhung
+# `check_tu_la` trong lint.py se KHONG bat duoc nhung tu kieu do.
 
 
 def _boundary(tu):
@@ -261,3 +292,29 @@ def tu_la(text):
             continue
         ra.append(tu)
     return ra
+
+
+# --- tu kiem: ban phien am phai la tieng Viet doc duoc -----------------------
+#
+# Ly do co ham nay: toi tung phien am `javascript` thanh "gia va so crip" va
+# nguoi xem nghe ra tieng nhieu trong vong mot phut. `crip` khong phai am tiet
+# tieng Viet - tieng Viet khong co phu am dau `cr`. Ban phien am cua toi tao ra
+# DUNG CAI LOI ma tu dien nay sinh ra de chua: mot chuoi nam ngoai von am cua
+# model, buoc no phai doan.
+#
+# Chay ngay luc nap module chu khong de trong lint, vi mot muc hong trong
+# TU_DIEN lam hong MOI kich ban chua tu do - phai chet som chu khong canh bao.
+def _tu_kiem():
+    hong = []
+    for goc, pa in TU_DIEN.items():
+        xau = [w for w in pa.split() if not la_am_tiet_viet(w)]
+        if xau:
+            hong.append(f"{goc!r} -> {pa!r}: {xau} khong phai am tiet tieng Viet")
+    if hong:
+        raise ValueError(
+            "TU_DIEN co ban phien am khong doc duoc bang tieng Viet:\n  "
+            + "\n  ".join(hong)
+            + "\nDoi ban phien am, hoac dua tu do vao GIU_GOC.")
+
+
+_tu_kiem()

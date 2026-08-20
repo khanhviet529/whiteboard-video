@@ -38,8 +38,9 @@ có mùa thật chứ không phải một khuôn lặp 90 lần.
 | Nhận diện hình thứ hai | mùa 2 và 5 dùng chung `bench` thì người xem không phân biệt được mùa | 2, 5 |
 | Vòng sinh YAML tự động + `lint.py` soi | ở 3 video thì viết tay hợp lý, ở 90 thì đây là đường tới hạn | tất cả |
 
-Đã có sẵn trên máy: Python 3.14, sqlite3, `node v24`, `npm 11`, WSL2 Ubuntu (đang
-chạy omnivoice), git.
+Đã có sẵn trên máy: Python 3.14, sqlite3, `node v24`, `npm 11`, WSL2 Ubuntu, git.
+(WSL2 giờ chỉ dùng cho postgres/redis/docker của phần nội dung — giọng đọc đã
+chuyển sang backend VoiceStudio qua HTTP, không còn chạy trong WSL.)
 
 ## Cách đọc bảng
 

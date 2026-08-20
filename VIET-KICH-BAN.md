@@ -34,7 +34,7 @@ dao 23–90 lần qua năm lượt.
 
 | Bước | Lệnh | Thời gian |
 |---|---|---|
-| Soi lỗi kịch bản | `python src/lint.py screenplays/<f>.yaml --engine omnivoice` | tức thì |
+| Soi lỗi kịch bản | `python src/lint.py screenplays/<f>.yaml --engine voicestudio` | tức thì |
 | Soi bố cục | `python src/render.py <f> --stills` rồi `python research/contact_sheet.py` | ~1 phút |
 | Soi cảnh mô phỏng | `python research/sim_strip.py gantt <f> 1` | ~1 phút |
 | **Nghe thử một cảnh** | `python src/render.py <f> ... --audio-only --scenes 8` | 2–7 phút |
@@ -46,7 +46,7 @@ còn chính câu đó nằm cuối lời đọc ba câu thì chạy ×0,95. Đã
 vì thử câu lẻ: người dùng báo một câu nghe không rõ trong video, thử riêng thì
 thấy ổn, và suýt đổ lỗi cho cách diễn đạt. `thu_cau.py` giờ in sẵn bảng hệ số đó.
 
-| Render đầy đủ | `python src/render.py <f> ... -j 10` | ~12 phút (edge) / ~40 phút (omnivoice) |
+| Render đầy đủ | `python src/render.py <f> ... -j 10` | ~12 phút (edge) / ~40 phút (voicestudio trên CPU, vài phút trên T4) |
 | Dò sạn trong bản đã render | `python D:/omnivoice-test/soi_san.py out/<f>.mp4` | tức thì |
 
 Sau khi render, nghe lại và ghi mốc giây của chỗ nghe cộm. Tai người vẫn bắt được
@@ -57,7 +57,7 @@ lệch 2% mà tai phân biệt rõ.
 
 ## Bẫy khi viết lời đọc
 
-Toàn bộ mục này chỉ áp cho engine `omnivoice`. Với `edge-tts` thì cả đoạn được đọc
+Toàn bộ mục này chỉ áp cho engine `voicestudio`. Với `edge-tts` thì cả đoạn được đọc
 một lần nên không gặp. Lý do gốc: `mode: tach` sinh **từng câu một lần gọi model
 riêng**, nên mỗi câu tự quyết mọi thứ và không có ngữ cảnh từ câu bên cạnh.
 
@@ -99,13 +99,13 @@ caption:   ...                       # caption giữ nguyên chữ TTL
 
 | Bẫy | Hậu quả | Cách tránh |
 |---|---|---|
-| Sửa `speed` / `pause_scale` trong `speak.py` | Không có tác dụng gì. `tts.config()` chỉ đưa giá trị khai trong YAML vào **khoá cache**, nên render sau dùng lại audio cũ | Khai trong screenplay: `speed:` `pause_scale:` |
+| Sửa tham số giọng ở chỗ khác YAML | Không có tác dụng gì. `tts.config()` chỉ đưa giá trị khai trong YAML vào **khoá cache**, nên render sau dùng lại audio cũ | Khai trong screenplay: `speed:` `num_step:` `seed:`. (`speak.py` và `pause_scale` đã bỏ cùng đường WSL) |
 | Tưởng cache lưu theo từng câu | Khoá tính trên **toàn bộ narration của cảnh**. Sửa một chữ là cả cảnh sinh lại | Đã sửa thì gộp câu cho triệt để, giữ nguyên vài câu không bảo toàn được gì |
-| `min_duration` canh theo edge-tts | Giọng omnivoice đọc gọn hơn, khung cứng để lại 3,9–4,9 giây im lặng ở cuối cảnh | Bỏ `min_duration`, để thời lượng chạy theo audio |
+| `min_duration` canh theo edge-tts | Giọng clone đọc gọn hơn, khung cứng để lại 3,9–4,9 giây im lặng ở cuối cảnh | Bỏ `min_duration`, để thời lượng chạy theo audio |
 | Quên `pre_pad` / `post_pad` | Mặc định 0,45 + 0,85 = 1,3 giây **mỗi điểm cắt**. Video 13 cảnh mất 15,6 giây chỉ để im lặng, đo được là 24% thời lượng | Khai `pre_pad: 0.35` và `post_pad: 0.55` |
 | `caption` để trống | Nó mặc định lấy luôn `narration`, mà thẻ phụ đề chỉ vừa ~3 dòng ở cỡ 24px | Viết `caption` riêng, ngắn hơn `narration` |
-| **Giọng, style và mode để trên dòng lệnh** | Đây là bẫy đắt nhất đã gặp. `--style camhung --tts-mode tach` là cả cơ chế kiểm soát chất lượng: `camhung` bật `contour` và `retry=2`, còn nhánh `tach` mới có vòng thử lại — nhánh `lien` sinh một phát rồi lấy nguyên, không kiểm tra gì. Quên hai cờ đó thì video vẫn ra, vẫn nghe được, chỉ là nhiều sạn hơn hẳn và không có gì báo | Khai trong screenplay: `omni_voice:` `style:` `mode:`. Chạy `--engine omnivoice` là đủ |
-| Chạy `--engine omnivoice` mà quên `--voice` | `voice: female` trong screenplay là tên giọng của **edge-tts**. Omnivoice không có tên đó nên render dừng ngay | `--voice` là **bắt buộc** khi dùng omnivoice. `tts.config()` chặn sớm và in ra tên giọng nên đọc dòng lỗi là biết phải gõ gì |
+| ~~**Giọng, style và mode để trên dòng lệnh**~~ *(hết hiệu lực 2026-08-20)* | Từng là bẫy đắt nhất: `--style camhung --tts-mode tach` là cả cơ chế kiểm soát chất lượng của `say.py` (`contour`, `retry=2`, chỉ nhánh `tach` có vòng thử lại). Sau khi đổi sang engine `voicestudio`, `style`/`mode`/`pause_scale` **không còn tác dụng** — `/generate` không có tham số tương ứng, `tts.config()` in cảnh báo rồi bỏ qua. Vòng thử lại còn lại là cổng `_nghiem_thu` ở mức **video**, và nó đổi seed mỗi vòng | Khai trong screenplay: `omni_voice:` `speed:` `num_step:` `seed:`. Chạy `--engine voicestudio` là đủ |
+| Chạy `--engine voicestudio` mà quên `--voice` | `voice: female` trong screenplay là tên giọng của **edge-tts**; kho giọng clone không có tên đó nên render dừng ngay | Khai `omni_voice:` trong screenplay (89 bản đã có). `tts.config()` chặn sớm và in cả 13 tên giọng có thật nên đọc dòng lỗi là biết phải gõ gì |
 | **`label: 23:30` không có nháy** | YAML 1.1 đọc số cách nhau bằng dấu hai chấm theo **hệ lục thập phân**: `23:30` thành `1410`, `1:2:3` thành `3723`. Không báo lỗi gì, chỉ nổ giữa lúc render. Lạ hơn nữa: `06:30` thì lại giữ nguyên là chuỗi vì số 0 đứng đầu | Bọc nháy mọi giờ phút. `lint.py` giờ kiểm 30 khoá được vẽ thẳng ra màn hình |
 | `status: 504` không có nháy | YAML trả về `int`, `track_w()` nổ **giữa lúc render** — tức sau khi đã trả tiền cho cả vòng tổng hợp giọng nói | Bọc nháy. `lint.py` bắt được mọi khoá được vẽ thẳng ra màn hình mà bị đọc thành số |
 | Dấu `:` theo sau dấu cách trong scalar YAML | Vỡ file, `ScannerError` | Bỏ dấu hai chấm hoặc bọc nháy |
@@ -198,11 +198,45 @@ Hai điều nữa về sự đơn điệu:
 
 ## Checklist trước khi render
 
-1. `python src/lint.py screenplays/<f>.yaml --engine omnivoice` sạch.
+1. `python src/lint.py screenplays/<f>.yaml --engine voicestudio` sạch.
 2. Không câu nào dưới 25 ký tự đứng cuối `narration`.
 3. Mọi viết tắt trong `narration` đã phiên âm, `caption` giữ chữ gốc.
 4. `caption` viết riêng và ngắn hơn `narration`.
-5. Không có `min_duration` nếu dùng omnivoice.
-6. Đã khai `speed`, `pause_scale`, `pre_pad`, `post_pad` trong YAML.
+5. Không có `min_duration` nếu dùng voicestudio.
+6. Đã khai `speed`, `pre_pad`, `post_pad` trong YAML (`pause_scale` không còn tác dụng).
 7. Số liệu trong video đã đo hoặc suy ra được, không có số bịa.
 8. Đã nghe thử bằng `--audio-only --scenes N` những cảnh mới viết.
+
+## Chọn giọng — quyết định một lần cho cả 90 số
+
+`omni_voice: namtre_v2` trong mọi screenplay. Đừng đổi lẻ một file.
+
+Trước đó dùng `namtre_v3` và người xem liên tục báo giọng bị nhiễu. Tôi chữa
+theo kiểu từng video — chỉnh câu chữ, chỉnh vị trí câu, sinh lại cảnh — và cách
+đó **sai**, vì model không có seed nên mỗi lần sinh là một mẫu mới. Chữa như vậy
+thì 90 video là 90 lần ngồi nghe, không nhân lên được.
+
+Cách chữa đúng nằm ở trên nguồn: sinh CÙNG MỘT ĐOẠN với cả 13 mẫu giọng có
+trong `D:/omnivoice-test/giong/`, nghe một lượt, chốt một giọng cho cả kênh.
+Script sinh nằm trong lịch sử phiên; file kết quả ở `out/thu/`.
+
+Số đo cao tần cuối cụm của 13 mẫu gốc, để tham khảo chứ KHÔNG để quyết định:
+
+| mẫu | cao tần cuối cụm |
+|---|---|
+| giong1_nam_hoihop | +4,3% |
+| modes_hoihop_CU | −11,2% |
+| modes_tintuc_LIEN | −15,9% |
+| nam_tramtrong | −34,2% |
+| namtre_v3 | −57,3% |
+| **namtre_v2** | **−66,9%** |
+| nam_tre | −89,5% |
+
+Giọng được chọn đứng gần cuối bảng. Đây là lần thứ bảy tai người nghe và thước
+đo của tôi cho hai kết luận khác nhau, và cả bảy lần tai người đúng. Ghi bảng
+này lại để lần sau đừng ai dùng nó mà chọn giọng.
+
+`modes_quangcao_CU` có một lỗ chết 2 giây trong đoạn thử — đừng dùng.
+
+Đổi giọng làm **đổi khoá cache** của toàn bộ audio, nên mọi video đã render đều
+phải render lại thì mới đồng giọng.

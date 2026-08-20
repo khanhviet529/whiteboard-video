@@ -15,7 +15,7 @@ Nen o day kiem hai nhom:
 Khong tu sua gi. Bo cuc va nhip la quyet dinh cua nguoi viet, tool chi chi ra
 cho dang ngo.
 
-    python src/lint.py screenplays/cache-stale.yaml [--engine omnivoice]
+    python src/lint.py screenplays/cache-stale.yaml [--engine voicestudio]
 
     thoat 1 neu co LOI, 0 neu chi co canh bao -> dung duoc trong vong lap kiem
     hang loat. Chot chan luc render (`render.py` goi `lint.report`) chi IN loi
@@ -196,7 +196,7 @@ def check_caption(sp, idx, out):
 
 
 def check_narration(sp, idx, out, engine):
-    """Bay doc sai cua engine `omnivoice` - CHI kiem khi dung engine do.
+    """Bay doc sai cua engine `voicestudio` - CHI kiem khi dung engine do.
 
     Hai bay nay do bang tai roi do lai bang so tren ban render that:
 
@@ -227,10 +227,10 @@ def check_narration(sp, idx, out, engine):
       2. tu 4 cau ngan tro len trong mot canh - moi cau la mot lan goi model kem
          mot khoang nghi, do duoc 1,04 giay im lang trong canh ~8 giay
 
-    Chi bao khi engine la `omnivoice`: edge-tts doc ca doan mot lan nen cau ngan
+    Chi bao khi engine la `voicestudio`: edge-tts doc ca doan mot lan nen cau ngan
     khong sinh van de nao.
     """
-    if engine != "omnivoice":
+    if engine not in ("omnivoice", "voicestudio"):
         return
     txt = sp.get("narration")
     if not txt:
@@ -243,7 +243,7 @@ def check_narration(sp, idx, out, engine):
         if end_abbr:
             out.append(("CANH BAO", f"cảnh {idx:02d} {sp.get('scene')}",
                         f"`{end_abbr.group(1)}` ở CUỐI câu \"{s[:44]}…\" — "
-                        f"omnivoice nén viết tắt cuối câu; đổi vào giữa câu"))
+                        f"voicestudio nén viết tắt cuối câu; đổi vào giữa câu"))
     if len(cau) > 1 and len(cau[-1]) < NGAN:
         out.append(("CANH BAO", f"cảnh {idx:02d} {sp.get('scene')}",
                     f"câu CUỐI chỉ {len(cau[-1])} ký tự: \"{cau[-1]}\" — câu cuối bị "
@@ -289,7 +289,7 @@ def check_doc_ro(sp, idx, out, engine):
     nhung canh bao that.
     Cho do thuoc ve cong nghiem thu (tang 2), noi do TRUC TIEP audio da sinh.
     """
-    if engine != "omnivoice":
+    if engine not in ("omnivoice", "voicestudio"):
         return
     tag = f"cảnh {idx:02d}"
     n = sp.get("narration", "") or ""
@@ -637,10 +637,10 @@ def main():
     import yaml
     if len(sys.argv) < 2:
         raise SystemExit("dùng: python src/lint.py screenplays/<file>.yaml "
-                         "[--engine omnivoice]")
+                         "[--engine voicestudio]")
     with open(sys.argv[1], "r", encoding="utf-8") as f:
         doc = yaml.safe_load(f)
-    # Phep kiem narration chi ap cho engine omnivoice, nen phai ghi de duoc tu
+    # Phep kiem narration chi ap cho engine voicestudio, nen phai ghi de duoc tu
     # dong lenh - khong thi khong test duoc ma cung khong soi truoc duoc.
     if "--engine" in sys.argv:
         doc["engine"] = sys.argv[sys.argv.index("--engine") + 1]
@@ -667,11 +667,11 @@ def main():
     args = [x for x in sys.argv[1:] if not x.startswith("-")]
     if not args:
         raise SystemExit(
-            "dung: python src/lint.py screenplays/<file>.yaml [--engine omnivoice]\n"
+            "dung: python src/lint.py screenplays/<file>.yaml [--engine voicestudio]\n"
             "      thoat 1 neu co LOI, 0 neu chi co canh bao")
     with open(args[0], "r", encoding="utf-8") as f:
         doc = yaml.safe_load(f)
-    # Phep kiem narration chi ap cho engine omnivoice nen phai ghi de duoc tu
+    # Phep kiem narration chi ap cho engine voicestudio nen phai ghi de duoc tu
     # dong lenh, khong thi khong soi truoc duoc ma cung khong test duoc.
     if "--engine" in sys.argv:
         doc["engine"] = sys.argv[sys.argv.index("--engine") + 1]

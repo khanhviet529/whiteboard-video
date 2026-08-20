@@ -147,37 +147,62 @@ khi hài lòng mới render full.
 
 Chọn bằng `engine:` ở đầu screenplay, hoặc ghi đè từ CLI.
 
-| | `edge` *(mặc định)* | `omnivoice` |
+| | `edge` *(mặc định)* | `voicestudio` |
 |---|---|---|
-| Nguồn | edge-tts, miễn phí, qua mạng | OmniVoice chạy trong WSL, offline |
-| Tốc độ sinh | ~1 giây/câu | **RTF 14–54** — xem bảng dưới |
+| Nguồn | edge-tts, miễn phí, qua mạng | backend VoiceStudio qua HTTP `/generate` |
+| Chạy ở đâu | dịch vụ Microsoft | `$VS_API` — máy này (`:3900`) hoặc Colab T4 qua tunnel |
+| Tốc độ sinh | ~1 giây/câu | RTF ~0,25 trên T4 · 10–30 trên CPU |
 | Giọng | 2 giọng Microsoft | giọng **clone từ mẫu**, tự nhiên hơn |
 | Định dạng ra | mp3 → 48k stereo | 24k **mono** → 48k stereo |
-| Giấy phép | dùng được thương mại | ⚠ trọng số **CC-BY-NC, cấm thương mại** |
+| Tái lập | không | **có** — ghim `seed:` là re-render ra đúng audio cũ |
+| Giấy phép | dùng được thương mại | ⚠ xem mục giới hạn ở cuối file |
+
+`omnivoice` vẫn nhận làm tên cũ: `tts.config()` tự đổi thành `voicestudio`, nên
+89 screenplay đang khai không phải sửa.
 
 ```bash
 # edge (mặc định)
 python src/render.py screenplays/cache-stale.yaml
 
-# omnivoice — screenplay tự khai đủ bộ nên dòng lệnh chỉ cần một cờ
-python src/render.py screenplays/cache-stale.yaml --engine omnivoice
-# -> out/cache-stale-omnivoice.mp4   (tên có hậu tố để không ghi đè bản edge)
+# voicestudio — screenplay tự khai đủ bộ nên dòng lệnh chỉ cần một cờ
+python src/render.py screenplays/cache-stale.yaml --engine voicestudio
+# -> out/cache-stale-voicestudio.mp4   (tên có hậu tố để không ghi đè bản edge)
+
+# trỏ sang backend khác (tunnel Colab đổi URL mỗi session)
+python src/render.py screenplays/cache-stale.yaml --engine voicestudio \
+    --vs-api https://xxx.trycloudflare.com --seed 12345
 ```
 
 ```yaml
 # ...và trong screenplay:
 omni_voice: namtre_v3    # ten giong clone. `voice:` la cua edge-tts, khac han
-style: camhung           # preset, khong phai sac thai - xem muc duoi
-mode: tach               # nhanh DUY NHAT co vong thu lai
-speed: 1.03
-pause_scale: 0.70
+speed: 1.03              # /generate nhan MOT speed cho ca lan goi
+num_step: 16             # it hon = nhanh hon; 24-32 muot hon
+seed: 12345              # ghim de re-render ra dung audio cu (tuy chon)
+
+# `style`, `mode`, `pause_scale` KHONG con tac dung - xem banner o muc duoi
 ```
 
-Xem giọng và sắc thái có thật: `D:\omnivoice-test\say.ps1 --list`. Tên giọng
-**không** tự do — `namtre_va` không tồn tại, có `namtre_v2` / `namtre_v3` /
-`nam_tre`.
+Kho giọng là `D:\omnivoice-test\giong\manifest.json` (13 giọng, mỗi giọng gồm
+file wav + `ref_text`). Tên giọng **không** tự do — `namtre_va` không tồn tại, có
+`namtre_v2` / `namtre_v3` / `nam_tre`. Khai sai thì `tts.config()` dừng ngay và in
+cả danh sách. Đổi kho bằng `$VS_VOICES`.
+
+Mỗi lần gọi gửi kèm **`ref_text`** lấy từ manifest — bản chép lời của đoạn mẫu.
+Đường `say.py` cũ không gửi trường này; nó là đòn bẩy chất lượng clone mạnh nhất
+mà không tốn gì.
 
 ### ⚠ `style` và `mode` không phải tuỳ chọn thẩm mỹ
+
+> **Cập nhật 2026-08-20 — hai mục dưới đây đã lỗi thời.** Đường sinh giọng qua
+> WSL/`say.py` đã bỏ hẳn; engine giờ là `voicestudio`, gọi HTTP tới backend
+> VoiceStudio. `style`, `mode`, `pause_scale` **không còn tác dụng** — backend
+> `/generate` không có tham số nào tương ứng, và `tts.config()` in cảnh báo rồi bỏ
+> qua chúng. Cơ chế kiểm soát chất lượng còn lại là cổng `_nghiem_thu` ở mức
+> **video** (`nghiemthu.py`), giờ đổi seed mỗi vòng sinh lại. Giữ hai mục này làm
+> lịch sử: số đo RTF bên dưới là của CPU i7-1355U qua `say.py`, không so sánh
+> được với backend chạy GPU.
+
 
 Đây là bẫy đắt nhất đã va phải trong dự án này. Nghe tên thì `camhung` giống một
 sắc thái giọng và `lien`/`tach` giống một đánh đổi tốc độ, nên rất dễ bỏ qua.
@@ -216,12 +241,18 @@ Vì vậy ba khoá đó khai trong screenplay chứ không để trên dòng l�
 nhanh hơn 2,4 lần, nhưng cái giá là mất vòng thử lại ở mục trên. Chỉ dùng `lien`
 khi đang thử nhanh một câu chữ, đừng dùng cho bản cuối.
 
-### Vì sao phải gom cả video vào một lần gọi
+### Vì sao trước đây phải gom cả video vào một lần gọi
 
-`omnivoice` nạp model ~8 giây, cộng warmup ~14 giây cho câu đầu **mỗi process**.
-Gọi từng câu là 13 lần trả cái phí đó. Nên `tts.prefetch()` gom **tất cả câu còn
-thiếu vào một lần gọi** `say.py` (nó nhận nhiều text và ghi ra `_1.wav`,
-`_2.wav`… theo đúng thứ tự tham số), rồi mới convert từng file sang 48k stereo.
+Đường WSL cũ nạp model ~8 giây, cộng warmup ~14 giây cho câu đầu **mỗi process**;
+gọi từng câu là 13 lần trả cái phí đó, nên `tts.prefetch()` phải gom tất cả câu
+còn thiếu vào một lần gọi `say.py`.
+
+`voicestudio` là **server thường trú** — model nằm sẵn trong RAM/VRAM, không có
+phí nạp lại. Nên `prefetch()` giờ sinh **từng câu**: log rõ câu nào mất bao lâu,
+lỗi một câu không kéo cả lượt, và không còn phải xử lý đụng tên file tạm giữa hai
+tiến trình render chạy song song. `prefetch()` cũng gọi `/health` một lần trước
+khi sinh và in `device` — để không render 40 phút rồi mới biết mình đang chạy CPU
+hoặc tunnel đã hết hạn.
 
 Cache theo hash của *nội dung + toàn bộ cấu hình giọng*, nên đổi một cảnh thì chỉ
 sinh lại đúng câu đó. Đổi `engine`/`voice`/`style` là đổi khoá → sinh lại toàn bộ.
@@ -589,15 +620,27 @@ Theme `bench` tự khai bố cục riêng (hằng số ở đầu `bench.py`), k
   ra gần 3 phút ở `+6%`; phải rút chữ và nâng `rate` mới về ~2 phút.
 - **Chú ý dấu `:` trong scalar YAML.** `narration: Quy tắc một: ghi trước` làm vỡ
   file. Bỏ dấu hai chấm hoặc bọc nháy.
-- **`engine: omnivoice` không dùng được cho mục đích thương mại.** Code OmniVoice
-  là Apache 2.0 nhưng **trọng số là CC-BY-NC**. Kênh có bật kiếm tiền, hoặc video
-  làm cho công ty, đều là dùng thương mại. Kênh dev cá nhân không kiếm tiền thì
-  được. Muốn giọng clone mà vẫn dùng thương mại được thì `D:\omnivoice-test\CLAUDE.md`
-  đã khảo sát sẵn hai hướng: VieNeu-TTS (Apache 2.0 cả trọng số) hoặc Azure Speech
-  free tier (500k ký tự/tháng). Engine `edge` mặc định không vướng.
-- **`omnivoice` chậm và chỉ chạy CPU trên máy này.** Sinh giọng cho một video 2
-  phút mất khoảng nửa tiếng. Nó là bước một-lần (có cache), nhưng đừng dùng khi
-  đang thử nghiệm nội dung — dùng `edge` để chốt kịch bản, xong mới đổi engine.
+- **Giấy phép của giọng clone: HAI NGUỒN ĐANG NÓI TRÁI NHAU, phải kiểm lại.**
+  File này (viết cho đường WSL cũ) ghi: code OmniVoice là Apache 2.0 nhưng **trọng
+  số là CC-BY-NC**, nên kênh bật kiếm tiền hoặc video làm cho công ty là vướng.
+  Nhưng `D:\Project\VoiceStudio\LICENSE-NOTICE.md` — repo của backend mới — ghi
+  ngược lại: app là AGPL-3.0 và cho phép rõ ràng *"use its outputs commercially,
+  sell the audio you produce with it"*, còn package `omnivoice/` (chính model đó)
+  là **Apache 2.0** upstream.
+  Cả hai nói về cùng một model `k2-fsa/OmniVoice`, nên **một trong hai đang sai** —
+  và điều này quyết định cả kế hoạch 90 video. Kiểm ở đúng hai chỗ trước khi bật
+  kiếm tiền: model card `k2-fsa/OmniVoice` trên HuggingFace, và
+  `LICENSE-NOTICE.md` mục "Scope". Ràng buộc AGPL còn lại chỉ áp khi bạn **sửa
+  VoiceStudio rồi phục vụ bản sửa đó qua mạng** — render video ở máy mình không
+  thuộc trường hợp đó. Hai hướng dự phòng đã khảo sát trong
+  `D:\omnivoice-test\CLAUDE.md`: VieNeu-TTS (Apache 2.0 cả trọng số) hoặc Azure
+  Speech free tier. Engine `edge` mặc định không vướng.
+- **`voicestudio` nhanh hay chậm tuỳ `$VS_API` trỏ vào đâu.** Máy này không có
+  GPU rời (Intel UHD, CUDA không dùng được) nên backend chạy local vẫn là CPU:
+  một video 2 phút mất khoảng nửa tiếng, y như đường WSL cũ. Trỏ sang Colab T4
+  thì RTF ~0,25 — cùng video còn vài phút. `prefetch()` in `device` ngay dòng đầu
+  nên biết mình đang ở nhánh nào. Vẫn nên dùng `edge` để chốt kịch bản, xong mới
+  đổi engine.
 - Phụ đề bám theo cả câu, chưa highlight theo từng từ. edge-tts có trả
   `WordBoundary` với offset từng từ nên làm được, chỉ là chưa dùng.
 - Nội dung do người viết, tool không tự sinh screenplay. Muốn tự sinh thì bọc
