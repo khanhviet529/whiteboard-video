@@ -1,30 +1,37 @@
-# SO 54 - MUA 4. Xem KE-HOACH-90.md.
-#   chu de   : Số nguyên nhỏ dùng chung
-#   ghi chu  : `a is b` đúng với 256 và sai với 257
-#   do bang  : python   (muc: đo)
+# SO 54 - MUA 4, CO CHE. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# GIA THUYET BAN DAU CUA TOI SAI, va phep kiem cuu duoc lan thu ba.
+# Ke hoach dinh ke theo demo kinh dien "a = 256; b = 256 -> is True; a = 257;
+# b = 257 -> is False". Chay that tren Python 3.14.6 thi CA HAI DEU RA True, ke
+# ca voi 1000: trinh bien dich gop hai hang so viet thang trong cung mot khoi
+# code lai lam mot. Demo do KHONG TAI HIEN DUOC.
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# Co che that chi lo khi gia tri duoc TINH LUC CHAY. MOI CON SO do bang
+# repro/bench_python.py, ca `so_nguyen_nho`, tren Python 3.14.6:
+#   bang so nguyen dung chung: -5 toi 256
+#   int('256') is int('256')  -> True
+#   int('257') is int('257')  -> False
+#   ma don 100  doc tu ngoai:  `is` True,  `==` True
+#   ma don 1000 doc tu ngoai:  `is` False, `==` True
+#
+# Ca DUNG SAI nen ket qua khong phu thuoc tai may.
+#
+# Bien -5 toi 256 la chi tiet cua BAN CAI DAT chu khong phai quy dinh cua ngon
+# ngu - giong so 38. Canh 5 ton tai de chan cach hieu "vay cu dung is cho so
+# duoi 256".
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: 'Số nguyên nhỏ dùng chung'
+title: Mã đơn 100 thì đúng, mã đơn 1000 thì sai
 theme: bench
+he: giang_duong
 accent: hot
-brand: 'CƠ CHẾ BÊN DƯỚI · SỐ 54'
-tag: 'python · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: CƠ CHẾ · SỐ 08
+tag: python · đúng sai
+footer: "`is` HỎI CÙNG MỘT VẬT  ·  `==` HỎI CÙNG GIÁ TRỊ"
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -35,45 +42,102 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
-  - scene: intro
-    chapter: MỞ MÀN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+  # ============================================ HOOK
   - scene: probe
-    chapter: CHẠY THẬT
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    chapter: HIỆN TRƯỜNG
+    head: Đúng suốt sáu tháng. Rồi sai.
+    narration: Một hàm đối chiếu mã đơn chạy đúng suốt sáu tháng. Rồi hệ thống vượt mốc mã đơn thứ hai trăm năm sáu, và từ đó nó bắt đầu báo hai đơn giống nhau là khác nhau.
+    caption: Đúng cho tới mã đơn thứ 256.
+    heading: python · bench_python.py
+    lenh: py repro/bench_python.py so_nguyen_nho
+    nguon: repro/bench_python.py
+    status: so_nguyen_nho
+    lines:
+      - { cmd: "mã đơn 100, hai nơi đọc",  out: "is → True",  state: ok }
+      - { cmd: "mã đơn 1000, hai nơi đọc", out: "is → False", state: bad }
+      - { cmd: "cả hai đều ==",            out: "True",       state: ok }
+    verdict: CÙNG MỘT CON SỐ, HAI KẾT QUẢ
 
-  - scene: topology
-    chapter: BÊN TRONG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+  # ============================================ hau qua
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Không ai sửa gì cả.
+    narration: Không có lần triển khai nào, không ai đụng vào hàm đó. Thứ duy nhất thay đổi là dữ liệu lớn lên. Lỗi này nằm sẵn trong code từ ngày đầu và chờ đúng con số hai trăm năm bảy.
+    caption: Code không đổi. Chỉ dữ liệu lớn lên.
+    value: NẰM SẴN TỪ NGÀY ĐẦU
+    size: 116
+    sub: Và chờ đúng một con số để lộ
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Hai câu hỏi khác nhau.
+    narration: Dấu bằng kép hỏi hai bên có cùng giá trị không. Chữ is hỏi một câu khác hẳn, là hai bên có phải cùng một vật trong bộ nhớ không. Với số thì gần như lúc nào bạn cũng đang muốn hỏi câu thứ nhất.
+    caption: "`==` hỏi cùng giá trị. `is` hỏi cùng một vật."
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: DẤU BẰNG KÉP
+        value: CÙNG GIÁ TRỊ KHÔNG
+        note: câu hỏi bạn thật sự muốn hỏi
+        color: ok
+      - label: CHỮ IS
+        value: CÙNG MỘT VẬT KHÔNG
+        note: câu hỏi về chỗ nằm trong bộ nhớ
+        color: hot
 
+  # ============================================ vi sao no tung dung
   - scene: statement
-    chapter: CHỖ LẠ
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    chapter: VÌ SAO
+    head: Vì sao nó từng đúng.
+    narration: Python dựng sẵn một bảng số nguyên nhỏ, từ âm năm tới hai trăm năm sáu. Nó dùng đi dùng lại đúng những vật đó. Nên với mã đơn nhỏ thì hai bên trỏ vào cùng một vật thật, và câu hỏi sai vẫn cho ra đáp án đúng.
+    caption: Python dựng sẵn bảng số nguyên từ -5 tới 256.
+    label: VÌ SAO NÓ TỪNG ĐÚNG
+    value: BẢNG DỰNG SẴN TỪ ÂM NĂM TỚI 256
+    size: 88
+    sub: Ngoài khoảng đó là mỗi lần một vật mới
 
+  # ============================================ chan cach hieu sai
+  - scene: statement
+    chapter: VÌ SAO
+    head: Đừng nhớ con số đó.
+    narration: Hai trăm năm sáu là chi tiết riêng của một bản cài đặt, không phải quy định của ngôn ngữ. Bản khác có thể chọn khoảng khác, và nó có quyền đổi ở phiên bản sau mà không báo ai. Nhớ con số đó là nhớ nhầm thứ.
+    caption: 256 là chi tiết của một bản cài đặt, không phải của ngôn ngữ.
+    label: PHẠM VI
+    value: MỘT BẢN CÀI ĐẶT, KHÔNG PHẢI NGÔN NGỮ
+    size: 84
+    sub: Bản khác có quyền chọn khoảng khác
+
+  # ============================================ cho de sai
+  - scene: statement
+    chapter: VÌ SAO
+    head: Viết thẳng thì không lộ.
+    narration: Còn một chỗ nữa làm nó khó bắt. Nếu bạn viết thẳng hai con số vào code để thử, trình biên dịch gộp chúng lại làm một. Nên phép kiểm trả về đúng kể cả với số lớn. Nó chỉ lộ khi con số đến từ bên ngoài.
+    caption: Viết thẳng vào code thì không tái hiện được.
+    label: CHỖ ÍT AI SOI
+    value: CHỈ LỘ KHI SỐ ĐẾN TỪ BÊN NGOÀI
+    size: 92
+    sub: Từ form, từ JSON, từ database
+
+  # ============================================ quy tac
   - scene: rule
-    chapter: DÙNG ĐƯỢC GÌ
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    chapter: CHẶN
+    accent: ok
+    head: So sánh giá trị thì dùng dấu bằng.
+    narration: Quy tắc chỉ có một câu. Chữ is chỉ dùng cho None, cho đúng và sai. Và cho những trường hợp bạn thật sự cần biết có phải cùng một vật hay không. Mọi so sánh giá trị đều dùng dấu bằng kép.
+    caption: "`is` chỉ cho None, True, False. Còn lại dùng `==`."
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: So sánh giá trị thì luôn dùng dấu bằng kép.
+    small: Dấu hiệu trong code — chữ is đặt cạnh một con số, một chuỗi, hoặc một biến kiểu số. Cả trường hợp is not cũng vậy, vì nó cùng một cơ chế.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu hai chuỗi giống hệt nhau nhưng được ghép từ hai chỗ khác nhau, thì chữ is trả về gì? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: HAI CHUỖI GIỐNG HỆT NHAU THÌ IS TRẢ VỀ GÌ?
+    size: 82
+    hint: cùng một cơ chế, và cũng có một bảng dựng sẵn

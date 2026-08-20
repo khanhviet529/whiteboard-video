@@ -23,7 +23,7 @@ footer: SỐ NGUYÊN QUÁ 9 TRIỆU TỈ  ·  JAVASCRIPT LÀM TRÒN ÂM THẦM
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -104,7 +104,12 @@ scenes:
   - scene: statement
     chapter: THỦ PHẠM
     head: Gọi tên thủ phạm.
-    narration: Thủ phạm là bước đọc chuỗi thành số. Máy chủ gửi mã số dưới dạng chuỗi ký tự, nhưng thư viện đọc dữ liệu tự đổi nó thành kiểu số, và chính lúc đổi đó con số bị làm tròn.
+    # Cau thu hai truoc day dai 132 ky tu - dai nhat ca video, va dai hon ca
+    # cau dai nhat trong 38 loi doc cua cache-stale (107) ma nguoi xem da duyet.
+    # Mode `tach` sinh MOI CAU mot lan goi model rieng, nen cau cang dai chat
+    # luong cang troi ve cuoi. Nguoi xem nghe ra dung cho "chuoi ky tu". Cat lam
+    # hai. Xem `check_cau_dai` trong lint.py.
+    narration: Thủ phạm là bước đọc chuỗi thành số. Máy chủ gửi mã số dưới dạng chuỗi ký tự. Nhưng thư viện đọc dữ liệu tự đổi nó thành kiểu số, và chính lúc đổi đó con số bị làm tròn.
     caption: Bước đọc chuỗi thành số là chỗ con số bị đổi.
     label: THỦ PHẠM
     value: TỰ ĐỔI CHUỖI THÀNH SỐ LÚC ĐỌC DỮ LIỆU

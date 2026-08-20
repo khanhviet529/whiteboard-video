@@ -1,30 +1,41 @@
-# SO 38 - MUA 3. Xem KE-HOACH-90.md.
-#   chu de   : Nối chuỗi trong vòng lặp
-#   ghi chu  : ĐÃ ĐO: chỉ **2×** chứ không bình phương — CPython sửa tại chỗ khi refcount bằng 1. Kể theo hướng
-#   do bang  : python   (muc: đo)
+# SO 38 - MUA 3, HAI DOAN CODE. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# GIA THUYET BAN DAU CUA TOI CUNG DA SAI, giong so 50. Ke hoach ghi "noi chuoi
+# trong vong lap la binh phuong" - cau nay nam trong moi bai day toi uu. Do that
+# (repro/bench_python.py, ca `noi_chuoi`, 20.000 ky tu) thi chi cham khoang HAI
+# LAN, khong he binh phuong.
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# Co che: CPython co mot toi uu tai cho cho `s += x` khi chuoi `s` chi con DUNG
+# MOT nguoi tham chieu - luc do no noi thang vao bo nho cu thay vi cap phat chuoi
+# moi. Toi uu nay KHONG CO trong PyPy, Jython, va tat khi con bien nao khac cung
+# tro vao chuoi do.
+#
+# CHO NGUY HIEM CUA SO NAY: de nguoi xem hieu thanh "vay cu noi thoai mai".
+# Ket luan dung la nguoc lai - loi khuyen VAN DUNG, nhung ly do thi khac cai moi
+# nguoi van noi, va cai toi uu kia rat de tat ma khong ai bao. Canh 4 va canh 5
+# ton tai de chan cach hieu sai do.
+#
+# DA DO tren may ranh (hieu chuan 1.01x mocs). Ba luot lien tiep:
+#   s += trong vong lap  1.21 ms | 930 us | 983 us
+#   "".join(...)          462 us |  440 us | 510 us
+#   ty le                  2.6x  |   2.1x  |  1.9x   -> on dinh o ~2x
+#
+# So TUYET DOI dao dong +-20% giua cac luot ngay ca luc may ranh, nen kich ban
+# dan TY LE la chinh va so tuyet doi chi de tren man hinh. Con so tren man hinh
+# lay tu luot 3, de nguoi xem chay lai thay dung mot bo so nhat quan.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: 'Nối chuỗi trong vòng lặp'
+title: Nối chuỗi trong vòng lặp, chậm bao nhiêu
 theme: bench
+he: giang_duong
 accent: hot
-brand: 'HAI ĐOẠN CODE · SỐ 38'
-tag: 'python · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: NIỀM TIN BỊ LẬT · SỐ 07
+tag: python · đúng sai
+footer: KHÔNG PHẢI BÌNH PHƯƠNG  ·  NHƯNG ĐỪNG DỰA VÀO ĐIỀU ĐÓ
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -35,39 +46,109 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK
   - scene: code
     chapter: CHỌN ĐI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Chậm hơn bao nhiêu lần?
+    narration: Hai đoạn này cùng nối hai mươi nghìn ký tự thành một chuỗi. Đoạn trên là cách ai cũng bảo đừng viết. Bạn có ba giây để đoán nó chậm hơn đoạn dưới bao nhiêu lần.
+    caption: Đoạn trên là cách ai cũng bảo đừng viết. Chậm hơn mấy lần?
+    hoi: CHẬM HƠN MẤY LẦN?
+    dem: 3
+    ket: a
+    a:
+      label: A
+      note: cách bị chê
+      lines:
+        - "s = \"\""
+        - "for i in range(n):"
+        - { text: "    s += \"x\"", diff: true }
+      value: CHẬM 2 LẦN
+    b:
+      label: B
+      note: cách được khuyên
+      lines:
+        - { text: "\"\".join(", diff: true }
+        - "  \"x\" for _ in range(n)"
+        - ")"
+      value: NHANH HƠN
+    verdict_at: 0.88
+    verdict: HAI LẦN, KHÔNG PHẢI BÌNH PHƯƠNG
 
+  # ============================================ chay that
   - scene: probe
     chapter: CHẠY THẬT
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Hai mươi nghìn vòng lặp.
+    narration: Nếu thật sự là bình phương thì hai mươi nghìn vòng phải chậm hơn hàng nghìn lần. Chạy thật thì nó chỉ chậm khoảng hai lần. Con số này không khớp với điều mà hầu hết tài liệu vẫn dạy.
+    caption: Không phải hàng nghìn lần. Chỉ khoảng hai lần.
+    heading: python · bench_python.py
+    lenh: py repro/bench_python.py noi_chuoi
+    nguon: repro/bench_python.py
+    status: noi_chuoi
+    lines:
+      - { cmd: "s += trong vòng lặp", out: "983 µs", state: bad }
+      - { cmd: "\"\".join(...)",       out: "510 µs", state: ok }
+      - { cmd: "chênh nhau",          out: "2 lần",  state: warn }
+    verdict: KHÔNG PHẢI HÀNG NGHÌN LẦN
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Có một đường tắt bí mật.
+    narration: Bình thường mỗi lần nối là phải cấp phát một chuỗi mới rồi chép toàn bộ phần cũ sang. Nhưng Python có một đường tắt. Nếu chuỗi đó chỉ còn đúng một chỗ đang dùng tới, nó nối thẳng vào bộ nhớ cũ, khỏi chép.
+    caption: Nếu chuỗi chỉ còn một chỗ dùng tới, nó nối thẳng, khỏi chép.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: CÓ ĐƯỜNG TẮT
+        value: NỐI THẲNG VÀO CHỖ CŨ
+        note: khi chuỗi chỉ còn một chỗ dùng tới
+        color: ok
+      - label: KHÔNG CÓ ĐƯỜNG TẮT
+        value: CHÉP LẠI TỪ ĐẦU MỖI VÒNG
+        note: và lúc đó mới thật sự là bình phương
+        color: hot
 
+  # ============================================ chan cach hieu sai
   - scene: statement
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Đừng vội mừng.
+    narration: Đường tắt đó tắt ngóm nếu có thêm một biến nào khác cũng trỏ vào chuỗi. Chỉ cần gán nó cho một biến tạm để in ra xem, hoặc đưa vào một danh sách, là lập tức quay về đúng bình phương.
+    caption: Chỉ cần thêm một biến trỏ vào là mất đường tắt.
+    label: CHỖ ÍT AI SOI
+    value: MỘT BIẾN TẠM LÀ MẤT ĐƯỜNG TẮT
+    size: 96
+    sub: Và không có cảnh báo nào lúc đó
 
+  # ============================================ chan cach hieu sai (2)
+  - scene: statement
+    chapter: VÌ SAO
+    head: Và nó chỉ có ở một chỗ.
+    narration: Đường tắt này là chi tiết riêng của bản Python phổ biến nhất, không phải quy định của ngôn ngữ. Chạy cùng đoạn code đó trên một bản Python khác thì nó biến mất, và bạn nhận lại đúng cái bình phương.
+    caption: Đây là chi tiết của một bản cài đặt, không phải của ngôn ngữ.
+    label: PHẠM VI
+    value: MỘT BẢN CÀI ĐẶT, KHÔNG PHẢI NGÔN NGỮ
+    size: 84
+    sub: Bản khác chạy cùng code lại ra bình phương
+
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Vẫn cứ dùng join.
+    narration: Quy tắc không đổi, nhưng lý do thì đổi. Vẫn dùng join, không phải vì cách kia chậm hàng nghìn lần. Mà vì cách kia nhanh nhờ một đường tắt mong manh, có thể mất bất cứ lúc nào mà không báo.
+    caption: Vẫn dùng join, nhưng vì lý do khác cái người ta hay nói.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Dùng join, vì đường tắt kia không đáng để dựa vào.
+    small: Nói đúng lý do thì quan trọng. Người tin vào lý do sai sẽ bỏ quy tắc ngay khi gặp một phép đo không khớp, và đó chính là chuyện vừa xảy ra trong video này.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Bạn còn tin điều nào về tốc độ mà chưa bao giờ tự tay đo, chỉ vì nghe nhiều lần quá? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: BẠN CÒN TIN ĐIỀU NÀO MÀ CHƯA TỪNG TỰ ĐO?
+    size: 84
+    hint: nghe nhiều lần không làm một điều thành đúng

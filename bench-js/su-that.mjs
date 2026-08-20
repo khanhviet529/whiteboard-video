@@ -24,10 +24,17 @@ const in_ = (ten, ...dong) => ra.push([ten, dong]);
 // ---------------------------------------------------------------- so 71
 {
   const xs = [10, 9, 1, 200, 30];
+  // Gia tien lam hien truong: day so tron chi cho thay THU TU sai, con gia tien
+  // cho thay HAU QUA - "re nhat" tren trang khong phai mon re nhat.
+  const gia = [1200000, 990000, 85000, 1000000];
+  const reNhat = [...gia].sort()[0];
   in_("71 · sort mặc định so sánh theo CHUỖI",
     `[10, 9, 1, 200, 30].sort()        -> [${[...xs].sort()}]`,
     `.sort((a,b) => a - b)             -> [${[...xs].sort((a, b) => a - b)}]`,
-    `"200" < "30"                      -> ${"200" < "30"}`);
+    `"200" < "30"                      -> ${"200" < "30"}`,
+    `giá [1200000, 990000, 85000, 1000000].sort()`,
+    `  -> [${[...gia].sort()}]`,
+    `  "rẻ nhất" hoá ra là ${reNhat.toLocaleString("vi")}đ, rẻ thật là ${Math.min(...gia).toLocaleString("vi")}đ`);
 }
 
 // ---------------------------------------------------------------- so 72
@@ -43,21 +50,30 @@ const in_ = (ten, ...dong) => ra.push([ten, dong]);
     `BigInt("${id}")   -> ${BigInt(id)}`);
 }
 
+
 // ---------------------------------------------------------------- so 73
 {
-  const cap = [["[] == ![]", [] == ![]], ["'' == 0", "" == 0],
-               ["'0' == 0", "0" == 0], ["'' == '0'", "" == "0"],
-               ["null == 0", null == 0], ["null >= 0", null >= 0],
-               ["NaN == NaN", NaN == NaN]];
-  in_("73 · bảng ép kiểu của ==",
-    ...cap.map(([b, v]) => `${b.padEnd(34)} -> ${v}`),
-    `--- cùng những phép đó với === ---`,
-    ...cap.map(([b]) => {
-      const c = b.replace("==", "===").replace(">==", ">=");
-      // eslint-disable-next-line no-eval
-      return `${c.padEnd(34)} -> ${eval(c)}`;
-    }));
+  // Cap gia tri chon de lo DU CAC LOAI ep kieu, khong phai de gay soc: so voi
+  // chuoi, so voi rong, so voi boolean, so voi mang, null voi undefined.
+  const cap = [[0, "0"], [0, ""], [0, false], [0, []], ["", []],
+               [null, undefined], [null, 0], [NaN, NaN], ["1", 1]];
+  const ten = (v) => typeof v === "string" ? JSON.stringify(v)
+                   : Array.isArray(v) ? "[]" : String(v);
+  in_("73 · dấu bằng đôi ép kiểu trước khi so",
+    ...cap.map(([x, y]) =>
+      `${ten(x).padEnd(10)} ==  ${ten(y).padEnd(10)} -> ${String(x == y).padEnd(5)}`
+      + ` | === -> ${x === y}`),
+    // Hai truong hop dac biet khong nam trong bang tren.
+    `[] == ![]                        -> ${[] == ![]}`,
+    `null >= 0                        -> ${null >= 0}   (nhưng null == 0 -> ${null == 0})`,
+    // Day moi la cho dat: `==` KHONG co tinh bac cau, nen khong the suy luan
+    // bang no. Ba dong duoi day la mot phan chung.
+    `phá vỡ tính bắc cầu:`,
+    `  0 == ""    -> ${0 == ""}`,
+    `  "" == "0"  -> ${"" == "0"}`,
+    `  0 == "0"   -> ${0 == "0"}   (nếu bắc cầu thì dòng giữa phải đúng)`);
 }
+
 
 for (const [ten, dong] of ra) {
   console.log(`\n=== ${ten} ===`);

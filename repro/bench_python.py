@@ -32,6 +32,20 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _hieu_chuan import canh_bao, in_moc, kiem_may  # noqa: E402
 
 
+def _do(ham, lap=LAP):
+    """Trung vi cua `lap` lan do. Tat gc de khong bi mot lan thu gom lam lech."""
+    ra = []
+    gc.disable()
+    try:
+        for _ in range(lap):
+            t0 = time.perf_counter()
+            ham()
+            ra.append(time.perf_counter() - t0)
+    finally:
+        gc.enable()
+    return st.median(ra)
+
+
 # =============================================================== CA DO TOC DO
 
 def ca_in_set():
@@ -256,6 +270,38 @@ def ca_mui_gio():
                         + ", ".join(sorted(ngay))])
 
 
+def ca_so_nguyen_nho():
+    """Bang so nguyen dung chung: `is` dung cho so nho, sai cho so lon. So 54.
+
+    PHAI tinh gia tri LUC CHAY (`int(str(n))`). Viet thang `a = 257; b = 257`
+    thi trinh bien dich gop hai hang so lai va `is` tra ve True ca voi 1000 -
+    ca demo kinh dien "256 voi 257" KHONG TAI HIEN DUOC theo cach do tren
+    Python 3.14.6.
+    """
+    duoi = tren = None
+    for n in range(-20, 400):
+        chung = int(str(n)) is int(str(n))
+        if chung and duoi is None:
+            duoi = n
+        if not chung and duoi is not None and tren is None:
+            tren = n - 1
+    ma_nho_a, ma_nho_b = int("100"), int("100")       # ma don nho, luc test
+    ma_to_a, ma_to_b = int("1000"), int("1000")       # ma don that, tren that
+    assert ma_nho_a == ma_nho_b and ma_to_a == ma_to_b
+    return dict(loai="dung sai",
+                hoi="`is` tren so nguyen DOC TU BEN NGOAI (int(str(n)))",
+                a="ma don 100 (nho)", b="ma don 1000 (that)",
+                ka=f"`is` -> {ma_nho_a is ma_nho_b}   (`==` -> {ma_nho_a == ma_nho_b})",
+                kb=f"`is` -> {ma_to_a is ma_to_b}  (`==` -> {ma_to_a == ma_to_b})",
+                them=[f"bang so nguyen dung chung: {duoi} toi {tren}",
+                      f"int('{tren}') is int('{tren}')   -> "
+                      f"{int(str(tren)) is int(str(tren))}",
+                      f"int('{tren+1}') is int('{tren+1}') -> "
+                      f"{int(str(tren+1)) is int(str(tren+1))}",
+                      "viet thang `a = 257; b = 257` thi trinh bien dich gop "
+                      "hang so, `is` ra True - khong tai hien duoc"])
+
+
 def ca_so_sanh_float():
     """So sanh hai so thuc bang `==`. So 49.
 
@@ -317,6 +363,7 @@ CA = {
     "copy_nong": ca_copy_nong,
     "mui_gio": ca_mui_gio,
     "so_sanh_float": ca_so_sanh_float,
+    "so_nguyen_nho": ca_so_nguyen_nho,
     "sort_chuoi": ca_sort_js_kieu,
 }
 

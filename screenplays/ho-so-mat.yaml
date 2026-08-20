@@ -1,0 +1,180 @@
+# Video ngoai luong #2 - concept "HO SO MAT: NHIEM VU MOI CHI DI AN".
+#
+# NGU CANH giong ban truoc: video NAY chinh la loi moi, gui cho chi qua tin nhan.
+# Khac o giong ke: ban truoc la tam su tu kiem diem, ban nay la nhai phim diep
+# vien - moi thu duoc bao cao nhu mot nhiem vu, va cai buon cuoi nam o do lech
+# giua giong ke cuc nghiem trong voi viec dang lam chi la di an mot bua.
+#
+# Vi sao khong dung "man hinh den" nhu kich ban goc: theme nay la giay kem, mot
+# canh den se pha vo toan bo mach hinh. Thay bang BIA HO SO co con dau MAT - giu
+# duoc chat "tai lieu mat" ma khong doi chat lieu.
+#
+# 11 canh (~85 giay):
+#   1  bia ho so     ho_so_bia     con dau MAT
+#   2  ban diep vien ban_dem       em deo kinh ram, tap ho so tren ban
+#   3  trang muc tieu ho_so_trang  o anh + truong du lieu
+#   4  gio           man_so        18:30
+#   5  ngay          to_lich       khoanh o 21, thang 8 nam 2026
+#   6  dia diem      ban_do        muoi diem mo dan, con mot dong chu
+#   7  ngan sach     vi_tien       tuyen bo dut khoat
+#   8  vi run        vi_tien       CUNG mot hinh, chi khac mot co `rung`
+#   9  khung chat    dien_thoai    tin nhan sang chi
+#   10 bam nut       dien_thoai    nut lon + phao giay
+#   11 the moi       the_moi       bang thong tin day du
+#
+# Do dat cua cach ke nay nam o canh 7 va 8: cung mot cai vi, canh truoc tuyen bo
+# "em lo" dut khoat, canh sau chinh cai vi do rung len. Doi bo cuc giua hai canh
+# la mat cu do.
+#
+# Ngay 21/08/2026 da kiem: dung la thu Sau.
+
+title: Hồ sơ mật - Nhiệm vụ mời chị đi ăn
+theme: net_ve
+engine: omnivoice
+omni_voice: namtre_v3
+style: tunhien
+mode: lien
+
+scenes:
+  # ------------------------------------------------------------ bia ho so
+  - scene: ho_so_bia
+    tieu_de: HỒ SƠ MẬT
+    phu: NHIỆM VỤ ĐẶC BIỆT
+    dau: MẬT
+    narration: Chị ơi, em vừa nhận được một nhiệm vụ rất quan trọng.
+    caption: Nhiệm vụ đặc biệt. Mức độ - mật.
+
+  # ------------------------------------- ban diep vien. Em deo kinh ram
+  - scene: ban_dem
+    head: Em mở hồ sơ ra
+    do: ho_so
+    the: nghi
+    mat: kinh
+    narration: Nhiệm vụ lần này có độ khó cao, yêu cầu sự phối hợp của một nhân vật đặc biệt.
+    caption: Yêu cầu phối hợp của một nhân vật đặc biệt.
+
+  # ------------------------------------------------- trang nhan vat muc tieu
+  - scene: ho_so_trang
+    head: Nhân vật mục tiêu
+    tieu_de: NHÂN VẬT MỤC TIÊU
+    the_anh: vay
+    mat_anh: vui
+    dong:
+      - "Quan hệ    :  chị"
+      - "Mức độ     :  rất quan trọng"
+      - "Nhiệm vụ   :  đưa đi ăn"
+      - "                 một bữa thật ngon"
+    dau: MỤC TIÊU
+    narration: Đó là đưa chị đi ăn một bữa thật ngon.
+    caption: Đưa chị đi ăn một bữa thật ngon.
+
+  # ------------------------------------------------------------------- gio
+  - scene: man_so
+    head: Thời gian thực hiện
+    nhan: THỜI GIAN THỰC HIỆN
+    so: "18:30"
+    co: 180
+    narration: Thời gian thực hiện nhiệm vụ, mười tám giờ ba mươi phút.
+    caption: 18 giờ 30.
+
+  # ------------------------------------------------------------------ ngay
+  - scene: to_lich
+    head: Ngày thực hiện
+    thang: THÁNG 8 · 2026
+    nam: 2026
+    thang_so: 8
+    danh_dau: 21
+    ghi: Thứ Sáu. Ngày 21. Đã khoanh đỏ, không đổi được nữa.
+    narration: Thứ Sáu, ngày hai mươi mốt tháng tám năm hai nghìn không trăm hai mươi sáu.
+    caption: Thứ Sáu, ngày 21 tháng 8 năm 2026.
+
+  # ---------------------------------------------------------------- dia diem
+  - scene: ban_do
+    head: Địa điểm thực hiện
+    nhan: ĐỊA ĐIỂM - CHỊ QUYẾT ĐỊNH
+    narration: Địa điểm thực hiện nhiệm vụ thì chị toàn quyền lựa chọn, còn em chỉ việc đi theo chỉ đạo.
+    caption: Chị toàn quyền lựa chọn. Em đi theo chỉ đạo.
+
+  # --- liet ke mon. Danh so tung o de chi tra loi bang MOT con so, khong
+  # phai nghi ra ten quan. Nam mon nen luoi tu chuyen sang 3 hang.
+  - scene: chon_quan
+    head: Danh mục mục tiêu
+    quan:
+      - { ve: oc,   ten: ỐC,           loi: "Ngồi lâu, nói chuyện lâu." }
+      - { ve: long, ten: LÒNG,         loi: "Em ăn được, chị đừng lo." }
+      - { ve: lau,  ten: LẨU ẾCH,      loi: "Món chị hay gọi. Em nhớ." }
+      - { ve: suon, ten: LẨU SƯỜN BÒ,  loi: "Hạng mục cao cấp nhất." }
+      - { ve: vit,  ten: VỊT,          loi: "Phương án dự phòng." }
+    narration: Danh mục mục tiêu gồm năm phương án. Ốc, lòng, lẩu ếch, lẩu sườn bò, và vịt.
+    caption: Năm phương án. Chị chọn một con số.
+
+  # --- cua thoat cho chi: khong bat chon trong nam mon nay
+  - scene: chu
+    chu: KHÔNG HỢP THÌ CHỊ ĐỀ XUẤT
+    co: 84
+    sub: Danh mục này chỉ là gợi ý. Chị nói tên quán, em đặt bàn.
+    narration: Nếu không món nào hợp khẩu vị, chị cứ đề xuất quán khác. Chị nói tên quán, em đặt bàn.
+    caption: Chị nói tên quán, em đặt bàn.
+
+  # ------------------------------------------- ngan sach, tuyen bo dut khoat
+  - scene: vi_tien
+    head: Ngân sách
+    nhan: EM LO
+    thanh: 1.0
+    narration: Ngân sách nhiệm vụ, em lo.
+    caption: Ngân sách - em lo.
+
+  # --- CUNG hinh canh truoc, chi doi mot co `rong`. Vi mo ra, trong tron.
+  # Do la ca cai joke: khong can loi noi nao, hinh tu noi.
+  - scene: vi_tien
+    head: Để em kiểm tra lại
+    nhan: "..."
+    thanh: 0.06
+    rong: true
+    ghi: Ngân sách đang trong quá trình xác minh.
+    narration: Ờ. Cái này để em kiểm tra lại một chút.
+    caption: Ngân sách đang trong quá trình xác minh.
+
+  # --- cau tran an. Dat thanh chu LON chu khong ve lai cai vi lan thu ba:
+  # ba canh vi lien nhau la nhac lai, khong con buon cuoi nua.
+  - scene: chu
+    chu: EM ỔN. VẪN LO ĐƯỢC.
+    co: 96
+    gach: true
+    sub: Chị cứ chọn chỗ. Phần còn lại là việc của em.
+    narration: Nhưng em ổn. Em vẫn lo được. Chị cứ chọn chỗ, phần còn lại là việc của em.
+    caption: Chị cứ chọn chỗ. Phần còn lại là việc của em.
+
+  # ----------------------------------------------------- phan viec cua chi
+  - scene: dien_thoai
+    head: Phần việc của chị
+    tin:
+      - { ai: em,  text: "Chị chọn quán nhé?" }
+      - { ai: chi, text: "..." }
+    narration: Phần việc của chị rất đơn giản. Chọn địa điểm, và xác nhận tham gia.
+    caption: Chọn địa điểm, và xác nhận tham gia.
+
+  # ---------------------------------------------------- bam nut + phao giay
+  - scene: dien_thoai
+    head: Chỉ cần một cái bấm
+    tin:
+      - { ai: em, text: "Chốt nha chị!" }
+    nut: ĐỒNG Ý ĐI ĂN
+    phao: true
+    narration: Nếu chị đồng ý, xin hãy nhắn lại cho em trước khi em đổi ý, hoặc trước khi ví em kịp suy nghĩ.
+    caption: Nhắn trước khi ví em kịp suy nghĩ.
+
+  # -------------------------------------------------- the moi, bang thong tin
+  - scene: the_moi
+    head: Chốt đơn nha chị
+    tieu_de: HẸN CHỊ TỐI THỨ SÁU
+    dong:
+      - "THỜI GIAN  :  18:30 - THỨ SÁU"
+      - "                 21/08/2026"
+      - "ĐỊA ĐIỂM   :  CHỊ CHỌN"
+      - "KINH PHÍ   :  EM LO"
+      - "TRẠNG THÁI :  ĐANG CHỜ CHỊ"
+      - "                 XÁC NHẬN"
+    ghi: Nhiệm vụ chỉ hoàn thành khi chị nhắn lại.
+    narration: Tóm lại là thứ Sáu này, mười tám giờ ba mươi, chị chọn chỗ, em mời, chốt đơn nha chị.
+    caption: Chị chọn chỗ, em mời. Chốt đơn nha chị!

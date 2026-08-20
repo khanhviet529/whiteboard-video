@@ -41,7 +41,7 @@ rate: "+16%"
 #
 # De hai khoa nay tren dong lenh thi mot lan quen la ra video khac han, va da
 # mat mot luot render vi dung chuyen do. Xem VIET-KICH-BAN.md.
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 
@@ -86,7 +86,7 @@ scenes:
   - scene: compare
     chapter: HIỆN TRƯỜNG
     head: Giữ lâu hơn dùng 81 lần.
-    narration: Đo lại một request thì thấy thế này. Database chỉ thật sự làm việc mười mili giây, nhưng kết nối bị giữ tám trăm mười mili giây, tức lâu hơn tám mươi mốt lần.
+    narration: Đo lại một request thì thấy thế này. Database chỉ thật sự làm việc mười mili giây, nhưng kết nối bị giữ tám trăm mười mili giây. Lâu hơn tám mươi mốt lần.
     caption: Database làm 10ms. Kết nối bị giữ 810ms.
     vs: NHƯNG KẾT NỐI THÌ
     box_h: 300
@@ -143,7 +143,7 @@ scenes:
   - scene: queue
     chapter: QUAY CHẬM
     head: 70 request chờ, 10 chỗ ngồi.
-    narration: Đây là số request đang xếp hàng chờ kết nối, đo trong bảy giây. Hàng dâng lên bảy mươi request trong khi chỉ có mười chỗ, và nó chỉ rút xuống lúc bạn ngừng gửi chứ không phải lúc hệ thống khoẻ lại. Ba mươi chín request trong số đó bỏ cuộc trước khi tới lượt.
+    narration: Đây là số request đang xếp hàng chờ kết nối, đo trong bảy giây. Hàng dâng lên bảy mươi request trong khi chỉ có mười chỗ. Và nó chỉ rút xuống lúc bạn ngừng gửi chứ không phải lúc hệ thống khoẻ lại. Ba mươi chín request trong số đó bỏ cuộc trước khi tới lượt.
     caption: Hàng dâng lên 70. Chỗ ngồi có 10.
     inbox: { label: TỚI, value: "40/giây", color: cool }
     outbox: { label: XONG, value: "12/giây", color: hot }
@@ -174,7 +174,7 @@ scenes:
     chapter: CHẶN
     accent: ok
     head: Đọc, ghi, rồi thả ra.
-    narration: Quy tắc chỉ có một câu. Trong transaction chỉ được đọc và ghi database, mọi cú gọi ra ngoài phải đẩy sang hàng đợi nền và làm sau khi đã thả kết nối.
+    narration: Quy tắc chỉ có một câu. Trong transaction chỉ được đọc và ghi database. Mọi cú gọi ra ngoài phải đẩy sang hàng đợi nền và làm sau khi đã thả kết nối.
     caption: Trong transaction chỉ đọc và ghi. Gọi mạng thì để sau.
     n: "01"
     kicker: QUY TẮC

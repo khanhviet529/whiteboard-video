@@ -22,7 +22,7 @@ footer: SO SÁNH BẰNG TRÊN SỐ THỰC  ·  MỘT NỬA SỐ LẦN TRẢ VỀ
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -100,7 +100,7 @@ scenes:
   - scene: statement
     chapter: VÌ SAO
     head: Chia đôi thì luôn đúng.
-    narration: Chia thành hai, bốn hay tám phần thì phép so sánh bằng luôn cho kết quả đúng, vì những số đó biểu diễn được trọn vẹn trong hệ nhị phân. Chỉ chia thành ba, sáu hay bảy phần mới lộ.
+    narration: Chia thành hai, bốn hay tám phần thì phép so sánh bằng luôn cho kết quả đúng. Vì những số đó biểu diễn được trọn vẹn trong hệ nhị phân. Chỉ chia thành ba, sáu hay bảy phần mới lộ.
     caption: Chia 2, 4, 8 thì luôn đúng. Chia 3, 6, 7 mới lộ.
     label: CHỖ ÍT AI SOI
     value: CHIA ĐÔI THÌ KHÔNG BAO GIỜ LỘ

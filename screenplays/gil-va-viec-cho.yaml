@@ -23,7 +23,7 @@ footer: GIL ĐƯỢC NHẢ RA TRONG LÚC CHỜ  ·  CHỈ CHẶN LÚC TÍNH
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -125,7 +125,7 @@ scenes:
   - scene: statement
     chapter: RANH GIỚI
     head: Đổi việc thành tính toán thì sập.
-    narration: Nói cho công bằng, khoá đó có thật và nó chặn thật. Đổi tám việc chờ thành tám việc tính toán thì thêm luồng không giúp gì, vì lúc đó luồng nào cũng cần khoá và chúng phải xếp hàng.
+    narration: Nói cho công bằng, khoá đó có thật và nó chặn thật. Đổi tám việc chờ thành tám việc tính toán thì thêm luồng không giúp gì. Vì lúc đó luồng nào cũng cần khoá và chúng phải xếp hàng.
     caption: Đổi sang việc tính toán thì thêm luồng không giúp gì.
     label: RANH GIỚI
     value: VIỆC TÍNH THÌ LUỒNG XẾP HÀNG

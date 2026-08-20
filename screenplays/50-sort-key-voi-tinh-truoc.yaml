@@ -1,30 +1,37 @@
-# SO 50 - MUA 3. Xem KE-HOACH-90.md.
-#   chu de   : ~~`sort(key=)` với tính trước~~
-#   ghi chu  : ĐÃ ĐO: **giả thuyết SAI** — `sorted(key=)` nhanh hơn 2× vì key chỉ gọi một lần mỗi phần tử. Chuy
-#   do bang  : python   (muc: đo)
+# SO 50 - MUA 3, HAI DOAN CODE. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# GIA THUYET BAN DAU CUA TOI DA SAI, va phep do cuu duoc truoc khi viet.
+# Ke hoach ghi "sort(key=) cham vi goi ham key moi lan so sanh" - nghe rat hop
+# ly va la loi khuyen toi uu pho bien. Do that (repro/bench_python.py, ca
+# `sort_key`) thi NGUOC LAI: ban `sorted(key=)` NHANH HON khoang hai lan.
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `python`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# Co che: Python goi ham key DUNG MOT LAN moi phan tu roi giu ket qua lai
+# (decorate-sort-undecorate lam san ben trong). Ban "toi uu" tay dung them mot
+# danh sach tuple, roi so sanh tuple thay vi so sanh so - dat hon han.
+#
+# Vi vay so nay ke theo huong MOT NIEM TIN BI LAT, khong ke theo huong "doan
+# code nay sai". Ca hai doan deu chay dung; cai sai la loi khuyen.
+#
+# DA DO tren may ranh (hieu chuan 1.01x moc). Ba luot lien tiep:
+#   sorted(key=ham)      3.50 ms | 2.96 ms | 3.61 ms
+#   tinh truoc roi sort  7.13 ms | 6.22 ms | 7.45 ms
+#   ty le                 2.04x  |  2.10x  |  2.06x   -> rat on dinh
+#
+# Mot luot chay luc may hoi ban cho 6.70 va 10.27 (ty le 1.53x) - so tuyet doi
+# lech hon gap doi con ty le cung tut. Vi vay ba luot chu khong mot luot.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: '~~`sort(key=)` với tính trước~~'
+title: Lời khuyên tối ưu làm code chậm đi
 theme: bench
+he: giang_duong
 accent: hot
-brand: 'HAI ĐOẠN CODE · SỐ 50'
-tag: 'python · chưa xong'
-footer: '{{SO}}'
+domain: be
+brand: NIỀM TIN BỊ LẬT · SỐ 06
+tag: python · đúng sai
+footer: TÍNH TRƯỚC RỒI SORT  ·  CHẬM HƠN CHỨ KHÔNG NHANH HƠN
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -35,39 +42,97 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK: hai doan code
   - scene: code
     chapter: CHỌN ĐI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Cái nào nhanh hơn?
+    narration: Hai đoạn này cùng sắp xếp hai mươi nghìn phần tử bằng một hàm tính toán tốn kém. Đoạn dưới là cách tối ưu tay mà nhiều người vẫn khuyên. Bạn có ba giây để đoán đoạn nào nhanh hơn.
+    caption: Một cách thường, một cách tối ưu tay. Cái nào nhanh hơn?
+    hoi: CÁI NÀO NHANH HƠN?
+    dem: 3
+    ket: a
+    a:
+      label: A
+      note: cách thường
+      lines:
+        - { text: "sorted(xs, key=nặng)", diff: true }
+      value: NHANH GẤP ĐÔI
+    b:
+      label: B
+      note: tính trước rồi sort
+      lines:
+        - "cặp = [(nặng(x), x)"
+        - "       for x in xs]"
+        - { text: "cặp.sort()", diff: true }
+        - "[x for _, x in cặp]"
+      value: CHẬM HƠN
+    verdict_at: 0.88
+    verdict: CÁCH TỐI ƯU LẠI CHẬM HƠN
 
+  # ============================================ chay that
   - scene: probe
     chapter: CHẠY THẬT
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Đo cả hai trên cùng dữ liệu.
+    narration: Cùng hai mươi nghìn phần tử, cùng hàm tính toán đó, chạy cả hai và đo. Bản viết theo cách thường nhanh hơn khoảng hai lần. Bản tối ưu tay thua, dù nó làm đúng cái việc mà lời khuyên nói là sẽ nhanh hơn.
+    caption: Bản viết theo cách thường nhanh hơn khoảng hai lần.
+    heading: python · bench_python.py
+    lenh: py repro/bench_python.py sort_key
+    nguon: repro/bench_python.py
+    status: sort_key
+    lines:
+      - { cmd: "sorted(key=hàm)",      out: "3.61 ms", state: ok }
+      - { cmd: "tính trước rồi sort",  out: "7.45 ms", state: bad }
+      - { cmd: "chênh nhau",           out: "2 lần",   state: bad }
+    verdict: CẢ HAI ĐỀU CHẠY ĐÚNG
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Hàm key chỉ chạy một lần.
+    narration: Lời khuyên dựa trên một giả định là hàm key được gọi lại mỗi lần so sánh. Thật ra Python gọi nó đúng một lần cho mỗi phần tử rồi giữ kết quả lại. Tức là nó đã tự làm sẵn cái việc mà bạn định làm tay.
+    caption: Python đã tự tính trước sẵn rồi.
+    vs: CHỨ KHÔNG PHẢI
+    box_h: 290
+    items:
+      - label: THỰC TẾ
+        value: MỖI PHẦN TỬ MỘT LẦN
+        note: Python giữ sẵn kết quả để so sánh
+        color: ok
+      - label: LỜI KHUYÊN GIẢ ĐỊNH
+        value: MỖI LẦN SO SÁNH MỘT LẦN
+        note: đúng với vài ngôn ngữ khác, không đúng ở đây
+        color: hot
 
+  # ============================================ vi sao no CHAM hon
   - scene: statement
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Và bạn phải trả thêm.
+    narration: Bản tối ưu tay còn dựng thêm hai mươi nghìn cặp giá trị, rồi bắt máy so sánh từng cặp thay vì so sánh từng số. So sánh cặp thì phải mở ra xem phần đầu, bằng nhau mới xem tiếp phần sau. Đắt hơn hẳn.
+    caption: Nó dựng thêm 20.000 cặp và so sánh cặp thay vì so sánh số.
+    label: GIÁ PHẢI TRẢ
+    value: SO SÁNH CẶP ĐẮT HƠN SO SÁNH SỐ
+    size: 92
+    sub: Cộng thêm 20.000 cặp phải dựng và giữ trong bộ nhớ
 
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Đo trước khi tối ưu.
+    narration: Quy tắc chỉ có một câu. Mọi tối ưu đều là một giả định về cách máy chạy, và giả định thì phải kiểm. Viết cách rõ ràng nhất trước, đo, rồi chỉ đổi chỗ nào phép đo chỉ ra.
+    caption: Tối ưu là một giả định. Giả định thì phải đo.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Viết cách rõ nhất trước, đo, rồi mới đổi.
+    small: Dấu hiệu đáng ngờ trong code — một đoạn viết vòng vo kèm lời chú thích nói rằng làm vậy cho nhanh, mà không có con số nào đi kèm.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Trong code của bạn có đoạn nào đang viết vòng vo vì lý do tốc độ, mà chưa ai từng đo không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: ĐOẠN TỐI ƯU NÀO TRONG CODE BẠN CHƯA TỪNG ĐƯỢC ĐO?
+    size: 74
+    hint: tối ưu chưa đo chỉ là một giả định được viết ra

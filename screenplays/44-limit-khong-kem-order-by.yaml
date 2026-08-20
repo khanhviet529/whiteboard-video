@@ -22,7 +22,7 @@ footer: KHÔNG ORDER BY  ·  THỨ TỰ LÀ CHUYỆN MAY RỦI
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -80,7 +80,7 @@ scenes:
   - scene: compare
     chapter: VÌ SAO
     head: Nó trả về theo thứ tự nó gặp.
-    narration: Không có mệnh đề sắp xếp thì database được quyền trả về theo bất kỳ thứ tự nào tiện cho nó, và tiện nhất là thứ tự nó gặp trên đĩa. Cập nhật một dòng thì bản cũ chết đi, bản mới ghi xuống cuối, nên thứ tự đổi.
+    narration: Không có mệnh đề sắp xếp thì database được quyền trả về theo bất kỳ thứ tự nào tiện cho nó. Và tiện nhất là thứ tự nó gặp trên đĩa. Cập nhật một dòng thì bản cũ chết đi, bản mới ghi xuống cuối, nên thứ tự đổi.
     caption: Không sắp xếp thì thứ tự là thứ tự trên đĩa.
     vs: TRONG KHI ĐÓ
     box_h: 290
@@ -98,7 +98,7 @@ scenes:
   - scene: statement
     chapter: VÌ SAO
     head: Trên máy bạn nó luôn đúng.
-    narration: Bảng mới nạp thì thứ tự trên đĩa trùng với thứ tự khoá chính, nên câu thiếu sắp xếp chạy đúng suốt giai đoạn phát triển. Nó chỉ đổi sau khi có người cập nhật dữ liệu, tức là sau khi lên production một thời gian.
+    narration: Bảng mới nạp thì thứ tự trên đĩa trùng với thứ tự khoá chính. Nên câu thiếu sắp xếp chạy đúng suốt giai đoạn phát triển. Nó chỉ đổi sau khi có người cập nhật dữ liệu, tức là sau khi lên production một thời gian.
     caption: Bảng mới nạp thì hai thứ tự trùng nhau, nên test luôn xanh.
     label: CHỖ ÍT AI SOI
     value: ĐÚNG CHO TỚI LẦN UPDATE ĐẦU TIÊN

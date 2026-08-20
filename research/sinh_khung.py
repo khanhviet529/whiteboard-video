@@ -132,7 +132,7 @@ def khung(so, chu_de, ghi, so_lieu, do_bang):
     d.append("voice: female")
     d.append('rate: "+16%"')
     d.append("")
-    d.append("omni_voice: namtre_v3")
+    d.append("omni_voice: namtre_v2")
     d.append("style: camhung")
     d.append("mode: tach")
     d.append("phien_am: true")

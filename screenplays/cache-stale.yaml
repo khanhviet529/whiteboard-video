@@ -54,7 +54,7 @@ rate: "+16%"      # nhip TikTok; +6% ra video dai gan 3 phut
 #
 # De hai khoa nay tren dong lenh thi mot lan quen la ra video khac han, va da
 # mat mot luot render vi dung chuyen do. Xem VIET-KICH-BAN.md.
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 

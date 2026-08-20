@@ -1,31 +1,36 @@
-# SO 73 - MUA 5. Xem KE-HOACH-90.md.
-#   chu de   : `==` và bảng ép kiểu
-#   ghi chu  : `[] == ![]` là `true`
-#   do bang  : node   (muc: đo)
+# SO 73 - MUA 5, JAVASCRIPT. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# MOI KET QUA chay bang `node bench-js/su-that.mjs`, khoi `so 73`:
+#   0  == "0"   true  | ===  false        ""   == []        true
+#   0  == ""    true  | ===  false        null == undefined true
+#   0  == false true  | ===  false        null == 0         false
+#   0  == []    true  | ===  false        NaN  == NaN       false
+#   [] == ![]   true         null >= 0    true  (nhung null == 0 la false)
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `node`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+#   PHA VO TINH BAC CAU:
+#     0 == ""     true
+#     "" == "0"   false
+#     0 == "0"    true      <- neu bac cau thi dong giua phai dung
+#
+# CHO DAT CUA SO NAY la tinh bac cau, khong phai bang ep kieu. Bang ep kieu thi
+# ai cung da thay va no chi gay cuoi. Con mat tinh bac cau nghia la khong the
+# SUY LUAN bang `==`: biet a bang b va b bang c van khong ket luan duoc gi.
+# Do la ly do that de bo han no, chu khong phai "vi no ky quac".
+#
+# SU THAT CUA DAC TA nen khong phu thuoc may.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: '`==` và bảng ép kiểu'
+title: Biết a bằng b, b bằng c, vẫn không kết luận được gì
 theme: bench
 he: giang_duong
 accent: hot
-brand: 'FRONTEND · SỐ 73'
-tag: 'node · chưa xong'
-footer: '{{SO}}'
+domain: fe
+brand: MÙA JAVASCRIPT · SỐ 10
+tag: javascript · đúng sai
+footer: DẤU BẰNG ĐÔI KHÔNG CÓ TÍNH BẮC CẦU  ·  NÊN KHÔNG SUY LUẬN ĐƯỢC
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -36,45 +41,80 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK
   - scene: probe
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Ba dòng, và một dòng phá vỡ tất cả.
+    narration: Số không bằng chuỗi rỗng, đúng. Chuỗi rỗng bằng chuỗi không, sai. Số không bằng chuỗi không, lại đúng. Ba dòng này không thể cùng tồn tại trong bất kỳ phép so sánh nào bạn từng học.
+    caption: Ba dòng này không thể cùng đúng trong một phép so sánh bình thường.
+    heading: node · su-that.mjs
+    lenh: node bench-js/su-that.mjs
+    nguon: bench-js/su-that.mjs
+    status: so 73
+    lines:
+      - { cmd: "0 == \"\"",    out: "true",  state: warn }
+      - { cmd: "\"\" == \"0\"", out: "false", state: bad }
+      - { cmd: "0 == \"0\"",   out: "true",  state: warn }
+    verdict: KHÔNG CÒN SUY LUẬN ĐƯỢC
 
+  # ============================================ hau qua that
   - scene: statement
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Cái mất không phải là đúng sai.
+    narration: Điều bạn vừa mất không phải một kết quả sai lẻ tẻ, mà là quyền suy luận. Bình thường biết a bằng b và b bằng c thì kết luận được a bằng c. Ở đây thì không, và không có ngoại lệ nào báo cho bạn biết.
+    caption: Cái mất là quyền suy luận, không phải một kết quả lẻ.
+    value: MẤT QUYỀN SUY LUẬN
+    size: 124
+    sub: Chứ không phải mất một kết quả
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Nó đổi kiểu trước khi so.
+    narration: Trước khi so, dấu bằng đôi tìm cách đưa hai bên về cùng một kiểu. Mà cách đưa về thì tuỳ từng cặp kiểu, nên mỗi cặp lại đi một đường khác. Chuỗi rỗng gặp số thì thành số không, còn chuỗi rỗng gặp chuỗi thì cứ là chuỗi.
+    caption: Mỗi cặp kiểu lại đổi theo một đường khác nhau.
+    vs: TRONG KHI ĐÓ
+    box_h: 290
+    items:
+      - label: DẤU BẰNG BA
+        value: KHÁC KIỂU LÀ KHÁC
+        note: một luật cho mọi cặp
+        color: ok
+      - label: DẤU BẰNG ĐÔI
+        value: MỖI CẶP MỘT LUẬT
+        note: nên không có luật chung nào để nhớ
+        color: hot
 
-  - scene: list
-    chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+  # ============================================ vai cai vo ly khac
+  - scene: statement
+    chapter: VÌ SAO
+    head: Còn một cặp nữa đáng nhớ.
+    narration: Rỗng lớn hơn hoặc bằng số không thì trả về đúng, nhưng rỗng bằng số không thì trả về sai. Nghĩa là ở đây lớn hơn hoặc bằng lại không bao hàm bằng, vì hai phép đó đi qua hai đường đổi kiểu khác nhau.
+    caption: null >= 0 là đúng, nhưng null == 0 là sai.
+    label: CẶP KHÓ TIN NHẤT
+    value: LỚN HƠN HOẶC BẰNG, MÀ KHÔNG BẰNG
+    size: 86
+    sub: Hai phép đi qua hai đường đổi kiểu khác nhau
 
-  - scene: multiply
-    chapter: QUAY CHẬM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Dùng dấu bằng ba, luôn luôn.
+    narration: Quy tắc chỉ có một câu. Luôn dùng dấu bằng ba, không có ngoại lệ nào đáng để nhớ. Cần kiểm rỗng hay chưa gán thì viết thẳng ra hai vế, dài thêm mấy ký tự nhưng đọc lên là hiểu ngay.
+    caption: Luôn dùng ===. Kiểm null thì viết thẳng cả hai vế.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Luôn dùng dấu bằng ba, không có ngoại lệ.
+    small: Bật luật lint cấm dấu bằng đôi thì máy bắt hộ, khỏi phải nhớ. Đây là loại lỗi mà con người rà bằng mắt sẽ bỏ sót, vì hai ký tự và ba ký tự trông gần giống nhau.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu số không phẩy một cộng số không phẩy hai đem so với số không phẩy ba bằng dấu bằng ba, thì kết quả là gì? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: DẤU BẰNG BA CÓ CỨU ĐƯỢC SỐ THỰC KHÔNG?
+    size: 84
+    hint: dấu bằng ba chỉ chặn ép kiểu, không chặn sai số

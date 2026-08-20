@@ -41,7 +41,7 @@ rate: "+16%"
 #
 # De hai khoa nay tren dong lenh thi mot lan quen la ra video khac han, va da
 # mat mot luot render vi dung chuyen do. Xem VIET-KICH-BAN.md.
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 
@@ -205,7 +205,7 @@ scenes:
     chapter: CÒN LẠI
     accent: ok
     head: Đúng chỗ thì nó rất mạnh.
-    narration: Nói cho công bằng. Cũng bốn việc đó nhưng là chờ mạng, thì bất đồng bộ rút từ hai giây xuống nửa giây, tức gần bốn lần, đúng bằng số việc.
+    narration: Nói cho công bằng. Cũng bốn việc đó nhưng là chờ mạng, thì bất đồng bộ rút từ hai giây xuống nửa giây. Gần bốn lần, đúng bằng số việc.
     caption: Bốn việc chờ mạng, từ hai giây xuống nửa giây.
     heading: python · 4 việc chờ mạng
     status: 3.97x

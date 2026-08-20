@@ -1,31 +1,31 @@
-# SO 71 - MUA 5. Xem KE-HOACH-90.md.
-#   chu de   : `Array.sort` mặc định so chuỗi
-#   ghi chu  : `[10, 9, 1].sort()` ra `[1, 10, 9]`
-#   do bang  : node   (muc: đo)
+# SO 71 - MUA 5, JAVASCRIPT. Xem KE-HOACH-90.md.
 #
-# KHUNG TU SINH boi research/sinh_khung.py. Chua viet loi doc,
-# chua co so do. `chua_xong: true` chan khong cho render.
+# MOI CON SO chay bang `node bench-js/su-that.mjs`, khoi `so 71`:
+#   [10, 9, 1, 200, 30].sort()              -> [1, 10, 200, 30, 9]
+#   .sort((a, b) => a - b)                  -> [1, 9, 10, 30, 200]
+#   "200" < "30"                            -> true
+#   [1200000, 990000, 85000, 1000000].sort() -> [1000000, 1200000, 85000, 990000]
+#     "re nhat" hoa ra la 1.000.000d, re that la 85.000d
 #
-# Viec phai lam, theo thu tu:
-#   1. chay bo do `node`, lay so THAT (may phai ranh)
-#   2. thay moi `{{SO}}` bang so do duoc
-#   3. viet `narration` va `caption` cho tung canh
-#   4. doi chuoi canh neu co che nay hop loai khac (xem README)
-#   5. xoa dong `chua_xong` o duoi
+# SU THAT CUA DAC TA nen khong phu thuoc may, khong phai do trung vi. Nhung van
+# chay mot lan, vi dong `nguon:` tren man hinh chi co nghia khi file do chay duoc.
+#
+# HIEN TRUONG dung GIA TIEN chu khong dung day so tron. Day so tron chi cho thay
+# THU TU sai; gia tien cho thay HAU QUA - mon dau tien tren trang "gia thap den
+# cao" khong phai mon re nhat, va do la thu nguoi xem tung nhin thay that.
 
-chua_xong: true       # XOA dong nay khi da co so that
-
-title: '`Array.sort` mặc định so chuỗi'
+title: Sắp xếp giá thấp đến cao, món đầu không rẻ nhất
 theme: bench
 he: giang_duong
 accent: hot
-brand: 'FRONTEND · SỐ 71'
-tag: 'node · chưa xong'
-footer: '{{SO}}'
+domain: fe
+brand: MÙA JAVASCRIPT · SỐ 09
+tag: javascript · đúng sai
+footer: SORT MẶC ĐỊNH SO SÁNH THEO CHUỖI  ·  KHÔNG PHẢI THEO SỐ
 voice: female
 rate: "+16%"
 
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 phien_am: true
@@ -36,45 +36,81 @@ pre_pad: 0.35
 post_pad: 0.55
 
 scenes:
+  # ============================================ HOOK
   - scene: probe
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Rẻ nhất, mà không rẻ nhất.
+    narration: Người dùng bấm sắp xếp giá từ thấp lên cao. Món hiện ra đầu tiên có giá một triệu đồng. Còn món tám mươi lăm nghìn thì nằm tít phía dưới, sau cả món một triệu hai.
+    caption: Món đầu tiên một triệu. Món 85 nghìn nằm dưới cùng.
+    heading: node · su-that.mjs
+    lenh: node bench-js/su-that.mjs
+    nguon: bench-js/su-that.mjs
+    status: so 71
+    lines:
+      - { cmd: "giá gốc",         out: "1200000 990000 85000 1000000", state: ok }
+      - { cmd: "sau .sort()",     out: "1000000 1200000 85000 990000", state: bad }
+      - { cmd: "món đầu danh sách", out: "1.000.000đ",                 state: bad }
+    verdict: KHÔNG MỘT LỖI NÀO BÁO
 
+  # ============================================ hau qua
   - scene: statement
     chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Không có gì báo cả.
+    narration: Không có ngoại lệ, không cảnh báo, không dòng nào đỏ. Danh sách vẫn hiện đủ số món, vẫn theo một thứ tự trông rất có trật tự. Chỉ là cái trật tự đó không phải cái người dùng vừa yêu cầu.
+    caption: Vẫn có thứ tự. Chỉ không phải thứ tự người dùng yêu cầu.
+    prop: trinh_duyet
+    value: SẮP XẾP XONG, VẪN SAI
+    size: 116
+    sub: Và trông hoàn toàn bình thường
 
+  # ============================================ co che
   - scene: compare
     chapter: VÌ SAO
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    head: Nó không so sánh số.
+    narration: Hàm sắp xếp mặc định đổi mọi phần tử thành chuỗi rồi so từng ký tự một, giống cách xếp tên trong danh bạ. Chuỗi hai không nhỏ hơn chuỗi ba, vì ký tự đầu của nó là số hai.
+    caption: Nó đổi thành chuỗi rồi so từng ký tự, như xếp danh bạ.
+    vs: CHỨ KHÔNG PHẢI
+    box_h: 290
+    items:
+      - label: THỰC TẾ NÓ LÀM
+        value: SO TỪNG KÝ TỰ
+        note: '"200" đứng trước "30" vì ký tự đầu là 2'
+        color: hot
+      - label: NGƯỜI VIẾT TƯỞNG
+        value: SO GIÁ TRỊ SỐ
+        note: và với danh sách một chữ số thì đúng thật
+        color: ok
 
-  - scene: list
-    chapter: HIỆN TRƯỜNG
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+  # ============================================ cho de sai
+  - scene: statement
+    chapter: VÌ SAO
+    head: Dữ liệu thử luôn đúng.
+    narration: Đây là lý do nó sống sót qua kiểm thử. Nếu mọi số đều cùng số chữ số thì so theo ký tự cho ra đúng kết quả như so theo giá trị. Chỉ khi danh sách có cả số ba chữ số lẫn số bảy chữ số nó mới lộ.
+    caption: Cùng số chữ số thì hai cách cho kết quả giống nhau.
+    label: CHỖ ÍT AI SOI
+    value: CHỈ LỘ KHI SỐ CHỮ SỐ KHÁC NHAU
+    size: 90
+    sub: Nên dữ liệu giả trong test luôn xanh
 
-  - scene: multiply
-    chapter: QUAY CHẬM
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+  # ============================================ quy tac
   - scene: rule
     chapter: CHẶN
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
+    accent: ok
+    head: Sắp xếp số thì phải nói rõ.
+    narration: Quy tắc chỉ có một câu. Sắp xếp số thì luôn truyền vào hàm so sánh lấy hiệu hai bên, đừng bao giờ gọi sắp xếp trần. Với chuỗi tiếng Việt cũng vậy, phải nói rõ ngôn ngữ thì dấu mới xếp đúng.
+    caption: Sắp xếp số thì luôn truyền hàm so sánh. Chuỗi thì nói rõ ngôn ngữ.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Sắp xếp số thì luôn truyền hàm so sánh vào.
+    small: Dấu hiệu trong code — bất kỳ lời gọi sắp xếp nào không có tham số, trên một mảng có thể chứa số. Tìm bằng cách rà đúng chữ đó với hai ngoặc rỗng ngay sau.
 
+  # ============================================ cau hoi
   - scene: ask
     chapter: CÒN LẠI
-    head: '{{SO}}'
-    narration: '{{SO}}'
-    caption: '{{SO}}'
-
+    head: Câu hỏi cuối.
+    narration: Nếu mảng của bạn chứa ngày tháng dưới dạng chuỗi, thì sắp xếp trần có cho đúng thứ tự thời gian không? Trả lời được câu đó là bạn đã nắm đúng cơ chế.
+    caption: Trả lời được là bạn đã nắm đúng cơ chế.
+    text: MẢNG NGÀY THÁNG DẠNG CHUỖI THÌ SORT TRẦN CÓ ĐÚNG KHÔNG?
+    size: 70
+    hint: còn tuỳ định dạng ngày viết theo thứ tự nào

@@ -35,7 +35,7 @@ rate: "+16%"
 #
 # De hai khoa nay tren dong lenh thi mot lan quen la ra video khac han, va da
 # mat mot luot render vi dung chuyen do. Xem VIET-KICH-BAN.md.
-omni_voice: namtre_v3
+omni_voice: namtre_v2
 style: camhung
 mode: tach
 
@@ -129,7 +129,7 @@ scenes:
     #
     # O luoi dau tien mau xanh (cau hop le), 148 o con lai mau do (thua) - ty le
     # 1 tren 148 hien ra ngay, khong can mot loi giai thich nao.
-    narration: Danh sách này bắt đầu bằng đúng một câu truy vấn. Rồi vòng lặp bắt đầu. Mỗi đơn, ô a em lặng lẽ gửi thêm một câu để lấy tên khách, một câu nữa lấy danh sách hàng, rồi một câu cho từng dòng hàng, cứ thế nhân lên. Hai mươi đơn trên một trang thành một trăm bốn chín câu truy vấn.
+    narration: Danh sách này bắt đầu bằng đúng một câu truy vấn. Rồi vòng lặp bắt đầu. Mỗi đơn, ô a em lặng lẽ gửi thêm một câu để lấy tên khách, một câu nữa lấy danh sách hàng. Rồi một câu cho từng dòng hàng, cứ thế nhân lên. Hai mươi đơn trên một trang thành một trăm bốn chín câu truy vấn.
     caption: Mỗi vòng lặp lặng lẽ thêm một câu truy vấn.
     source:
       label: CÂU ĐẦU TIÊN

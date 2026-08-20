@@ -1,0 +1,156 @@
+# Video ngoai luong - khong thuoc kenh dev.
+#
+# NGU CANH QUYET DINH MOI THU: video nay CHINH LA loi moi, gui cho chi qua tin
+# nhan. Chi la NGUOI XEM, khong phai nhan vat duoc ke lai. Nen toan bo loi doc
+# noi THANG voi chi, va cau chot phai la mot viec chi lam duoc ngay trong chat.
+#
+# Nut that: mot tin nhan "hom nao di an nha chi" chinh la thu da hong lan truoc.
+# Nen CHINH CAI VIDEO NAY la bang chung rang lan nay khong phai "hom nao" nua -
+# khong ai ngoi lam ca mot video roi lai hen suong. Do la canh 8, ban le cua bai.
+#
+# 11 canh (~80 giay):
+#   1  chao        thoai       goi thang chi, dua ngay
+#   2  loi hua cu  thoai       em hua
+#   3  chi u       thoai       GIONG NU - vang lai cua lan hua cu, doc that
+#   4  goi ten     chu         HÔM NÀO
+#   5  thoi gian   troiqua     4 thang
+#   6  cho ap      chu         chi khong nhac lan nao
+#   7  tin nhan    mot_nguoi   bong bong nghi hien dung cai tin nhan nhat
+#   8  ban le      chu         nen em lam han cai nay
+#   9  to moi      mo_thu      gio + tien (dong tien co y de lung lo)
+#   10 chon quan   chon_quan   4 mon co danh so
+#   11 chot        thoai       nhan mot con so
+#
+# GIONG: em `namtre_v3`, chi `nu_trungnien` va CHI xuat hien o canh 3. Chi la
+# nguoi xem chu khong doi thoai, nen giong nu bat len dung mot lan giua toan
+# giong em nghe nhu tieng vong cua lan hua cu.
+#
+# Nhip hai: canh 3 va nua sau canh 6 KHONG pha hai. Hai suot tu dau den cuoi
+# thi loi moi mat trong luong, phai co nhip that thi cau chot moi co suc.
+
+title: Hôm nào em mời chị đi ăn
+theme: net_ve
+engine: omnivoice
+omni_voice: namtre_v3
+style: tunhien
+mode: lien
+
+scenes:
+  # ------------------------------------------------------------------- chao
+  - scene: thoai
+    head: Chị ơi
+    boi_canh: quan
+    the: vay
+    mat: vui
+    ai: em
+    noi: Chị coi hết nha, cuối có quà.
+    tay_len: true
+    narration: Chị ơi, coi hết cái này giùm em nha. Cuối có quà. Đùa đấy, quà chưa mua. Nhưng chị coi hết đi, vì lần này em có ngày giờ đàng hoàng.
+    caption: Quà chưa mua, ngày giờ có rồi.
+
+  # -------------------------------------------------------------- loi hua cu
+  - scene: thoai
+    head: Chị còn nhớ không
+    the: chi
+    mat: vui
+    ai: em
+    noi: Hôm nào em mời chị đi ăn nhé!
+    narration: 'Chị còn nhớ không. Có lần em dõng dạc tuyên bố, khí thế như trưởng ban tổ chức sự kiện: hôm nào em mời chị đi ăn.'
+    caption: Khí thế như trưởng ban tổ chức.
+
+  # ------------------------ GIONG NU. Cang than nhien cang dat - dung pha hai
+  - scene: thoai
+    head: Và chị trả lời
+    boi_canh: quan
+    the: ngoi
+    mat: nghi
+    the_nghe: dung
+    ai: chi
+    omni_voice: nu_trungnien
+    noi: Ừ, hôm nào.
+    narration: Ừ, hôm nào.
+    caption: Ừ, hôm nào.
+
+  # ------------------------------------------------------ goi ten hai chu do
+  - scene: to_lich
+    head: Và em tra lịch
+    thang: THÁNG NÀY
+    khoanh_ngoai: HÔM NÀO
+    ghi: Ngày nào cũng có. Riêng cái ngày em hứa thì không.
+    narration: 'Và chị đáp: Ừ, hôm nào. Lúc ấy em mới nhận ra, hôm nào là đơn vị thời gian duy nhất không có trên lịch, không có trên đồng hồ, nhưng lại xuất hiện rất tự tin trong mọi lời hứa.'
+    caption: 'Hôm nào: có trong lời hứa, không có trên lịch.'
+
+  # ----------------------------------------------------- thoi gian troi qua
+  - scene: troiqua
+    head: Rồi hôm nào trôi qua
+    dem: 4 THÁNG
+    moc: [lúc hứa, quạt chạy hết công suất, lá rụng, tới hôm nay]
+    ghi: Lịch lật vù vù. Em đứng yên như ảnh thờ.
+    narration: Rồi hôm nào trôi qua. Hè đi qua, quạt nhà em từ số một lên số ba, mùa thu cũng kịp rụng lá. Bốn tháng. Đủ để một cái cây ra quả, còn em vẫn chưa ra được một cái ngày.
+    caption: Bốn tháng. Cây ra quả, em chưa ra ngày.
+
+  # ----------------------------------------------- cho ap nhat, nua sau that
+  - scene: chu
+    chu: CHỊ KHÔNG NHẮC LẦN NÀO
+    co: 88
+    mau: pink
+    sub: Không seen đòi, không nhắc nợ, chỉ im lặng đầy sức nặng
+    narration: Suốt bốn tháng, chị không nhắc lấy một lần. Không đòi, không cà khịa, không gửi chiếc meme hình cái bụng đói. Chị càng im, lương tâm em càng tự bật chế độ họp khẩn.
+    caption: Chị im lặng. Lương tâm em họp khẩn.
+
+  # -------------- cho de cuoi nhat: ai cung tung go dung cau nay roi xoa di
+  - scene: ban_dem
+    gio: "11:47"
+    do: dien_thoai
+    the: nghi
+    mat: nghi
+    nghi: Hôm nào rảnh đi ăn nha chị :))
+    narration: 'Hôm nay em mở khung chat, ngón tay tự động gõ: hôm nào rảnh đi ăn nha chị. Đọc lại, thấy y hệt cái câu bốn tháng trước. Điện thoại còn nhận ra em đang lặp bài, nên em xoá.'
+    caption: 'Điện thoại cũng biết: câu này nghe quen lắm.'
+
+  # ------------- BAN LE: bien chinh cai video nay thanh bang chung nghiem tuc
+  - scene: chu
+    chu: NÊN EM LÀM HẲN CÁI NÀY
+    co: 92
+    gach: true
+    sub: Dựng trailer cho một bữa ăn
+    narration: Nên em không nhắn câu đó nữa. Em ngồi làm hẳn cái video này, mất ba tiếng. Nhắn tin mất mười giây. Nhưng một lời mời có lịch, có thực đơn, có trách nhiệm thì phải có trailer chứ chị.
+    caption: Nhắn mười giây. Dựng trailer ba tiếng.
+
+  # --------------------------------- to moi. Dong "kinh phi" co y de lung lo
+  - scene: mo_thu
+    head: Đây, chính thức luôn
+    tieu_de: LỜI MỜI CHÍNH THỨC
+    dong:
+      - "Bên mời     :  em"
+      - "Được mời    :  chị"
+      - "Thời gian   :  7 giờ tối nay"
+      - "               canh giờ chị tan ITV rồi"
+      - "Địa điểm    :  chị chọn — trang sau"
+      - "Kinh phí    :  em lo"
+      - "               hmmm... lúc đó tính nhé chị"
+    ghi: Điều khoản, cấm trả lời bằng hai chữ "hôm nào".
+    narration: Tối nay, bảy giờ. Kinh phí thì em lo. Ờ mà thôi, cái đó lúc đó tính nhé chị.
+    caption: Kinh phí thì em lo. Ờ mà... lúc đó tính nhé chị.
+
+  # --- danh so tung o de chi tra loi bang MOT con so, khong phai nghi them
+  - scene: chon_quan
+    head: Em kê sẵn bốn phương án
+    quan:
+      - { ve: lau,  ten: LẨU ẾCH, loi: "Món chị hay gọi. Em nhớ." }
+      - { ve: oc,   ten: ỐC,      loi: "Ngồi lâu được, nói chuyện được." }
+      - { ve: long, ten: LÒNG,    loi: "Cái này em ăn được, chị đừng lo." }
+      - { ve: vit,  ten: VỊT,     loi: "Phòng khi ba món trên chị chê." }
+    narration: Còn quán thì em kê sẵn bốn phương án. Lẩu ếch là món chị hay gọi. Ốc thì ngồi lâu được, nói chuyện được. Lòng thì em ăn được nên chị đừng lo. Còn vịt là phòng khi ba món kia chị chê hết.
+    caption: Không hợp cái nào thì em kê tiếp.
+
+  # ------------------------------- chot: viec chi lam duoc ngay trong khung chat
+  - scene: thoai
+    head: Chị nhắn em một con số thôi
+    boi_canh: quan
+    the: chi
+    mat: vui
+    ai: em
+    noi: Một, hai, ba, hay bốn?
+    narration: Trong tờ mời không có chữ hôm nào nào cả, trừ mỗi chỗ tiền, chị bỏ qua giùm em. Giờ chị nhắn lại cho em một con số thôi, một hai ba hay bốn. Nhắn hôm nào là em buồn thật đấy.
+    caption: Nhắn hôm nào là em buồn thật đấy.
