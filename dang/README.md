@@ -54,20 +54,45 @@ và **Client secret**; `py dang/dang.py auth` tự làm phần OAuth và tự l�
 token vào `dang/token.json`, rồi tự refresh sau đó.
 
 1. Vào <https://developers.tiktok.com/apps>, tạo app.
-2. Thêm **ba** product:
+2. Thêm **hai** product (**Add products**):
    - **Login Kit** — bắt buộc để có luồng OAuth `/v2/auth/authorize/`. Không có
-     nó thì không đăng nhập được, dù các product khác đã bật.
-   - **Content Posting API** — cấp `video.upload` và `video.publish`.
-   - **Display API** — cấp `video.list` và `user.info.basic`. Thiếu nó thì mục
-     "Đã đăng" trong UI không lấy được view / like / bình luận.
-3. Bật **cả bốn** scope (xin hết một lần để sau không phải `auth` lại):
+     nó thì không đăng nhập được, dù các product khác đã bật. Cấp
+     `user.info.basic`.
+   - **Content Posting API** — cấp `video.upload`. Bật thêm công tắc
+     **Direct Post** trong panel của nó để có `video.publish`.
 
-   | Scope | Để làm gì |
-   |---|---|
-   | `video.upload` | đẩy vào inbox — dùng trước khi audit |
-   | `video.publish` | đăng trực tiếp — dùng sau khi audit |
-   | `video.list` | đọc view / like / bình luận |
-   | `user.info.basic` | điều kiện kèm của Display API |
+   Ba product còn lại trong danh sách (**Share Kit**, **Webhooks**, **Data
+   Portability API**) đều không dùng: Share Kit mở app TikTok để *người dùng tự*
+   đăng — ngược mục đích tự động hoá; Webhooks cần một URL công khai để TikTok
+   gọi vào, mà tool chạy trên máy bạn (và tool đã tự poll `status/fetch/`); Data
+   Portability API là để xuất dữ liệu theo yêu cầu GDPR/DSA.
+
+   Khai product không dùng **không vô hại**: TikTok ghi rõ mọi product và scope
+   đã khai đều phải được demo trong video review, thiếu là hoãn duyệt.
+
+3. Scope đến **từ product**, đừng bấm **Add scopes** khai tay — khai một scope
+   không có product đỡ là cách chắc chắn nhận `scope not authorized` khi chạy.
+   Panel Scopes phải có đúng ba dòng:
+
+   | Scope | Đến từ | Để làm gì |
+   |---|---|---|
+   | `user.info.basic` | Login Kit | `open_id` + tên hiển thị, để biết đang đăng vào tài khoản nào |
+   | `video.upload` | Content Posting API | đẩy vào inbox — dùng trước khi audit |
+   | `video.publish` | Content Posting API + Direct Post | đăng trực tiếp — dùng sau khi audit |
+
+   **`video.list` không có ở đây, và đó là chuyện bình thường.** Nó thuộc
+   **Display API** — một product riêng mà TikTok **không phát cho mọi app**; nhiều
+   app không thấy nó trong danh sách **Add products** chút nào. Hệ quả: `so-lieu`
+   và bảng view / bình luận trong UI không chạy được. Luồng đăng video không ảnh
+   hưởng gì; xem số liệu trong app TikTok hoặc TikTok Studio.
+
+   Đây cũng là lý do `auth` mặc định chỉ xin **ba** scope: TikTok từ chối **cả**
+   request uỷ quyền nếu trong `scope` có một scope chưa được cấp — không phải cấp
+   phần còn lại rồi bỏ qua. Nếu app của bạn *có* Display API thì thêm tay:
+
+   ```powershell
+   py dang\dang.py auth --scope "user.info.basic,video.upload,video.publish,video.list"
+   ```
 
 4. Trong **Platforms**, tick **Desktop**. Rồi khai **Redirect URI** ở tab
    **Desktop** của Login Kit, đúng bằng chuỗi trong `.env`:
@@ -160,7 +185,8 @@ này là đăng được video lên tài khoản của bạn.
 # 1. xem giới hạn THẬT của tài khoản (privacy nào được phép, độ dài tối đa...)
 py dang\dang.py creator
 
-# 1b. view / like / bình luận của video đã đăng (cần scope video.list)
+# 1b. view / like / bình luận (cần scope video.list -> cần product Display
+#     API, thứ TikTok không phát cho mọi app; thiếu thì lệnh này báo rõ)
 py dang\dang.py so-lieu
 
 # 3. xem chính xác sẽ gửi gì, không gọi mạng
