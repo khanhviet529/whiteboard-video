@@ -97,7 +97,15 @@ def cau_hinh():
             f"thieu {', '.join(thieu)}.\n"
             f"  Tao {TEP_ENV} theo mau .env.example, hoac dat bien moi truong.\n"
             f"  Lay key o https://developers.tiktok.com/apps")
-    e.setdefault("TIKTOK_REDIRECT_URI", "http://127.0.0.1:8723/callback")
+    # TikTok BAT BUOC redirect_uri bat dau bang `https` (Login Kit web doc: "must
+    # be absolute and begin with https"). Nen khong the dung http://127.0.0.1 nhu
+    # phan lon provider khac cho phep.
+    #
+    # Chon `https://127.0.0.1` co chu dich: browser se KHONG ket noi duoc (khong co
+    # server HTTPS o day), dung lai o trang loi - nhung `code` van nam trong thanh
+    # dia chi. Nghia la ma uy quyen KHONG di ra ngoai may. Neu khai mot domain that
+    # cua nguoi khac thi `code` duoc gui thang toi server ho.
+    e.setdefault("TIKTOK_REDIRECT_URI", "https://127.0.0.1:8723/callback")
     return e
 
 

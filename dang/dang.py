@@ -15,8 +15,8 @@ import argparse
 import json
 import os
 import sys
+import urllib.parse
 import webbrowser
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -38,58 +38,57 @@ def _ghi_so(so):
 
 # --------------------------------------------------------------------- auth
 def lenh_auth(a):
-    """Mo browser, bat `code` bang mot HTTP server tam tren localhost.
+    """Mo browser de dang nhap, roi nhan `code` bang cach DAN URL vao terminal.
 
-    Phai co server tam vi TikTok tra `code` qua redirect_uri chu khong in ra man
-    hinh. Cong lay tu redirect_uri da khai trong app - hai ben phai TRUNG nhau,
-    lech mot ky tu la TikTok tu choi.
+    Vi sao khong bat `code` tu dong bang HTTP server nhu phan lon tool khac:
+    TikTok bat buoc `redirect_uri` phai la `https` (Login Kit web doc), nen khong
+    the dung `http://127.0.0.1`. Dung mot server HTTPS local thi phai co chung chi
+    tu ky - stdlib Python khong tao duoc, va them phu thuoc chi cho mot buoc lam
+    MOT LAN trong 365 ngay la khong dang.
+
+    Dung `https://127.0.0.1` lam redirect_uri: browser khong ket noi duoc, dung o
+    trang loi, nhung `code` van nam trong thanh dia chi. Ma uy quyen KHONG di ra
+    khoi may - khac han voi viec khai domain cua nguoi khac.
     """
     cf = tt.cau_hinh()
-    ru = urlparse(cf["TIKTOK_REDIRECT_URI"])
-    cong = ru.port or 80
-    got = {}
-
-    class H(BaseHTTPRequestHandler):
-        def log_message(self, *_):
-            pass
-
-        def do_GET(self):
-            q = parse_qs(urlparse(self.path).query)
-            got.update({k: v[0] for k, v in q.items()})
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            xong = "code" in got
-            self.wfile.write(
-                ("<h2>" + ("Xong. Dong tab nay va quay lai terminal."
-                           if xong else
-                           "Khong thay `code` trong callback. Xem terminal.")
-                 + "</h2>").encode("utf-8"))
-
     url = tt.url_dang_nhap(scope=a.scope)
     print(f"scope       : {a.scope}")
     print(f"redirect_uri: {cf['TIKTOK_REDIRECT_URI']}")
-    print(f"\nMo trang nay de dang nhap (neu browser khong tu mo):\n  {url}\n")
-    srv = HTTPServer((ru.hostname or "127.0.0.1", cong), H)
+    print("\nBa buoc:")
+    print("  1. Trang dang nhap TikTok se mo (neu khong, mo tay URL duoi day)")
+    print("  2. Dang nhap va dong y. Browser se bao loi khong ket noi duoc")
+    print(f"     {cf['TIKTOK_REDIRECT_URI']} - DUNG LA NHU VAY, khong phai loi")
+    print("  3. Copy TOAN BO url tren thanh dia chi, dan vao day")
+    print(f"\n{url}\n")
     webbrowser.open(url)
-    print(f"dang cho callback tren cong {cong}... (Ctrl+C de huy)")
-    srv.handle_request()
-    srv.server_close()
 
-    if "code" not in got:
-        raise SystemExit(
-            f"callback khong co `code`: {json.dumps(got, ensure_ascii=False)}\n"
-            f"  Thuong la do redirect_uri trong app TikTok khac voi "
-            f"{cf['TIKTOK_REDIRECT_URI']}")
-    t = tt.doi_code_lay_token(got["code"])
+    dan = input("Dan url (hoac chi rieng code) roi Enter: ").strip()
+    code = None
+    if "code=" in dan:
+        q = parse_qs(urlparse(dan).query or dan.split("?", 1)[-1])
+        code = (q.get("code") or [None])[0]
+        if q.get("error"):
+            raise SystemExit(f"TikTok tu choi: {q['error']} "
+                             f"{q.get('error_description', [''])[0]}")
+    elif dan:
+        code = dan
+    if not code:
+        raise SystemExit("khong tim thay `code` trong chuoi vua dan")
+    # `code` cua TikTok bi url-encode trong thanh dia chi (dau `*` thanh `%2A`).
+    # Khong giai ma thi doi token that bai voi loi mo ho.
+    code = urllib.parse.unquote(code)
+
+    t = tt.doi_code_lay_token(code)
     print(f"\nda luu token vao {tt.TEP_TOKEN}")
-    print(f"  open_id        : {t.get('open_id')}")
-    print(f"  scope          : {t.get('scope')}")
-    print(f"  access_token   : het han sau {t.get('expires_in')}s (~24 gio)")
-    print(f"  refresh_token  : het han sau {t.get('refresh_expires_in')}s (~365 ngay)")
-    if "video.publish" not in (t.get("scope") or ""):
-        print("\n  CANH BAO: token khong co scope `video.publish` - chi upload vao "
-              "inbox duoc, khong dang truc tiep duoc.")
+    print(f"  open_id       : {t.get('open_id')}")
+    print(f"  scope         : {t.get('scope')}")
+    print(f"  access_token  : het han sau {t.get('expires_in')}s (~24 gio)")
+    print(f"  refresh_token : het han sau {t.get('refresh_expires_in')}s (~365 ngay)")
+    thieu = [x for x in ("video.upload", "video.publish", "video.list")
+             if x not in (t.get("scope") or "")]
+    if thieu:
+        print(f"\n  CANH BAO: token thieu scope {', '.join(thieu)}.")
+        print("  Bat chung trong app TikTok roi chay lai `auth`.")
 
 
 # ------------------------------------------------------------------ creator

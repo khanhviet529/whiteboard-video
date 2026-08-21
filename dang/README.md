@@ -49,15 +49,59 @@ riêng của TikTok cho nội dung AI. Tắt bằng `--khong-aigc`, nhưng đừ
 
 ## Chuẩn bị key
 
+Bạn **không** lấy access token / refresh token bằng tay. Bạn chỉ cần **Client key**
+và **Client secret**; `py dang/dang.py auth` tự làm phần OAuth và tự lưu cả hai
+token vào `dang/token.json`, rồi tự refresh sau đó.
+
 1. Vào <https://developers.tiktok.com/apps>, tạo app.
-2. Bật product **Content Posting API**, bật **cả hai** scope:
-   - `video.upload` — đẩy vào inbox, bạn tự bấm đăng trong app (**dùng cái này
-     trước khi audit** — xem mục "Hai đường đăng" ở trên)
-   - `video.publish` — đăng trực tiếp lên trang (dùng sau khi audit)
-3. Khai **Redirect URI** đúng bằng chuỗi bạn sẽ đặt trong `.env`. Lệch một ký tự
-   là TikTok từ chối. Mặc định của tool: `http://127.0.0.1:8723/callback`
-4. Copy `Client key` và `Client secret`.
-5. Tạo `dang/.env` theo `dang/.env.example`.
+2. Thêm **hai** product:
+   - **Login Kit** — bắt buộc để có luồng OAuth `/v2/auth/authorize/`. Không có
+     nó thì không đăng nhập được, dù Content Posting API đã bật.
+   - **Content Posting API**
+3. Bật **cả bốn** scope (xin hết một lần để sau không phải `auth` lại):
+
+   | Scope | Để làm gì |
+   |---|---|
+   | `video.upload` | đẩy vào inbox — dùng trước khi audit |
+   | `video.publish` | đăng trực tiếp — dùng sau khi audit |
+   | `video.list` | đọc view / like / bình luận |
+   | `user.info.basic` | điều kiện kèm của Display API |
+
+4. Khai **Redirect URI** trong Login Kit, đúng bằng chuỗi trong `.env`:
+
+   ```
+   https://127.0.0.1:8723/callback
+   ```
+
+   **TikTok chỉ nhận `https`** — tài liệu Login Kit ghi *"must be absolute and
+   begin with https"*. Không nhận `http`, kể cả localhost. Lệch một ký tự là bị
+   từ chối.
+
+   Vì sao chọn `https://127.0.0.1`: browser sẽ **không kết nối được** (không có
+   server HTTPS ở đó), dừng lại ở trang lỗi — nhưng `code` vẫn nằm trong thanh địa
+   chỉ. Nghĩa là mã uỷ quyền **không đi ra khỏi máy bạn**. Nếu khai domain của
+   người khác thì `code` được gửi thẳng tới server họ.
+
+5. Copy `Client key` và `Client secret` → `dang/.env` theo `dang/.env.example`.
+
+### Đăng nhập một lần
+
+```powershell
+py dang\dang.py auth
+```
+
+Ba bước, tool in ra sẵn:
+
+1. Trang đăng nhập TikTok mở ra
+2. Đăng nhập và đồng ý → browser báo **không kết nối được
+   `https://127.0.0.1:8723/callback`**. Đúng là như vậy, không phải lỗi.
+3. Copy **toàn bộ URL** trên thanh địa chỉ, dán vào terminal
+
+Tool tự tách `code`, giải url-encode (`code` của TikTok có ký tự `*` bị mã hoá
+thành `%2A` — không giải thì đổi token thất bại với lỗi mơ hồ), đổi lấy token, và
+in ra scope thật nhận được. Thiếu scope nào nó cảnh báo ngay.
+
+Từ đó trở đi không phải làm gì nữa trong 365 ngày.
 
 `dang/.env` và `dang/token.json` đều bị `.gitignore` — repo này public, đừng bao
 giờ commit chúng. Tool không in giá trị token ra log.
@@ -88,11 +132,11 @@ này là đăng được video lên tài khoản của bạn.
 ## Dùng — dòng lệnh (để script hoá về sau)
 
 ```powershell
-# 1. đăng nhập một lần — mở browser, tool bắt `code` qua HTTP server tạm
-py dang\dang.py auth
-
-# 2. xem giới hạn THẬT của tài khoản (privacy nào được phép, độ dài tối đa...)
+# 1. xem giới hạn THẬT của tài khoản (privacy nào được phép, độ dài tối đa...)
 py dang\dang.py creator
+
+# 1b. view / like / bình luận của video đã đăng (cần scope video.list)
+py dang\dang.py so-lieu
 
 # 3. xem chính xác sẽ gửi gì, không gọi mạng
 py dang\dang.py dang out\cache-stale.mp4 --dry-run
