@@ -45,7 +45,7 @@ giờ commit chúng. Tool không in giá trị token ra log.
 ## Dùng — bấm trong UI (cách chính)
 
 ```powershell
-python dang\web.py        # -> http://127.0.0.1:8724
+py dang\web.py        # -> http://127.0.0.1:8724
 ```
 
 Một bảng liệt kê mọi `out/*.mp4`: tên, dung lượng, độ dài, **fps**, đã đăng chưa.
@@ -67,19 +67,19 @@ này là đăng được video lên tài khoản của bạn.
 
 ```powershell
 # 1. đăng nhập một lần — mở browser, tool bắt `code` qua HTTP server tạm
-python dang\dang.py auth
+py dang\dang.py auth
 
 # 2. xem giới hạn THẬT của tài khoản (privacy nào được phép, độ dài tối đa...)
-python dang\dang.py creator
+py dang\dang.py creator
 
 # 3. xem chính xác sẽ gửi gì, không gọi mạng
-python dang\dang.py dang out\cache-stale.mp4 --dry-run
+py dang\dang.py dang out\cache-stale.mp4 --dry-run
 
 # 4. đăng thật, chờ TikTok xử lý xong
-python dang\dang.py dang out\cache-stale.mp4 --tieu-de "Cache hết hạn sai lúc" --cho
+py dang\dang.py dang out\cache-stale.mp4 --tieu-de "Cache hết hạn sai lúc" --cho
 
 # 5. hỏi lại trạng thái bất kỳ lúc nào
-python dang\dang.py trang-thai <publish_id>
+py dang\dang.py trang-thai <publish_id>
 ```
 
 ### Chống đăng trùng

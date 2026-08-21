@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """CLI dang video len TikTok.
 
-    python dang/dang.py auth                      dang nhap mot lan, luu token
-    python dang/dang.py creator                   xem gioi han that cua tai khoan
-    python dang/dang.py dang out/x.mp4 --dry-run  xem chinh xac se gui gi
-    python dang/dang.py dang out/x.mp4 --tieu-de "..."
-    python dang/dang.py trang-thai <publish_id>
+    py dang/dang.py auth                      dang nhap mot lan, luu token
+    py dang/dang.py creator                   xem gioi han that cua tai khoan
+    py dang/dang.py dang out/x.mp4 --dry-run  xem chinh xac se gui gi
+    py dang/dang.py dang out/x.mp4 --tieu-de "..."
+    py dang/dang.py trang-thai <publish_id>
 
 Mac dinh privacy la SELF_ONLY. Do la lua chon co y: app chua qua audit thi TikTok
 khoa moi bai o che do rieng tu bat ke minh dat gi, nen dat PUBLIC_TO_EVERYONE luc
@@ -160,7 +160,7 @@ def lenh_dang(a):
                "luc": _dt.datetime.now().isoformat(timespec="seconds")}
     _ghi_so(so)
     print(f"\nxong. da ghi vao {SO_DANG}")
-    print(f"kiem lai bat ky luc nao: python dang/dang.py trang-thai {pid}")
+    print(f"kiem lai bat ky luc nao: py dang/dang.py trang-thai {pid}")
 
 
 def lenh_trang_thai(a):

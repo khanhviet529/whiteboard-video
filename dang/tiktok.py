@@ -180,7 +180,7 @@ def lay_token():
     cau_hinh()
     if not os.path.exists(TEP_TOKEN):
         raise SystemExit(
-            f"chua co {TEP_TOKEN}. Chay `python dang/dang.py auth` mot lan de "
+            f"chua co {TEP_TOKEN}. Chay `py dang/dang.py auth` mot lan de "
             f"dang nhap va luu token.")
     t = json.load(open(TEP_TOKEN, encoding="utf-8"))
     if time.time() > t.get("refresh_het_han_luc", 0):

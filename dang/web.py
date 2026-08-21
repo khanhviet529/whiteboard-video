@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """UI local de bam dang video len TikTok. Chi stdlib.
 
-    python dang/web.py        ->  http://127.0.0.1:8724
+    py dang/web.py        ->  http://127.0.0.1:8724
 
 Vi sao co file nay khi da co CLI: quy trinh test la "chu dong bam dang", va nhin
 mot bang co san ten / dung luong / fps / da dang chua thi quyet dinh nhanh hon
@@ -216,7 +216,7 @@ def _trang():
                         f"{max(0, con)//60} phút (tự refresh)")
         else:
             tt_token = ("<span class=canh>chưa đăng nhập</span> — chạy "
-                        "<code>python dang/dang.py auth</code> một lần")
+                        "<code>py dang/dang.py auth</code> một lần")
     except SystemExit as e:
         tt_token = f"<span class=loi>{html.escape(str(e).splitlines()[0])}</span>"
 
