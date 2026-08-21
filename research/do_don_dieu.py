@@ -72,15 +72,23 @@ def in_bong(b):
 
 
 def do_mot_video(ten, in_hinh=False):
-    thu_muc = os.path.join(ROOT, "build", "stills")
-    anh = sorted(glob.glob(os.path.join(thu_muc, "scene-*.png")))
+    # Visual Lab xuat ra `build/vlab/<ten>/nhip-*.png` va KHONG co san dien co
+    # dinh - do la ca diem cua no. Nen voi vlab thi chi do CA KHUNG, con phep
+    # "khung lam phang bao nhieu" khong ap dung.
+    vlab = os.path.join(ROOT, "build", "vlab", ten)
+    la_vlab = os.path.isdir(vlab)
+    if la_vlab:
+        anh = sorted(glob.glob(os.path.join(vlab, "*.png")))
+    else:
+        anh = sorted(glob.glob(os.path.join(ROOT, "build", "stills",
+                                            "scene-*.png")))
     if len(anh) < 3:
         print(f"  {ten}: chi thay {len(anh)} still, can >= 3. "
               f"Chay `python src/render.py screenplays/{ten}.yaml --stills` truoc")
         return None
 
     day = [bong(p) for p in anh]
-    san = [bong(p, chi_san_dien=True) for p in anh]
+    san = day if la_vlab else [bong(p, chi_san_dien=True) for p in anh]
     n = len(anh)
 
     cap = [(khac(day[i], day[j]), khac(san[i], san[j]), i, j)
@@ -94,9 +102,11 @@ def do_mot_video(ten, in_hinh=False):
     print(f"                        SAN DIEN   {tb_san:.3f}")
     # San dien luon khac nhieu hon ca khung, va TY LE giua hai so cho biet khung
     # co dinh dang lam mo di bao nhieu phan da dang cua noi dung.
-    if tb_san > 1e-6:
+    if tb_san > 1e-6 and not la_vlab:
         print(f"  khung cố định làm phẳng   {(1 - tb_day / tb_san):.0%} "
               f"độ đa dạng của nội dung")
+    if la_vlab:
+        print("  (visual lab: không có sân diễn cố định nên chỉ đo cả khung)")
     print("  ba cặp cảnh giống nhau nhất (theo sân diễn):")
     for _, s, i, j in sorted(cap, key=lambda c: c[1])[:3]:
         ta = os.path.basename(anh[i]).replace(".png", "")

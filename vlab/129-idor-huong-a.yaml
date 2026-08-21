@@ -1,0 +1,115 @@
+# VISUAL LAB - de tai 129 (IDOR), HUONG A: DUNG RENDERER PRODUCTION.
+#
+# File nay khong phai mot kich ban de dang. No la BAN DOI CHUNG: cung mot cau
+# chuyen, cung sau nhip, nhung ke bang 17 loai canh cua `bench`. Dat canh
+# `129-idor-huong-c.vlab.yaml` de so sanh dang bong.
+#
+# Sau nhip anh xa mot-doi-mot voi huong C:
+#   1 probe      goi don cua minh, dung          <- nhip 1 cua C
+#   2 statement  doi so, van 200 OK              <- nhip 2
+#   3 topology   goi tin di qua het moi tang     <- nhip 3 (he lo)
+#   4 compare    phep kiem hoi gi / khong hoi gi <- nhip 4
+#   5 statement  thu pham                        <- nhip 5
+#   6 rule       ban sua                         <- nhip 6
+#
+# Cho dang chu y: nhip 3 cua huong C la mot CU LUI ONG KINH, va o day no phai
+# tro thanh mot canh `topology` VE THEM. Tuc cung mot thong tin, nhung huong A
+# NOI cho nguoi xem, con huong C de ho tu thay.
+
+title: Đơn của người khác, và không lệnh nào lỗi
+theme: bench
+he: hien_truong
+accent: hot
+domain: be
+brand: 'HIỆN TRƯỜNG · SỐ 129'
+tag: 'bảo mật · sở hữu'
+footer: 'PHÉP KIỂM ĐỨNG Ở CỬA VÀO  ·  KHÔNG ĐỨNG Ở ĐƯỜNG BIÊN'
+voice: female
+rate: "+16%"
+
+omni_voice: namtre_v2
+phien_am: true
+
+pause_scale: 0.70
+speed: 1.03
+pre_pad: 0.35
+post_pad: 0.55
+
+scenes:
+  - scene: probe
+    chapter: HIỆN TRƯỜNG
+    head: Đổi một số trên đường dẫn.
+    narration: Bạn gọi đơn của mình, trả về đúng đơn đó. Rồi bạn đổi một chữ số trên đường dẫn, và hệ thống trả về đơn của người khác.
+    caption: Đổi một chữ số. Nhận về đơn của người khác.
+    heading: curl · api
+    status: "200 OK"
+    lines:
+      - { cmd: "GET /api/orders/118",  out: "đơn của bạn",     state: ok }
+      - { cmd: "GET /api/orders/1043", out: "đơn của user 41", state: bad }
+      - { cmd: "mã trả về",            out: "200 OK",          state: bad }
+    verdict: KHÔNG MỘT LỆNH NÀO LỖI
+
+  - scene: statement
+    chapter: HIỆN TRƯỜNG
+    head: Mọi phép kiểm đều xanh.
+    narration: Chỗ khó chịu là không có phép kiểm nào thất bại. Bạn đã đăng nhập thật, token còn hạn thật, và câu truy vấn chạy đúng cú pháp.
+    caption: Không phép kiểm nào thất bại, nên không có gì để log.
+    value: KHÔNG PHÉP KIỂM NÀO THẤT BẠI
+    size: 104
+    sub: Nên không có dòng log nào để lần theo
+
+  - scene: topology
+    chapter: QUAY CHẬM
+    head: Request đi qua những tầng nào.
+    narration: Đi lại đường của request đó. Nó qua trình duyệt, qua ây pi ai, qua lớp kiểm đăng nhập, rồi xuống database và lấy đúng bản ghi được hỏi.
+    caption: Nó đi qua hết mọi tầng, và tầng nào cũng cho qua.
+    packet: GET /api/orders/1043
+    from: 0
+    to: 4
+    nodes:
+      - { name: TRÌNH DUYỆT, sub: "đổi một chữ số", tag: "1043", color: cool }
+      - { name: API, sub: "nhận đường dẫn", color: cool }
+      - { name: KIỂM ĐĂNG NHẬP, sub: "token còn hạn", tag: "OK", color: ok }
+      - { name: TRUY VẤN, sub: "WHERE id = 1043", color: gold }
+      - { name: DATABASE, sub: "trả đúng bản ghi được hỏi", color: hot }
+    verdict_at: 0.93
+    verdict: TẦNG NÀO CŨNG CHO QUA
+
+  - scene: compare
+    chapter: QUAY CHẬM
+    head: Phép kiểm hỏi câu nào.
+    narration: Lớp kiểm đó có hỏi một câu, và câu đó đúng. Nhưng nó hỏi bạn là ai, chứ không hỏi bản ghi này thuộc về ai.
+    caption: Nó hỏi bạn là ai, không hỏi bản ghi này của ai.
+    vs: NHƯNG NÓ KHÔNG HỎI
+    box_h: 300
+    items:
+      - label: PHÉP KIỂM CÓ HỎI
+        value: BẠN ĐÃ ĐĂNG NHẬP CHƯA
+        note: và câu trả lời là có
+        color: ok
+      - label: NÓ KHÔNG HỎI
+        value: BẢN GHI NÀY CỦA AI
+        note: không ai hỏi câu đó ở bất kỳ tầng nào
+        color: hot
+
+  - scene: statement
+    chapter: THỦ PHẠM
+    head: Gọi tên thủ phạm.
+    narration: Thủ phạm không phải thiếu phép kiểm. Là phép kiểm đứng sai chỗ, nó canh cửa vào nhà chứ không canh ranh giới giữa hai người dùng.
+    caption: Phép kiểm đứng ở cửa vào, không ở đường biên sở hữu.
+    label: THỦ PHẠM
+    value: PHÉP KIỂM ĐỨNG SAI CHỖ
+    size: 112
+    sub: Canh cửa vào, không canh đường biên
+
+  - scene: rule
+    chapter: CHẶN
+    accent: ok
+    head: Đưa chủ sở hữu vào câu truy vấn.
+    narration: Quy tắc chỉ một câu. Điều kiện chủ sở hữu phải nằm trong chính câu truy vấn, không nằm trong một lần kiểm riêng phía trên.
+    caption: Điều kiện chủ sở hữu nằm trong chính câu truy vấn.
+    n: "01"
+    kicker: QUY TẮC
+    color: ok
+    body: Chủ sở hữu là một điều kiện của truy vấn, không phải một lần kiểm.
+    small: Dấu hiệu phát hiện sớm — rà mọi truy vấn tìm theo khoá chính mà không kèm điều kiện chủ sở hữu. Đó chính là danh sách những đường đang hở.
