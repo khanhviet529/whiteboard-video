@@ -54,10 +54,12 @@ và **Client secret**; `py dang/dang.py auth` tự làm phần OAuth và tự l�
 token vào `dang/token.json`, rồi tự refresh sau đó.
 
 1. Vào <https://developers.tiktok.com/apps>, tạo app.
-2. Thêm **hai** product:
+2. Thêm **ba** product:
    - **Login Kit** — bắt buộc để có luồng OAuth `/v2/auth/authorize/`. Không có
-     nó thì không đăng nhập được, dù Content Posting API đã bật.
-   - **Content Posting API**
+     nó thì không đăng nhập được, dù các product khác đã bật.
+   - **Content Posting API** — cấp `video.upload` và `video.publish`.
+   - **Display API** — cấp `video.list` và `user.info.basic`. Thiếu nó thì mục
+     "Đã đăng" trong UI không lấy được view / like / bình luận.
 3. Bật **cả bốn** scope (xin hết một lần để sau không phải `auth` lại):
 
    | Scope | Để làm gì |
