@@ -175,6 +175,19 @@ def lenh_dang(a):
     print(f"kiem lai bat ky luc nao: py dang/dang.py trang-thai {pid}")
 
 
+def lenh_so_lieu(a):
+    vids, _, _ = tt.danh_sach_da_dang(a.so)
+    if not vids:
+        print("chua co video nao tren TikTok (hoac token thieu scope video.list)")
+        return
+    print(f"{'view':>8} {'like':>7} {'cmt':>6} {'share':>6}  {'giay':>5}  tieu de")
+    for v in vids:
+        print(f"{v.get('view_count', 0):>8} {v.get('like_count', 0):>7} "
+              f"{v.get('comment_count', 0):>6} {v.get('share_count', 0):>6} "
+              f"{v.get('duration', 0):>6}  "
+              f"{(v.get('title') or v.get('video_description') or '')[:52]}")
+
+
 def lenh_trang_thai(a):
     print(json.dumps(tt.trang_thai(a.publish_id), ensure_ascii=False, indent=2))
 
@@ -186,8 +199,9 @@ def main():
     sub = ap.add_subparsers(dest="lenh", required=True)
 
     p = sub.add_parser("auth", help="dang nhap mot lan, luu token")
-    p.add_argument("--scope", default="video.publish",
-                   help="video.publish = dang truc tiep; video.upload = chi vao inbox")
+    p.add_argument("--scope", default=tt.SCOPE_DAY_DU,
+                   help="mac dinh xin het 4 scope: upload + publish + list + "
+                        "info.basic, de sau khong phai auth lai")
     p.set_defaults(fn=lenh_auth)
 
     p = sub.add_parser("creator", help="xem gioi han that cua tai khoan")
@@ -215,6 +229,10 @@ def main():
     p.add_argument("--tat-stitch", action="store_true")
     p.add_argument("--cover-ms", type=int, default=0, help="moc thoi gian lam anh bia")
     p.set_defaults(fn=lenh_dang)
+
+    p = sub.add_parser("so-lieu", help="view/like/binh luan cua video da dang")
+    p.add_argument("--so", type=int, default=20, help="so video, toi da 20")
+    p.set_defaults(fn=lenh_so_lieu)
 
     p = sub.add_parser("trang-thai", help="hoi trang thai theo publish_id")
     p.add_argument("publish_id")

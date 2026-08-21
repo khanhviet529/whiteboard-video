@@ -40,6 +40,19 @@ URL_INIT = f"{BASE}/v2/post/publish/video/init/"
 URL_INIT_INBOX = f"{BASE}/v2/post/publish/inbox/video/init/"
 URL_STATUS = f"{BASE}/v2/post/publish/status/fetch/"
 URL_AUTH = "https://www.tiktok.com/v2/auth/authorize/"
+# Display API: so lieu cua video DA dang. Khac han Content Posting API.
+URL_VIDEO_LIST = f"{BASE}/v2/video/list/"
+URL_VIDEO_QUERY = f"{BASE}/v2/video/query/"
+
+# Bon scope can cho ca hai viec: dang (upload/publish) va doc so lieu
+# (list + info.basic). Xin het mot lan de sau khong phai `auth` lai.
+SCOPE_DAY_DU = "video.upload,video.publish,video.list,user.info.basic"
+
+# Truong so lieu. `view_count` la thu TikTok goi la "so lan xem" trong app.
+TRUONG_VIDEO = ("id", "title", "video_description", "create_time",
+                "duration", "share_url", "cover_image_url",
+                "view_count", "like_count", "comment_count",
+                "share_count")
 
 MB = 1024 * 1024
 CHUNK_MIN = 5 * MB
@@ -203,7 +216,7 @@ def lay_token(can_scope=None):
     return t["access_token"]
 
 
-def url_dang_nhap(scope="video.publish", state="wbv"):
+def url_dang_nhap(scope=SCOPE_DAY_DU, state="wbv"):
     cf = cau_hinh()
     return URL_AUTH + "?" + urllib.parse.urlencode({
         "client_key": cf["TIKTOK_CLIENT_KEY"],
@@ -365,6 +378,23 @@ def cho_xong(publish_id, *, gioi_han_s=600, nhip_s=5, in_ra=print, xong_o=None):
                 f"  than: {json.dumps(d, ensure_ascii=False)[:400]}")
         time.sleep(nhip_s)
     raise SystemExit(f"qua {gioi_han_s}s van chua xong, trang thai cuoi: {da_in}")
+
+
+def danh_sach_da_dang(max_count=20, cursor=None):
+    """Video da dang tren TikTok kem so lieu. Scope `video.list`.
+
+    `fields` di o QUERY STRING chu khong o body - khac voi Content Posting API
+    (moi thu o body). Nham cho nay thi TikTok tra ve object rong ma khong bao loi,
+    va rat kho doan tai sao.
+    """
+    tk = lay_token(can_scope="video.list")
+    url = URL_VIDEO_LIST + "?fields=" + ",".join(TRUONG_VIDEO)
+    than = {"max_count": min(int(max_count), 20)}
+    if cursor:
+        than["cursor"] = cursor
+    ma, tra = _goi(url, data=than, token=tk)
+    d = _bat_loi(ma, tra, "video/list")["data"]
+    return d.get("videos") or [], d.get("cursor"), d.get("has_more", False)
 
 
 def bam_file(duong):
