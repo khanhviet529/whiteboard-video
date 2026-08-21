@@ -156,8 +156,12 @@ def canh_upload(a):
         "The video lands in the creator's own TikTok inbox as a DRAFT.",
         "The creator writes the caption and publishes it in the app.",
     ])
+    # `--lai` co y: so `da-dang.json` chan dang trung theo NOI DUNG file, dung
+    # cho lich chay tu dong. Nhung mot buoi quay thi CO Y dang lai cung mot file -
+    # canh 4 (inbox) roi canh 5 (direct) - va con quay lai lan hai lan ba. Thieu
+    # co nay thi canh 4 chet giua bai quay, dung luc khong sua duoc gi.
     lenh = [sys.executable, os.path.join(tt.GOC, "dang.py"), "dang", a.video,
-            "--inbox", "--cho"]
+            "--inbox", "--cho", "--lai"]
     _chay(lenh, a.thu)
     _cho("Mo tiktok.com (hoac app TikTok) cho thay ban NHAP vua toi Inbox")
 
