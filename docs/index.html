@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whiteboard Video Uploader</title>
+<style>
+  :root { color-scheme: light }
+  body { max-width: 44rem; margin: 0 auto; padding: 3rem 1.5rem 6rem;
+         font: 16px/1.65 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+         color: #222; background: #fafaf5 }
+  h1 { font-size: 1.7rem; margin: 0 0 .3rem; letter-spacing: -.02em }
+  h2 { font-size: 1rem; margin: 2.4rem 0 .6rem; letter-spacing: .02em }
+  .sub { color: #6e6e6e; margin: 0 0 2rem }
+  code { font: .875rem ui-monospace, monospace; background: #efeee6;
+         padding: .1rem .35rem; border-radius: 4px }
+  ul { padding-left: 1.2rem } li { margin: .3rem 0 }
+  a { color: #b06a4f }
+  footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid #e2e0d5;
+           color: #6e6e6e; font-size: .875rem }
+  .box { background: #fff; border: 1px solid #e2e0d5; border-radius: 8px;
+         padding: 1rem 1.2rem; margin: 1.2rem 0 }
+</style>
+
+<h1>Whiteboard Video Uploader</h1>
+<p class="sub">A personal, self-hosted tool that uploads the operator's own
+whiteboard-animation videos to their own TikTok account.</p>
+
+<h2>What it does</h2>
+<p>The tool renders short educational whiteboard-animation videos about software
+engineering topics, then uploads them to the TikTok account of the person running
+it. It is a command-line program with a small local web page for pressing
+&ldquo;upload&rdquo;. It runs entirely on the operator's own computer.</p>
+
+<div class="box">
+  <strong>There is no service, no server, and no other users.</strong>
+  Nothing is hosted for anyone else. The operator installs the tool on their own
+  machine, authorizes their own TikTok account, and uploads their own videos.
+</div>
+
+<h2>How it works</h2>
+<ul>
+  <li>Videos are generated locally from plain-text scripts, rendered to
+      1080&times;1920 MP4 with an AI-generated Vietnamese voice-over.</li>
+  <li>The operator authorizes their own TikTok account once, using TikTok's
+      standard Login Kit OAuth flow.</li>
+  <li>The resulting access token is stored in a file on the operator's own
+      computer and is never transmitted anywhere except to TikTok.</li>
+  <li>Videos are uploaded through TikTok's Content Posting API using
+      <code>FILE_UPLOAD</code>. Uploads default to the creator's inbox as a draft,
+      which the operator then finishes and publishes inside the TikTok app.</li>
+  <li>Because the narration is synthesized, every upload sets TikTok's
+      <code>is_aigc</code> flag so the AI-generated content is disclosed.</li>
+</ul>
+
+<h2>Which TikTok data it uses</h2>
+<ul>
+  <li><code>video.upload</code> &mdash; send a video file to the operator's own
+      TikTok inbox as a draft.</li>
+  <li><code>video.publish</code> &mdash; post a video directly to the operator's
+      own profile.</li>
+  <li><code>video.list</code>, <code>user.info.basic</code> &mdash; read the view,
+      like, comment and share counts of the operator's own posts, shown on the
+      local page so the operator can see how their videos performed.</li>
+</ul>
+<p>The tool never reads, stores, or transmits data about any other TikTok user.</p>
+
+<h2>Source code</h2>
+<p>The tool is open source:
+  <a href="https://github.com/khanhviet529/whiteboard-video">github.com/khanhviet529/whiteboard-video</a>
+  (the uploader lives in the <code>dang/</code> directory).</p>
+
+<h2>Documents</h2>
+<ul>
+  <li><a href="terms.html">Terms of Service</a></li>
+  <li><a href="privacy.html">Privacy Policy</a></li>
+</ul>
+
+<footer>
+  Not affiliated with, endorsed by, or sponsored by TikTok or ByteDance.
+  TikTok is a trademark of its respective owner.<br>
+  Contact: open an issue at
+  <a href="https://github.com/khanhviet529/whiteboard-video/issues">the project's
+  issue tracker</a>.
+</footer>
+</html>

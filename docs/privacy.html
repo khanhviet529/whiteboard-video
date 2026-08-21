@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy &mdash; Whiteboard Video Uploader</title>
+<style>
+  :root { color-scheme: light }
+  body { max-width: 44rem; margin: 0 auto; padding: 3rem 1.5rem 6rem;
+         font: 16px/1.65 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+         color: #222; background: #fafaf5 }
+  h1 { font-size: 1.6rem; margin: 0 0 .3rem; letter-spacing: -.02em }
+  h2 { font-size: 1rem; margin: 2.2rem 0 .5rem }
+  .sub { color: #6e6e6e; margin: 0 0 2rem; font-size: .9rem }
+  code { font: .875rem ui-monospace, monospace; background: #efeee6;
+         padding: .1rem .35rem; border-radius: 4px }
+  ul { padding-left: 1.2rem } li { margin: .3rem 0 }
+  a { color: #b06a4f }
+  table { border-collapse: collapse; margin: 1rem 0; width: 100% }
+  th, td { text-align: left; border-bottom: 1px solid #e2e0d5;
+           padding: .5rem .6rem .5rem 0; vertical-align: top; font-size: .95rem }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em;
+       color: #6e6e6e }
+  .box { background: #fff; border: 1px solid #e2e0d5; border-radius: 8px;
+         padding: 1rem 1.2rem; margin: 1.2rem 0 }
+  footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid #e2e0d5;
+           color: #6e6e6e; font-size: .875rem }
+</style>
+
+<h1>Privacy Policy</h1>
+<p class="sub">Whiteboard Video Uploader &middot; last updated 21 August 2026</p>
+
+<div class="box">
+  <strong>Summary:</strong> the Software runs entirely on your own computer.
+  It has no server, collects nothing about you, and sends nothing anywhere except
+  directly to TikTok's own API. The author receives no data of any kind.
+</div>
+
+<h2>1. Who this applies to</h2>
+<p>This policy describes what Whiteboard Video Uploader (&ldquo;the Software&rdquo;)
+does with data when you install and run it on your own computer. There is no
+hosted service, so there is no operator collecting data about visitors or users.</p>
+
+<h2>2. What the Software stores, and where</h2>
+<table>
+  <tr><th>Data</th><th>Where it is stored</th><th>Why</th></tr>
+  <tr>
+    <td>TikTok client key and client secret</td>
+    <td><code>dang/.env</code> on your computer</td>
+    <td>Required to start TikTok's OAuth flow</td>
+  </tr>
+  <tr>
+    <td>Access token, refresh token, your TikTok <code>open_id</code>, granted
+        scopes</td>
+    <td><code>dang/token.json</code> on your computer</td>
+    <td>To upload without asking you to log in again; the token is refreshed
+        automatically</td>
+  </tr>
+  <tr>
+    <td>A record of what you uploaded: file path, content hash, TikTok
+        <code>publish_id</code>, title, timestamp</td>
+    <td><code>dang/da-dang.json</code> on your computer</td>
+    <td>So the same video is never uploaded twice by mistake</td>
+  </tr>
+  <tr>
+    <td>Video files and thumbnails</td>
+    <td><code>out/</code> and <code>build/</code> on your computer</td>
+    <td>They are the videos you produced</td>
+  </tr>
+</table>
+<p>All of these files stay on your computer. None of them are uploaded, backed up,
+or transmitted to the author or any third party. Two of them
+(<code>.env</code> and <code>token.json</code>) are excluded from the project's
+version control so they cannot be published by accident.</p>
+
+<h2>3. What is sent over the network, and to whom</h2>
+<p>The Software makes network requests to exactly one destination:
+<code>open.tiktokapis.com</code> and <code>www.tiktok.com</code> &mdash; TikTok's
+own servers. Those requests are:</p>
+<ul>
+  <li>Exchanging your authorisation code for tokens, and refreshing them.</li>
+  <li>Reading your own creator settings before an upload, as TikTok requires.</li>
+  <li>Uploading your video file.</li>
+  <li>Reading the view, like, comment, and share counts of your own posts.</li>
+</ul>
+<p>There are no analytics, no telemetry, no crash reporting, and no requests to any
+other host. Your access token is sent only to TikTok, in the
+<code>Authorization</code> header, and is never written to the Software's logs.</p>
+
+<h2>4. Data about other people</h2>
+<p>The Software requests only scopes that concern your own account
+(<code>video.upload</code>, <code>video.publish</code>, <code>video.list</code>,
+<code>user.info.basic</code>). It does not read, store, or transmit information
+about other TikTok users, their videos, their comments, or their profiles.</p>
+
+<h2>5. How long data is kept, and how to delete it</h2>
+<p>Files remain on your computer until you delete them. To remove everything the
+Software stored:</p>
+<ul>
+  <li>Delete <code>dang/token.json</code> &mdash; this revokes nothing at TikTok's
+      end but removes the stored credentials from your machine.</li>
+  <li>Delete <code>dang/.env</code> and <code>dang/da-dang.json</code>.</li>
+  <li>Remove the app's access to your TikTok account in TikTok's own settings
+      (Settings and privacy &rarr; Security and permissions &rarr; Manage app
+      permissions). This is what actually invalidates the tokens.</li>
+</ul>
+<p>Content you have already published on TikTok is governed by
+<a href="https://www.tiktok.com/legal/page/row/privacy-policy/en">TikTok's own
+privacy policy</a>, not by this one. Delete such posts in the TikTok app.</p>
+
+<h2>6. AI-generated content</h2>
+<p>Videos produced by the Software contain a synthesised Vietnamese voice-over
+generated by a local text-to-speech model. No voice recording of any real person
+is collected or transmitted. Every upload sets TikTok's <code>is_aigc</code> flag
+to disclose that the content is AI-generated.</p>
+
+<h2>7. Children</h2>
+<p>The Software is a developer tool and is not directed at children.</p>
+
+<h2>8. Changes</h2>
+<p>This policy may be updated. The date at the top shows the current version, and
+the full history is public in the project's repository.</p>
+
+<h2>9. Contact</h2>
+<p>Questions about this policy: open an issue at
+<a href="https://github.com/khanhviet529/whiteboard-video/issues">the project's
+issue tracker</a>.</p>
+
+<footer>
+  <a href="index.html">Home</a> &middot;
+  <a href="terms.html">Terms of Service</a>
+</footer>
+</html>
