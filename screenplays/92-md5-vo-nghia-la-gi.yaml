@@ -1,6 +1,6 @@
 # SO 92 - MUA 7 "BAM VA BI MAT".
 #   chu de   : "MD5 vo" nghia la gi, va no KHONG nghia la doc nguoc duoc
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 178
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 178
 #   do bang  : repro/bam_va_bi_mat.py  (ca `md5_trung`)
 #
 # CAP KHOI 128 BYTE trong script la cap noi tieng cua Wang & Yu (2004), khong

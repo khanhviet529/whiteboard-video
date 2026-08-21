@@ -1,6 +1,6 @@
 # SO 97 - MUA 7 "BAM VA BI MAT".
 #   chu de   : chu ky bang bam noi dung thi ai cung ky lai duoc
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 184 (HMAC)
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 184 (HMAC)
 #   do bang  : repro/bam_va_bi_mat.py  (ca `hmac_webhook`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #

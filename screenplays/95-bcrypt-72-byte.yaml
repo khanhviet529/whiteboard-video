@@ -1,6 +1,6 @@
 # SO 95 - MUA 7 "BAM VA BI MAT".
 #   chu de   : gioi han 72 byte cua bcrypt, va hai kieu no lam hong he thong
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 181
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 181
 #   do bang  : repro/bam_va_bi_mat.py  (ca `bcrypt_72`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #

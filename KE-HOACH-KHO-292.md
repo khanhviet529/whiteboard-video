@@ -2,8 +2,9 @@
 
 [KE-HOACH-90.md](KE-HOACH-90.md) là lịch **đã chốt** cho số 01–90, dựng từ ý
 tưởng tự sinh. File này là bản thiết kế lại, dựng từ kho chủ đề trong
-[files/](files/) — 292 đề tài trong ba tệp `kho-chu-de-content-it*.md`, cộng
-`SKILL.md` và hai tệp tham chiếu về định dạng và giọng văn.
+[files/](files/) — 292 đề tài trong ba tệp [files/ke-hoach/](files/ke-hoach/),
+cộng skill `content-it-tieng-viet` và hai tệp tham chiếu của nó ở
+[files/skill/](files/skill/).
 
 Đọc [Y-TUONG.md](Y-TUONG.md) để biết hai cửa lọc, [CONG-THUC.md](CONG-THUC.md)
 để biết khung nhịp, [VIET-KICH-BAN.md](VIET-KICH-BAN.md) để biết bẫy khi viết.
