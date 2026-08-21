@@ -257,6 +257,41 @@ Nếu render bằng `--fps 20` (bản nháp) thì **đừng đăng** — TikTok 
 
 ---
 
+## Quay demo video cho app review
+
+TikTok bắt app **chưa được duyệt** phải quay demo bằng **sandbox**, và demo phải
+cho thấy **mọi** product/scope đã khai — thiếu một cái là hoãn duyệt. `quay.py`
+tự lo phần máy móc:
+
+```powershell
+# diễn tập trước: không gọi mạng, không cần key. Kiểm khung hình và nhịp.
+py dang\quay.py --thu
+
+# quay thật
+py dang\quay.py out\<video>.mp4
+```
+
+Nó bật `ffmpeg` (gdigrab) quay cả màn hình, chạy đúng thứ tự reviewer cần thấy,
+rồi **cắt thành 5 file — một file một scope**. TikTok cho tải 5 file, mỗi file
+≤50MB; một file cho một scope thì reviewer đối chiếu được ngay thay vì tua tìm
+trong video hai phút.
+
+Việc của người quay còn đúng ba chỗ: đăng nhập TikTok khi browser mở, và mở
+tiktok.com cho thấy bản nháp / video đã lên. Script nhắc từng chỗ.
+
+Ba chi tiết đáng biết:
+
+- **Chữ trên màn hình là tiếng Anh, có ý.** Reviewer đọc tiếng Anh; terminal in
+  tiếng Việt thì coi như không có bằng chứng.
+- **Sandbox có cặp key riêng.** Đổi key trong `.env` rồi `auth` lại — token lưu
+  theo từng `client_key` (`token-<vân tay>.json`) nên hai môi trường không lấn
+  nhau, đổi qua đổi lại không phải `auth` lại.
+- **Quay cả màn hình**, kể cả thông báo bật lên. Đóng hết thứ không liên quan
+  trước khi bắt đầu; script nhắc điều này ở màn chuẩn bị.
+
+File thô ghi ra `.mkv` chứ không `.mp4`: mp4 ghi `moov` atom ở **cuối** file, nên
+bị kill giữa đường là mất trắng; mkv thì vẫn xem được.
+
 ## Bước sau: chạy theo giờ
 
 Chưa làm, và **đừng làm trước khi app qua audit** — đăng tự động ra bài riêng tư

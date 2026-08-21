@@ -23,3 +23,6 @@ dang/.env
 dang/token.json
 dang/token-*.json
 dang/da-dang.json
+# Demo quay man hinh: nang, va quay ca man hinh nen co the lot thong bao rieng tu.
+dang/demo/
+dang/quay-tho.mkv
