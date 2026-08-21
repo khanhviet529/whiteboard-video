@@ -125,23 +125,31 @@ def lenh_dang(a):
 
     chunk, n_chunk = tt.ke_hoach_chunk(size)
     print(f"video    : {a.video}  ({size/tt.MB:.1f} MB)")
-    print(f"tieu de  : {tieu_de}")
-    print(f"privacy  : {a.privacy}")
-    print(f"is_aigc  : {not a.khong_aigc}")
+    print(f"cach     : {'inbox (nhap, tu hoan tat trong app)' if a.inbox else 'dang truc tiep'}")
+    if a.inbox:
+        print("           tieu de / quyen xem / hashtag dat trong app TikTok")
+    else:
+        print(f"tieu de  : {tieu_de}")
+        print(f"privacy  : {a.privacy}")
+        print(f"is_aigc  : {not a.khong_aigc}")
     print(f"chunk    : {chunk/tt.MB:.1f} MB x {n_chunk}")
 
-    if a.privacy == "PUBLIC_TO_EVERYONE" and not a.dry_run:
+    if a.privacy == "PUBLIC_TO_EVERYONE" and not a.inbox and not a.dry_run:
         print("\nLUU Y: app chua qua audit thi TikTok van khoa bai o rieng tu, "
               "bat ke privacy_level. Kiem bang `creator` truoc.")
 
-    pid, up, than = tt.khoi_tao(
-        a.video, title=tieu_de, privacy=a.privacy,
-        is_aigc=not a.khong_aigc, disable_comment=a.tat_binh_luan,
-        disable_duet=a.tat_duet, disable_stitch=a.tat_stitch,
-        cover_ms=a.cover_ms, dry_run=a.dry_run)
+    if a.inbox:
+        pid, up, than = tt.khoi_tao_inbox(a.video, dry_run=a.dry_run)
+    else:
+        pid, up, than = tt.khoi_tao(
+            a.video, title=tieu_de, privacy=a.privacy,
+            is_aigc=not a.khong_aigc, disable_comment=a.tat_binh_luan,
+            disable_duet=a.tat_duet, disable_stitch=a.tat_stitch,
+            cover_ms=a.cover_ms, dry_run=a.dry_run)
 
     if a.dry_run:
-        print("\n--- DRY RUN: than JSON se gui toi /video/init/ ---")
+        duong_api = "/inbox/video/init/" if a.inbox else "/video/init/"
+        print(f"\n--- DRY RUN: than JSON se gui toi {duong_api} ---")
         print(json.dumps(than, ensure_ascii=False, indent=2))
         print("\nKhong goi mang, khong ghi so. Bo --dry-run de dang that.")
         return
@@ -152,11 +160,15 @@ def lenh_dang(a):
 
     if a.cho:
         print("cho TikTok xu ly...")
-        tt.cho_xong(pid, gioi_han_s=a.gioi_han)
+        # Duong inbox dung o SEND_TO_USER_INBOX, khong bao gio len
+        # PUBLISH_COMPLETE - vi buoc dang cuoi do nguoi lam trong app.
+        tt.cho_xong(pid, gioi_han_s=a.gioi_han,
+                    xong_o=("SEND_TO_USER_INBOX",) if a.inbox else None)
 
     import datetime as _dt
     so[bam] = {"file": os.path.abspath(a.video), "publish_id": pid,
-               "privacy": a.privacy, "tieu_de": tieu_de,
+               "cach": "inbox" if a.inbox else "truc_tiep",
+               "privacy": "-" if a.inbox else a.privacy, "tieu_de": tieu_de,
                "luc": _dt.datetime.now().isoformat(timespec="seconds")}
     _ghi_so(so)
     print(f"\nxong. da ghi vao {SO_DANG}")
@@ -184,7 +196,13 @@ def main():
     p = sub.add_parser("dang", help="dang mot video")
     p.add_argument("video")
     p.add_argument("--tieu-de", help="mac dinh: ten file")
-    p.add_argument("--privacy", default="SELF_ONLY", choices=tt.PRIVACY)
+    p.add_argument("--privacy", default="SELF_ONLY", choices=tt.PRIVACY,
+                   help="chi co nghia voi direct post, khong dung voi --inbox")
+    # Truoc khi app qua audit, day la duong DUY NHAT ra video public that: bai cuoi
+    # do nguoi bam dang trong app TikTok nen khong bi han che chua-audit.
+    p.add_argument("--inbox", action="store_true",
+                   help="day vao inbox dang nhap (scope video.upload) thay vi "
+                        "dang truc tiep; tieu de va quyen xem dat trong app TikTok")
     p.add_argument("--dry-run", action="store_true",
                    help="in than JSON se gui, khong goi mang")
     p.add_argument("--cho", action="store_true", help="cho den khi TikTok xu ly xong")

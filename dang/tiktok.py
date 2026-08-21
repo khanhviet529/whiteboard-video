@@ -11,10 +11,15 @@ Hop dong lay tu tai lieu chinh thuc (kiem 2026-08-20):
 
 Ba dieu tai lieu noi ro, anh huong truc tiep cach dung:
 
-  * "All content posted by unaudited clients will be restricted to private
-    viewing mode." App chua qua audit thi dat privacy_level nao cung ra rieng tu.
-    Vi vay mac dinh o day la SELF_ONLY - dat PUBLIC_TO_EVERYONE khi chua audit
-    chi lam nguoi dung tuong da public.
+  * HAI duong dang, khac han nhau:
+      - DIRECT POST (`video.publish`, /video/init/): dang thang len trang. Nhung
+        "All content posted by unaudited clients will be restricted to private
+        viewing mode" - app chua audit thi dat privacy_level nao cung ra rieng tu.
+      - INBOX (`video.upload`, /inbox/video/init/): day vao inbox dang nhap, nguoi
+        dung bam thong bao roi tu hoan tat trong app TikTok. Tai lieu endpoint nay
+        KHONG co han che chua-audit, vi bai cuoi do NGUOI dang qua luong tao binh
+        thuong. Nen truoc khi audit, day la duong duy nhat ra video public that.
+    Truoc audit dung inbox; sau audit moi dung direct post de tu dong hoa.
   * access_token song 24 gio, refresh_token 365 ngay. Nen phai co cho luu ben va
     tu refresh, khong thi hom sau cron chay la chet.
   * chunk: toi thieu 5MB, toi da 64MB (chunk CUOI duoc vuot chunk_size, toi 128MB),
@@ -32,6 +37,7 @@ BASE = "https://open.tiktokapis.com"
 URL_TOKEN = f"{BASE}/v2/oauth/token/"
 URL_CREATOR = f"{BASE}/v2/post/publish/creator_info/query/"
 URL_INIT = f"{BASE}/v2/post/publish/video/init/"
+URL_INIT_INBOX = f"{BASE}/v2/post/publish/inbox/video/init/"
 URL_STATUS = f"{BASE}/v2/post/publish/status/fetch/"
 URL_AUTH = "https://www.tiktok.com/v2/auth/authorize/"
 
@@ -167,7 +173,7 @@ def _refresh(t):
     return _luu_token(than)
 
 
-def lay_token():
+def lay_token(can_scope=None):
     """Tra ve access_token con hieu luc. Tu refresh khi con duoi 5 phut.
 
     Refresh SOM (5 phut) chu khong doi het han: mot lan day video 17MB co the mat
@@ -187,6 +193,13 @@ def lay_token():
         raise SystemExit("refresh_token da het han (365 ngay). Chay lai `auth`.")
     if time.time() > t.get("het_han_luc", 0) - 300:
         t = _refresh(t)
+    # Kiem scope o day chu khong de TikTok tra 401 mo ho: token cap cho
+    # `video.upload` khong dang truc tiep duoc, va nguoc lai. Bao som, bao ro.
+    if can_scope and can_scope not in (t.get("scope") or ""):
+        raise SystemExit(
+            f"token khong co scope `{can_scope}` (dang co: {t.get('scope')!r}).\n"
+            f"  Bat scope do trong app TikTok roi chay lai:\n"
+            f"    py dang/dang.py auth --scope {can_scope}")
     return t["access_token"]
 
 
@@ -262,9 +275,32 @@ def khoi_tao(duong_video, *, title, privacy="SELF_ONLY", is_aigc=True,
     }
     if dry_run:
         return None, None, than
-    tk = lay_token()
+    tk = lay_token(can_scope="video.publish")
     ma, tra = _goi(URL_INIT, data=than, token=tk)
     d = _bat_loi(ma, tra, "video/init")["data"]
+    return d["publish_id"], d["upload_url"], than
+
+
+def khoi_tao_inbox(duong_video, *, dry_run=False):
+    """Goi /inbox/video/init/. Tra ve (publish_id, upload_url, than_gui).
+
+    Khong co `post_info`: tieu de, quyen xem, hashtag deu do NGUOI dat trong app
+    TikTok luc hoan tat. Nen o day chi co source_info - dung nham la mat cong doi
+    tieu de o phia tool roi khong hieu vi sao khong thay.
+    """
+    size = os.path.getsize(duong_video)
+    chunk, so = ke_hoach_chunk(size)
+    than = {"source_info": {
+        "source": "FILE_UPLOAD",
+        "video_size": size,
+        "chunk_size": chunk,
+        "total_chunk_count": so,
+    }}
+    if dry_run:
+        return None, None, than
+    tk = lay_token(can_scope="video.upload")
+    ma, tra = _goi(URL_INIT_INBOX, data=than, token=tk)
+    d = _bat_loi(ma, tra, "inbox/video/init")["data"]
     return d["publish_id"], d["upload_url"], than
 
 
@@ -305,8 +341,14 @@ def trang_thai(publish_id):
     return _bat_loi(ma, than, "status/fetch")["data"]
 
 
-def cho_xong(publish_id, *, gioi_han_s=600, nhip_s=5, in_ra=print):
-    """Hoi trang thai den khi PUBLISH_COMPLETE hoac FAILED."""
+def cho_xong(publish_id, *, gioi_han_s=600, nhip_s=5, in_ra=print, xong_o=None):
+    """Hoi trang thai den khi dat trang thai ket thuc, hoac FAILED.
+
+    `xong_o` de duong inbox dung dung cho: no ket o SEND_TO_USER_INBOX va KHONG
+    bao gio len PUBLISH_COMPLETE, vi buoc dang cuoi do nguoi lam trong app. Cho
+    PUBLISH_COMPLETE o duong do la treo den het gio roi bao sai.
+    """
+    ket = tuple(xong_o) if xong_o else ("PUBLISH_COMPLETE",)
     han = time.time() + gioi_han_s
     da_in = None
     while time.time() < han:
@@ -315,7 +357,7 @@ def cho_xong(publish_id, *, gioi_han_s=600, nhip_s=5, in_ra=print):
         if st != da_in:
             da_in = st
             in_ra(f"    {st}")
-        if st == "PUBLISH_COMPLETE":
+        if st in ket:
             return d
         if st == "FAILED":
             raise SystemExit(

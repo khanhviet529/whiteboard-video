@@ -98,7 +98,7 @@ def _danh_sach():
 
 
 # ------------------------------------------------------------------ dang
-def dang_mot_video(duong, tieu_de, privacy, is_aigc, ma_viec):
+def dang_mot_video(duong, tieu_de, privacy, is_aigc, ma_viec, cach="inbox"):
     """Chay trong thread rieng. Ghi log vao VIEC[ma_viec] de trang tu doc."""
     def log(*a):
         with KHOA:
@@ -109,21 +109,30 @@ def dang_mot_video(duong, tieu_de, privacy, is_aigc, ma_viec):
         chunk, n = tt.ke_hoach_chunk(size)
         log(f"file {os.path.basename(duong)}  {size/tt.MB:.1f}MB  "
             f"chunk {chunk/tt.MB:.1f}MB x{n}")
-        log(f"privacy {privacy}  is_aigc {is_aigc}")
-        pid, up, _ = tt.khoi_tao(duong, title=tieu_de, privacy=privacy,
-                                 is_aigc=is_aigc)
+        if cach == "inbox":
+            log("cach: inbox - tieu de/quyen xem dat trong app TikTok")
+            pid, up, _ = tt.khoi_tao_inbox(duong)
+        else:
+            log(f"cach: dang truc tiep  privacy {privacy}  is_aigc {is_aigc}")
+            pid, up, _ = tt.khoi_tao(duong, title=tieu_de, privacy=privacy,
+                                     is_aigc=is_aigc)
         log(f"publish_id {pid}")
         with KHOA:
             VIEC[ma_viec]["publish_id"] = pid
         tt.day_file(up, duong, chunk, n, in_ra=log)
         log("cho TikTok xu ly...")
-        tt.cho_xong(pid, in_ra=log)
+        # Duong inbox ket o SEND_TO_USER_INBOX, khong len PUBLISH_COMPLETE.
+        tt.cho_xong(pid, in_ra=log,
+                    xong_o=("SEND_TO_USER_INBOX",) if cach == "inbox" else None)
+        if cach == "inbox":
+            log("Da vao inbox TikTok. Mo app, bam thong bao de hoan tat dang.")
         # Ghi so SAU khi TikTok bao xong, khong phai sau khi day xong: day xong ma
         # TikTok tu choi thi chua dang duoc, ghi so luc do la chan lan thu lai.
         p = os.path.join(tt.GOC, "da-dang.json")
         so = _so()
         so[tt.bam_file(duong)] = {
-            "file": duong, "publish_id": pid, "privacy": privacy,
+            "file": duong, "publish_id": pid, "cach": cach,
+            "privacy": "-" if cach == "inbox" else privacy,
             "tieu_de": tieu_de,
             "luc": time.strftime("%Y-%m-%dT%H:%M:%S"),
         }
@@ -177,6 +186,7 @@ function dang(bam){
   const fd = new URLSearchParams({
     bam: bam,
     tieu_de: r.querySelector('[name=tieu_de]').value,
+    cach: r.querySelector('[name=cach]').value,
     privacy: r.querySelector('[name=privacy]').value,
     aigc: r.querySelector('[name=aigc]').checked ? '1' : '0'
   });
@@ -184,6 +194,13 @@ function dang(bam){
     if(j.loi){ b.disabled=false; b.textContent='Đăng'; alert(j.loi); return; }
     theo(j.ma, bam);
   });
+}
+function doi_cach(s){
+  const r = s.closest('tr');
+  const inbox = s.value === 'inbox';
+  r.querySelector('[name=privacy]').disabled = inbox;
+  r.querySelector('[name=tieu_de]').disabled = inbox;
+  r.querySelector('[name=aigc]').disabled = inbox;
 }
 function theo(ma, bam){
   const o = document.getElementById('log-'+bam);
@@ -237,8 +254,9 @@ def _trang():
         dd = v["da_dang"]
         if dd:
             hd = (f"<span class=ok>đã đăng</span> {html.escape(dd.get('luc',''))}"
-                  f"<br><span class=nho>{html.escape(dd.get('privacy',''))} · "
-                  f"{html.escape(dd.get('publish_id','')[:24])}</span>")
+                  f"<br><span class=nho>{html.escape(dd.get('cach','?'))} · "
+                  f"{html.escape(dd.get('privacy',''))} · "
+                  f"{html.escape(dd.get('publish_id','')[:20])}</span>")
             nut = "<button disabled>Đã đăng</button>"
         else:
             hd = "<span class=nho>chưa đăng</span>"
@@ -249,14 +267,18 @@ def _trang():
   <td><div class=ten>{html.escape(v['ten'])}</div>
       <div class=nho>{meta} · {v['sua_luc']}</div>
       {'<div>' + ' '.join(canh) + '</div>' if canh else ''}</td>
-  <td><input type=text name=tieu_de value="{html.escape(mac_dinh)}"></td>
-  <td><select name=privacy>
+  <td><input type=text name=tieu_de value="{html.escape(mac_dinh)}" disabled></td>
+  <td><select name=cach onchange="doi_cach(this)">
+        <option value=inbox selected>Nháp vào inbox</option>
+        <option value=truc_tiep>Đăng trực tiếp</option>
+      </select><br>
+      <select name=privacy disabled>
         <option value=SELF_ONLY selected>SELF_ONLY (riêng tư)</option>
         <option value=FOLLOWER_OF_CREATOR>FOLLOWER_OF_CREATOR</option>
         <option value=MUTUAL_FOLLOW_FRIENDS>MUTUAL_FOLLOW_FRIENDS</option>
         <option value=PUBLIC_TO_EVERYONE>PUBLIC_TO_EVERYONE</option>
       </select>
-      <label class=nho><input type=checkbox name=aigc checked> is_aigc</label></td>
+      <label class=nho><input type=checkbox name=aigc checked disabled> is_aigc</label></td>
   <td>{hd}</td>
   <td>{nut}<pre id="log-{bam}" style="display:none"></pre></td>
 </tr>""")
@@ -266,7 +288,11 @@ def _trang():
 <h1>Đăng video lên TikTok</h1>
 <div class=phu>{tt_token}<br>
 Thư mục: <code>{html.escape(OUT)}</code> · {len(ds)} video ·
-App chưa qua audit thì TikTok khoá mọi bài ở chế độ riêng tư, bất kể privacy chọn ở đây.</div>
+<b>Nháp vào inbox</b> (mặc định): cần scope <code>video.upload</code>, video vào
+inbox TikTok rồi bạn bấm thông báo để tự hoàn tất — tiêu đề và quyền xem đặt trong app.
+Đây là đường duy nhất ra video <b>public thật</b> khi app chưa qua audit.<br>
+<b>Đăng trực tiếp</b>: cần scope <code>video.publish</code>, đăng thẳng lên trang —
+nhưng app chưa audit thì TikTok khoá mọi bài ở riêng tư, bất kể privacy chọn ở đây.</div>
 <table><tr><th>Video<th>Tiêu đề<th>Quyền xem<th>Trạng thái<th></tr>
 {''.join(hang) if hang else '<tr><td colspan=5 class=nho>Không có mp4 nào trong out/</td></tr>'}
 </table>
@@ -317,7 +343,8 @@ class H(BaseHTTPRequestHandler):
         threading.Thread(target=dang_mot_video, daemon=True, args=(
             v["duong"], f.get("tieu_de", [v["ten"]])[0],
             f.get("privacy", ["SELF_ONLY"])[0],
-            f.get("aigc", ["1"])[0] == "1", ma)).start()
+            f.get("aigc", ["1"])[0] == "1", ma,
+            f.get("cach", ["inbox"])[0])).start()
         self._tra(200, "application/json", json.dumps({"ma": ma}).encode())
 
 

@@ -8,20 +8,41 @@ Hợp đồng API kiểm ngày **2026-08-20** tại
 
 ---
 
-## Ba giới hạn phải biết trước khi lên kế hoạch
+## Hai đường đăng — chọn đúng, không thì làm lại từ đầu
 
-**1. App chưa qua audit → mọi bài bị khoá riêng tư.** Tài liệu ghi thẳng:
-*"All content posted by unaudited clients will be restricted to private viewing
-mode."* Đặt `privacy_level: PUBLIC_TO_EVERYONE` lúc đó **không** làm bài public —
-chỉ làm mình tưởng đã public. Muốn đăng công khai thật thì phải gửi app cho TikTok
-audit. Vì vậy mặc định của tool là `SELF_ONLY`.
+Trang product của TikTok có **hai** sản phẩm khác nhau. Tool hỗ trợ cả hai.
 
-**2. `access_token` sống 24 giờ**, `refresh_token` 365 ngày. Tool tự refresh khi
+| | Upload API | Direct Post |
+|---|---|---|
+Scope | `video.upload` | `video.publish` |
+Endpoint | `/v2/post/publish/inbox/video/init/` | `/v2/post/publish/video/init/` |
+Video đi đâu | **inbox** TikTok dạng nháp | đăng thẳng lên trang |
+Ai bấm đăng cuối | **bạn**, trong app TikTok | tool, tự động |
+Tiêu đề / quyền xem | đặt trong app | đặt trong request |
+Bị hạn chế chưa-audit | **không** | **có** |
+
+**Điểm quyết định:** tài liệu ghi *"All content posted by unaudited clients will be
+restricted to private viewing mode"* — nhưng câu đó nằm ở trang **Direct Post**, và
+tài liệu endpoint inbox không có hạn chế đó. Lý do hợp lý: bài cuối do *người* bấm
+đăng qua luồng tạo bình thường của TikTok, không phải do API đăng.
+
+Nên:
+
+- **Bây giờ, chưa audit** → dùng **inbox** (mặc định của tool). Đây là đường duy
+  nhất ra video **public thật**. Đổi lại: mỗi video bạn phải mở app bấm một lần —
+  mà đó đúng là quy trình "chủ động click đăng" bạn muốn.
+- **Sau khi audit** → chuyển sang **direct post** để tự động hoá hoàn toàn.
+
+Bật **cả hai scope** trong app TikTok ngay từ đầu thì sau này không phải khai lại.
+
+## Hai giới hạn còn lại
+
+**1. `access_token` sống 24 giờ**, `refresh_token` 365 ngày. Tool tự refresh khi
 còn dưới 5 phút, và lưu vào `dang/token.json`. Hệ quả cho bước deploy: **server
 phải có ổ đĩa ghi được bền** — free tier kiểu ephemeral filesystem sẽ mất token
 sau mỗi lần restart, và hôm sau cron chạy là chết.
 
-**3. Giọng đọc là AI sinh** → tool bật `is_aigc: true` mặc định. Đây là trường
+**2. Giọng đọc là AI sinh** → tool bật `is_aigc: true` mặc định. Đây là trường
 riêng của TikTok cho nội dung AI. Tắt bằng `--khong-aigc`, nhưng đừng tắt.
 
 ---
@@ -29,9 +50,10 @@ riêng của TikTok cho nội dung AI. Tắt bằng `--khong-aigc`, nhưng đừ
 ## Chuẩn bị key
 
 1. Vào <https://developers.tiktok.com/apps>, tạo app.
-2. Bật product **Content Posting API**, chọn scope:
-   - `video.publish` — đăng trực tiếp lên trang (tool này dùng cái này)
-   - `video.upload` — chỉ đẩy vào inbox, người dùng tự bấm đăng trong app
+2. Bật product **Content Posting API**, bật **cả hai** scope:
+   - `video.upload` — đẩy vào inbox, bạn tự bấm đăng trong app (**dùng cái này
+     trước khi audit** — xem mục "Hai đường đăng" ở trên)
+   - `video.publish` — đăng trực tiếp lên trang (dùng sau khi audit)
 3. Khai **Redirect URI** đúng bằng chuỗi bạn sẽ đặt trong `.env`. Lệch một ký tự
    là TikTok từ chối. Mặc định của tool: `http://127.0.0.1:8723/callback`
 4. Copy `Client key` và `Client secret`.
@@ -75,7 +97,10 @@ py dang\dang.py creator
 # 3. xem chính xác sẽ gửi gì, không gọi mạng
 py dang\dang.py dang out\cache-stale.mp4 --dry-run
 
-# 4. đăng thật, chờ TikTok xử lý xong
+# 4a. đẩy vào inbox (khuyên dùng khi chưa audit) — rồi mở app TikTok bấm đăng
+py dang\dang.py dang out\cache-stale.mp4 --inbox --cho
+
+# 4b. đăng trực tiếp (chỉ có nghĩa sau khi app qua audit)
 py dang\dang.py dang out\cache-stale.mp4 --tieu-de "Cache hết hạn sai lúc" --cho
 
 # 5. hỏi lại trạng thái bất kỳ lúc nào
@@ -100,7 +125,9 @@ PUT  {upload_url}                          từng chunk, Content-Range tuyệt �
 POST /v2/post/publish/status/fetch/        publish_id -> status + fail_reason
 ```
 
-Trạng thái: `PROCESSING_UPLOAD` → `PUBLISH_COMPLETE`, hoặc `FAILED` kèm
+Trạng thái: `PROCESSING_UPLOAD` → `PUBLISH_COMPLETE` (direct post) hoặc
+→ `SEND_TO_USER_INBOX` (inbox — **kết ở đây**, không bao giờ lên
+`PUBLISH_COMPLETE`, vì bước đăng cuối do người làm trong app). Hoặc `FAILED` kèm
 `fail_reason`. Các mã hay gặp: `duration_check_failed`, `picture_size_check_failed`,
 `frame_rate_check_failed`, `spam_risk_too_many_posts`.
 
