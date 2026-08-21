@@ -16,7 +16,10 @@ bench-js/package-lock.json
 # anh chup tam khi sua file - khong bao gio commit
 *.bak
 
-# dang/: khong bao gio commit token hay secret
+# dang/: khong bao gio commit token hay secret.
+# `token-*.json` vi token duoc luu theo tung client_key (sandbox / production la
+# hai app, hai cap key). Chan ca `token.json` tran de an toan neu doi ten sau nay.
 dang/.env
 dang/token.json
+dang/token-*.json
 dang/da-dang.json

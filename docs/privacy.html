@@ -51,7 +51,7 @@ hosted service, so there is no operator collecting data about visitors or users.
   <tr>
     <td>Access token, refresh token, your TikTok <code>open_id</code>, granted
         scopes</td>
-    <td><code>dang/token.json</code> on your computer</td>
+    <td><code>dang/token-*.json</code> on your computer, one file per TikTok app</td>
     <td>To upload without asking you to log in again; the token is refreshed
         automatically</td>
   </tr>
@@ -69,7 +69,7 @@ hosted service, so there is no operator collecting data about visitors or users.
 </table>
 <p>All of these files stay on your computer. None of them are uploaded, backed up,
 or transmitted to the author or any third party. Two of them
-(<code>.env</code> and <code>token.json</code>) are excluded from the project's
+(<code>.env</code> and <code>token-*.json</code>) are excluded from the project's
 version control so they cannot be published by accident.</p>
 
 <h2>3. What is sent over the network, and to whom</h2>
@@ -96,7 +96,7 @@ about other TikTok users, their videos, their comments, or their profiles.</p>
 <p>Files remain on your computer until you delete them. To remove everything the
 Software stored:</p>
 <ul>
-  <li>Delete <code>dang/token.json</code> &mdash; this revokes nothing at TikTok's
+  <li>Delete <code>dang/token-*.json</code> &mdash; this revokes nothing at TikTok's
       end but removes the stored credentials from your machine.</li>
   <li>Delete <code>dang/.env</code> and <code>dang/da-dang.json</code>.</li>
   <li>Remove the app's access to your TikTok account in TikTok's own settings

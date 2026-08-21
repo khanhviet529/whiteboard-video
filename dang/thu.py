@@ -120,7 +120,7 @@ def dat_token(scope="video.publish,video.upload", con_song=86400):
     t = {"access_token": "AT-cu", "refresh_token": "RT-cu", "scope": scope,
          "het_han_luc": int(time.time()) + con_song,
          "refresh_het_han_luc": int(time.time()) + 31536000}
-    io.open(tt.TEP_TOKEN, "w", encoding="utf-8").write(json.dumps(t))
+    io.open(tt.tep_token(), "w", encoding="utf-8").write(json.dumps(t))
     return t
 
 
@@ -257,9 +257,9 @@ def main():
     kiem("dung token moi", tk == "AT-moi", tk)
 
     print("\n11. refresh_token het han -> bat dang nhap lai")
-    t = json.loads(io.open(tt.TEP_TOKEN, encoding="utf-8").read())
+    t = json.loads(io.open(tt.tep_token(), encoding="utf-8").read())
     t["refresh_het_han_luc"] = 0
-    io.open(tt.TEP_TOKEN, "w", encoding="utf-8").write(json.dumps(t))
+    io.open(tt.tep_token(), "w", encoding="utf-8").write(json.dumps(t))
     try:
         tt.lay_token()
         kiem("bao het han", False, "khong raise")
@@ -270,6 +270,25 @@ def main():
     dat_token()
     d = tt.thong_tin_creator()
     kiem("tra privacy_level_options", "privacy_level_options" in d, d)
+
+    print("\n13. token tach theo client_key (sandbox vs production)")
+    # Truoc day ca hai moi truong ghi vao MOT file: doi key xong token cu van
+    # nam do, TikTok tra 401 ma file token nhin thi van "co". Rat kho doan.
+    goc_key = os.environ["TIKTOK_CLIENT_KEY"]
+    dat_token()
+    duong_a = tt.tep_token()
+    os.environ["TIKTOK_CLIENT_KEY"] = "CK-sandbox"
+    duong_b = tt.tep_token()
+    kiem("hai key -> hai duong dan", duong_a != duong_b, (duong_a, duong_b))
+    kiem("khong doc token cua key khac", not os.path.exists(duong_b), duong_b)
+    try:
+        tt.lay_token()
+        kiem("bat `auth` khi doi key", False, "khong raise")
+    except SystemExit as e:
+        kiem("bat `auth` khi doi key", "auth" in str(e), str(e)[:70])
+    os.environ["TIKTOK_CLIENT_KEY"] = goc_key
+    kiem("doi ve key cu thi token con nguyen", tt.lay_token() == "AT-cu",
+         tt.tep_token())
 
     srv.shutdown()
     for f in (v, v2):

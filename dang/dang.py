@@ -109,7 +109,7 @@ def lenh_auth(a):
     # `code` cua TikTok co ky tu `*` bi url-encode thanh `%2A`. parse_qs da giai ma
     # roi, nhung giu ghi chu nay vi day la bay da vap khi con dan URL bang tay.
     t = tt.doi_code_lay_token(got["code"], code_verifier=verifier)
-    print(f"\nda luu token vao {tt.TEP_TOKEN}")
+    print(f"\nda luu token vao {tt.tep_token()}")
     print(f"  open_id       : {t.get('open_id')}")
     print(f"  scope         : {t.get('scope')}")
     print(f"  access_token  : het han sau {t.get('expires_in')}s (~24 gio)")

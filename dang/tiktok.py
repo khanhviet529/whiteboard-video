@@ -73,6 +73,7 @@ PRIVACY = ("SELF_ONLY", "FOLLOWER_OF_CREATOR", "MUTUAL_FOLLOW_FRIENDS",
            "PUBLIC_TO_EVERYONE")
 
 GOC = os.path.dirname(os.path.abspath(__file__))
+# Duong dan CO SO. Ten that co van tay client_key gan vao - xem `tep_token()`.
 TEP_TOKEN = os.path.join(GOC, "token.json")
 TEP_ENV = os.path.join(GOC, ".env")
 
@@ -95,6 +96,27 @@ def _doc_env():
         if os.environ.get(k):
             ra[k] = os.environ[k]
     return ra
+
+
+def tep_token():
+    """Duong dan token cua client_key DANG dung.
+
+    Sandbox va production la HAI app voi HAI cap key. Neu ca hai ghi vao mot file
+    thi doi key xong token cu van nam do, va TikTok tra 401 ma khong noc ly do -
+    rat kho doan vi file token nhin thi van "co". Gan van tay client_key vao ten
+    file: hai moi truong song song, khong bao gio lay lan, va doi qua doi lai
+    khong phai `auth` lai.
+
+    Chi 8 ky tu dau cua SHA256: du de tach hai app, va client_key khong the doc
+    nguoc tu do (du client_key khong phai bi mat - client_secret moi la).
+    """
+    key = _doc_env().get("TIKTOK_CLIENT_KEY") or ""
+    if not key:
+        return TEP_TOKEN
+    thu_muc, ten = os.path.split(TEP_TOKEN)
+    than = os.path.splitext(ten)[0]
+    vt = hashlib.sha256(key.encode("utf-8")).hexdigest()[:8]
+    return os.path.join(thu_muc, f"{than}-{vt}.json")
 
 
 def cau_hinh():
@@ -169,10 +191,11 @@ def _luu_token(t):
     t = dict(t)
     t["het_han_luc"] = int(time.time()) + int(t.get("expires_in", 0))
     t["refresh_het_han_luc"] = int(time.time()) + int(t.get("refresh_expires_in", 0))
-    with open(TEP_TOKEN, "w", encoding="utf-8") as f:
+    tep = tep_token()
+    with open(tep, "w", encoding="utf-8") as f:
         json.dump(t, f, ensure_ascii=False, indent=2)
     try:
-        os.chmod(TEP_TOKEN, 0o600)
+        os.chmod(tep, 0o600)
     except OSError:
         pass       # Windows bo qua, khong phai loi
     return t
@@ -217,11 +240,12 @@ def lay_token(can_scope=None):
     # thieu client_key, khong phai thieu token. Bao dung thu tu de nguoi dung lam
     # dung buoc 1 thay vi di tim token.json khong ton tai.
     cau_hinh()
-    if not os.path.exists(TEP_TOKEN):
+    tep = tep_token()
+    if not os.path.exists(tep):
         raise SystemExit(
-            f"chua co {TEP_TOKEN}. Chay `py dang/dang.py auth` mot lan de "
+            f"chua co {tep}. Chay `py dang/dang.py auth` mot lan de "
             f"dang nhap va luu token.")
-    t = json.load(open(TEP_TOKEN, encoding="utf-8"))
+    t = json.load(open(tep, encoding="utf-8"))
     if time.time() > t.get("refresh_het_han_luc", 0):
         raise SystemExit("refresh_token da het han (365 ngay). Chay lai `auth`.")
     if time.time() > t.get("het_han_luc", 0) - 300:

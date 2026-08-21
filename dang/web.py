@@ -297,10 +297,10 @@ def _trang_thai_token():
         tt.cau_hinh()
     except SystemExit as e:
         return f"<b class=loi>{html.escape(str(e).splitlines()[0])}</b>"
-    if not os.path.exists(tt.TEP_TOKEN):
+    if not os.path.exists(tt.tep_token()):
         return ("<b class=canh>chua dang nhap</b> &mdash; chay "
                 "<code>py dang/dang.py auth</code> mot lan")
-    t = json.load(open(tt.TEP_TOKEN, encoding="utf-8"))
+    t = json.load(open(tt.tep_token(), encoding="utf-8"))
     con = max(0, int(t.get("het_han_luc", 0) - time.time())) // 60
     sc = t.get("scope") or ""
     thieu = [s for s in ("video.upload", "video.publish", "video.list")
