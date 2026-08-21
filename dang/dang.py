@@ -15,8 +15,8 @@ import argparse
 import json
 import os
 import sys
-import urllib.parse
 import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -38,47 +38,77 @@ def _ghi_so(so):
 
 # --------------------------------------------------------------------- auth
 def lenh_auth(a):
-    """Mo browser de dang nhap, roi nhan `code` bang cach DAN URL vao terminal.
+    """Dang nhap mot lan bang luong Desktop + PKCE, bat `code` tu dong.
 
-    Vi sao khong bat `code` tu dong bang HTTP server nhu phan lon tool khac:
-    TikTok bat buoc `redirect_uri` phai la `https` (Login Kit web doc), nen khong
-    the dung `http://127.0.0.1`. Dung mot server HTTPS local thi phai co chung chi
-    tu ky - stdlib Python khong tao duoc, va them phu thuoc chi cho mot buoc lam
-    MOT LAN trong 365 ngay la khong dang.
+    Duoc dung HTTP server local tro lai vi platform Desktop cua Login Kit cho phep
+    loopback: "Only `localhost` or loopback IP `127.0.0.1` are allowed host names".
+    Nen `code` di tu browser sang tool qua localhost, KHONG qua internet.
 
-    Dung `https://127.0.0.1` lam redirect_uri: browser khong ket noi duoc, dung o
-    trang loi, nhung `code` van nam trong thanh dia chi. Ma uy quyen KHONG di ra
-    khoi may - khac han voi viec khai domain cua nguoi khac.
+    PKCE la bat buoc o luong nay. `code_verifier` chi ton tai trong tien trinh nay,
+    khong ghi ra dia - no chi can song tu luc mo browser den luc doi token.
     """
     cf = tt.cau_hinh()
-    url = tt.url_dang_nhap(scope=a.scope)
+    ru = urlparse(cf["TIKTOK_REDIRECT_URI"])
+    if ru.hostname not in ("127.0.0.1", "localhost"):
+        raise SystemExit(
+            f"redirect_uri phai la loopback cho luong Desktop, dang la "
+            f"{cf['TIKTOK_REDIRECT_URI']!r}.\n"
+            f"  Dat TIKTOK_REDIRECT_URI=http://127.0.0.1:8723/callback/")
+    cong = ru.port or 80
+    verifier, challenge = tt._pkce()
+    got = {}
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *_):
+            pass
+
+        def do_GET(self):
+            got.update({k: v[0] for k, v in
+                        parse_qs(urlparse(self.path).query).items()})
+            xong = "code" in got
+            than = (
+                "<!doctype html><meta charset=utf-8>"
+                "<body style='font:16px/1.6 system-ui;max-width:34rem;"
+                "margin:4rem auto;padding:0 1.5rem;color:#222'>"
+                + ("<h2>Xong.</h2><p>Dong tab nay va quay lai terminal.</p>"
+                   if xong else
+                   "<h2>Khong thay <code>code</code> trong callback.</h2>"
+                   "<p>Xem terminal de biet chi tiet.</p>")
+                + "</body>").encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(than)))
+            self.end_headers()
+            self.wfile.write(than)
+
+    url = tt.url_dang_nhap(scope=a.scope, code_challenge=challenge)
     print(f"scope       : {a.scope}")
-    print(f"redirect_uri: {cf['TIKTOK_REDIRECT_URI']}")
-    print("\nBa buoc:")
-    print("  1. Trang dang nhap TikTok se mo (neu khong, mo tay URL duoi day)")
-    print("  2. Dang nhap va dong y. Browser se bao loi khong ket noi duoc")
-    print(f"     {cf['TIKTOK_REDIRECT_URI']} - DUNG LA NHU VAY, khong phai loi")
-    print("  3. Copy TOAN BO url tren thanh dia chi, dan vao day")
-    print(f"\n{url}\n")
+    print(f"redirect_uri: {cf['TIKTOK_REDIRECT_URI']}  (platform Desktop, PKCE S256)")
+    print(f"\nTrang dang nhap se mo. Neu khong, mo tay:\n  {url}\n")
+    try:
+        srv = HTTPServer((ru.hostname, cong), H)
+    except OSError as e:
+        raise SystemExit(
+            f"khong mo duoc cong {cong} ({e}).\n"
+            f"  Co tien trinh khac dang giu cong do. Dong no, hoac doi ca\n"
+            f"  TIKTOK_REDIRECT_URI va Redirect URI trong app TikTok sang cong khac.")
     webbrowser.open(url)
+    print(f"dang cho callback tren cong {cong}... (Ctrl+C de huy)")
+    srv.handle_request()
+    srv.server_close()
 
-    dan = input("Dan url (hoac chi rieng code) roi Enter: ").strip()
-    code = None
-    if "code=" in dan:
-        q = parse_qs(urlparse(dan).query or dan.split("?", 1)[-1])
-        code = (q.get("code") or [None])[0]
-        if q.get("error"):
-            raise SystemExit(f"TikTok tu choi: {q['error']} "
-                             f"{q.get('error_description', [''])[0]}")
-    elif dan:
-        code = dan
-    if not code:
-        raise SystemExit("khong tim thay `code` trong chuoi vua dan")
-    # `code` cua TikTok bi url-encode trong thanh dia chi (dau `*` thanh `%2A`).
-    # Khong giai ma thi doi token that bai voi loi mo ho.
-    code = urllib.parse.unquote(code)
+    if got.get("error"):
+        raise SystemExit(f"TikTok tu choi: {got['error']} "
+                         f"{got.get('error_description', '')}")
+    if "code" not in got:
+        raise SystemExit(
+            f"callback khong co `code`: {json.dumps(got, ensure_ascii=False)}\n"
+            f"  Thuong la do Redirect URI trong app TikTok khac voi "
+            f"{cf['TIKTOK_REDIRECT_URI']}")
 
-    t = tt.doi_code_lay_token(code)
+    # `code` cua TikTok co ky tu `*` bi url-encode thanh `%2A`. parse_qs da giai ma
+    # roi, nhung giu ghi chu nay vi day la bay da vap khi con dan URL bang tay.
+    t = tt.doi_code_lay_token(got["code"], code_verifier=verifier)
     print(f"\nda luu token vao {tt.TEP_TOKEN}")
     print(f"  open_id       : {t.get('open_id')}")
     print(f"  scope         : {t.get('scope')}")

@@ -28,6 +28,7 @@ Ba dieu tai lieu noi ro, anh huong truc tiep cach dung:
 import hashlib
 import json
 import os
+import secrets
 import time
 import urllib.error
 import urllib.parse
@@ -97,15 +98,19 @@ def cau_hinh():
             f"thieu {', '.join(thieu)}.\n"
             f"  Tao {TEP_ENV} theo mau .env.example, hoac dat bien moi truong.\n"
             f"  Lay key o https://developers.tiktok.com/apps")
-    # TikTok BAT BUOC redirect_uri bat dau bang `https` (Login Kit web doc: "must
-    # be absolute and begin with https"). Nen khong the dung http://127.0.0.1 nhu
-    # phan lon provider khac cho phep.
+    # Dung platform DESKTOP cua Login Kit, khong phai Web.
     #
-    # Chon `https://127.0.0.1` co chu dich: browser se KHONG ket noi duoc (khong co
-    # server HTTPS o day), dung lai o trang loi - nhung `code` van nam trong thanh
-    # dia chi. Nghia la ma uy quyen KHONG di ra ngoai may. Neu khai mot domain that
-    # cua nguoi khac thi `code` duoc gui thang toi server ho.
-    e.setdefault("TIKTOK_REDIRECT_URI", "https://127.0.0.1:8723/callback")
+    # Web doi redirect_uri phai `https` va tu choi ca IP - thu ca
+    # `https://127.0.0.1` cung bi tu choi. Desktop thi nguoc lai:
+    # "Only `localhost` or loopback IP `127.0.0.1` are allowed host names in URI",
+    # va vi du chinh thuc la `http://127.0.0.1:*/callback/`.
+    #
+    # Nho vay `code` KHONG bao gio ra khoi may - khac han phuong an dung mot domain
+    # cong khai lam redirect, luc do URL kem `code` di qua server cua ho.
+    # Cai gia phai tra: Desktop BAT BUOC PKCE. Xem `_pkce()`.
+    #
+    # Dau `/` cuoi la co y - giu dung dinh dang trong vi du cua TikTok.
+    e.setdefault("TIKTOK_REDIRECT_URI", "http://127.0.0.1:8723/callback/")
     return e
 
 
@@ -224,15 +229,34 @@ def lay_token(can_scope=None):
     return t["access_token"]
 
 
-def url_dang_nhap(scope=SCOPE_DAY_DU, state="wbv"):
+def _pkce():
+    """(code_verifier, code_challenge) cho PKCE. Desktop flow bat buoc co.
+
+    TikTok doi `code_challenge` la **SHA256 dang HEX**: "Create code_challenge
+    using hex encoding of SHA256". Phan lon provider khac dung base64url - dung
+    base64url o day thi TikTok tu choi voi loi mo ho, rat kho doan.
+
+    `code_verifier` dai 43-128 ky tu trong tap [A-Za-z0-9-._~] theo RFC 7636;
+    `token_urlsafe` cho dung tap do.
+    """
+    verifier = secrets.token_urlsafe(72)[:128]
+    challenge = hashlib.sha256(verifier.encode("ascii")).hexdigest()
+    return verifier, challenge
+
+
+def url_dang_nhap(scope=SCOPE_DAY_DU, state="wbv", code_challenge=None):
     cf = cau_hinh()
-    return URL_AUTH + "?" + urllib.parse.urlencode({
+    q = {
         "client_key": cf["TIKTOK_CLIENT_KEY"],
         "scope": scope,
         "response_type": "code",
         "redirect_uri": cf["TIKTOK_REDIRECT_URI"],
         "state": state,
-    })
+    }
+    if code_challenge:
+        q["code_challenge"] = code_challenge
+        q["code_challenge_method"] = "S256"
+    return URL_AUTH + "?" + urllib.parse.urlencode(q)
 
 
 # ----------------------------------------------------------------- creator

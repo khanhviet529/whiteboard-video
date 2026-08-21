@@ -69,20 +69,44 @@ token vào `dang/token.json`, rồi tự refresh sau đó.
    | `video.list` | đọc view / like / bình luận |
    | `user.info.basic` | điều kiện kèm của Display API |
 
-4. Khai **Redirect URI** trong Login Kit, đúng bằng chuỗi trong `.env`:
+4. Trong **Platforms**, tick **Desktop**. Rồi khai **Redirect URI** ở tab
+   **Desktop** của Login Kit, đúng bằng chuỗi trong `.env`:
 
    ```
-   https://127.0.0.1:8723/callback
+   http://127.0.0.1:8723/callback/
    ```
 
-   **TikTok chỉ nhận `https`** — tài liệu Login Kit ghi *"must be absolute and
-   begin with https"*. Không nhận `http`, kể cả localhost. Lệch một ký tự là bị
-   từ chối.
+   **Phải là tab Desktop, không phải Web.** Hai tab có luật khác nhau:
 
-   Vì sao chọn `https://127.0.0.1`: browser sẽ **không kết nối được** (không có
-   server HTTPS ở đó), dừng lại ở trang lỗi — nhưng `code` vẫn nằm trong thanh địa
-   chỉ. Nghĩa là mã uỷ quyền **không đi ra khỏi máy bạn**. Nếu khai domain của
-   người khác thì `code` được gửi thẳng tới server họ.
+   | | Web | Desktop |
+   |---|---|---|
+   | Scheme | chỉ `https` | `http` **và** `https` |
+   | Host | domain công khai | chỉ `localhost` hoặc `127.0.0.1` |
+   | PKCE | không | **bắt buộc** |
+
+   Tài liệu Desktop ghi: *"Only `localhost` or loopback IP `127.0.0.1` are allowed
+   host names in URI"*, ví dụ chính thức là `http://127.0.0.1:*/callback/`. Còn tab
+   Web thì từ chối cả `http` lẫn IP — kể cả `https://127.0.0.1` cũng bị từ chối.
+
+   Vì sao chọn Desktop: `code` đi từ browser sang tool **qua localhost**, không
+   bao giờ ra internet. Phương án còn lại là dùng một domain công khai làm redirect,
+   lúc đó URL kèm `code` đi qua server của domain đó.
+
+   Cái giá phải trả là **PKCE** — tool tự lo, nhưng có một chi tiết đáng ghi: TikTok
+   đòi `code_challenge` là **SHA256 dạng hex**, không phải base64url như hầu hết
+   provider khác. Dùng base64url thì bị từ chối với lỗi mơ hồ.
+
+   Dấu `/` cuối là cố ý — giữ đúng định dạng trong ví dụ của TikTok.
+
+   Ba ô còn lại (**Web/Desktop URL**, **Terms of Service URL**, **Privacy Policy
+   URL**) vẫn cần URL https công khai thật — form không nhận `127.0.0.1` ở đó. Repo
+   này có sẵn ba trang trong `docs/` để bật GitHub Pages:
+
+   ```
+   https://<user>.github.io/whiteboard-video/
+   https://<user>.github.io/whiteboard-video/terms.html
+   https://<user>.github.io/whiteboard-video/privacy.html
+   ```
 
 5. Copy `Client key` và `Client secret` → `dang/.env` theo `dang/.env.example`.
 
@@ -92,16 +116,15 @@ token vào `dang/token.json`, rồi tự refresh sau đó.
 py dang\dang.py auth
 ```
 
-Ba bước, tool in ra sẵn:
+Trang đăng nhập TikTok mở ra, bạn đăng nhập và đồng ý — xong. Tool dựng một
+HTTP server tạm trên `127.0.0.1:8723`, bắt `code` từ callback, đổi lấy token, rồi
+in ra scope **thật** nhận được. Thiếu scope nào nó cảnh báo ngay.
 
-1. Trang đăng nhập TikTok mở ra
-2. Đăng nhập và đồng ý → browser báo **không kết nối được
-   `https://127.0.0.1:8723/callback`**. Đúng là như vậy, không phải lỗi.
-3. Copy **toàn bộ URL** trên thanh địa chỉ, dán vào terminal
+Không phải copy dán gì. `code_verifier` của PKCE chỉ sống trong tiến trình đó,
+không ghi ra đĩa — nó chỉ cần tồn tại từ lúc mở browser đến lúc đổi token.
 
-Tool tự tách `code`, giải url-encode (`code` của TikTok có ký tự `*` bị mã hoá
-thành `%2A` — không giải thì đổi token thất bại với lỗi mơ hồ), đổi lấy token, và
-in ra scope thật nhận được. Thiếu scope nào nó cảnh báo ngay.
+Nếu cổng 8723 đang bị tiến trình khác giữ, tool báo rõ và chỉ cách đổi cổng (phải
+đổi **cả hai** chỗ: `.env` và Redirect URI trong app TikTok).
 
 Từ đó trở đi không phải làm gì nữa trong 365 ngày.
 
