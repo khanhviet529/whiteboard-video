@@ -15,3 +15,8 @@ bench-js/package-lock.json
 
 # anh chup tam khi sua file - khong bao gio commit
 *.bak
+
+# dang/: khong bao gio commit token hay secret
+dang/.env
+dang/token.json
+dang/da-dang.json
