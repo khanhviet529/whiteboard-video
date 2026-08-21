@@ -96,7 +96,7 @@ scenes:
   - scene: cot
     chapter: QUAY CHẬM
     head: Ba hàm, cùng một máy.
-    narration: Đây là ba hàm trên cùng một máy, trục dọc là số lần bấm được mỗi giây. Hàm đầu nhanh hơn hàm cuối hai trăm lẻ sáu nghìn lần, nên nó cũng cho kẻ dò đúng chừng ấy lượt thử.
+    narration: Đây là ba hàm trên cùng một máy, trục dọc là số lần bấm được mỗi giây. Cột đầu dựng lên tám trăm nghìn, cao gần hết khung. Cột thứ hai chỉ tới mười hai, cột cuối tới gần bốn, và cả hai gần như chạm đáy. Trục này là trục lô ga rít, nên khoảng cách mắt thấy đã bị nén lại rất nhiều rồi. Hàm đầu nhanh hơn hàm cuối hai trăm lẻ sáu nghìn lần, và đó cũng là số lượt thử nó tặng cho kẻ đang dò.
     caption: Nhanh hơn 206 nghìn lần, tức cho kẻ dò 206 nghìn lượt.
     truc: SỐ LẦN BẤM ĐƯỢC MỖI GIÂY
     thang: log

@@ -774,8 +774,179 @@ def check_chua_xong(doc, out):
                     f"còn {n} chỗ `{{{{SO}}}}` chưa thay bằng số đo được"))
 
 
+# --- CONG KE CHUYEN -------------------------------------------------------
+#
+# Muoi hai phep kiem duoi day khong soi mot canh, chung soi CA CHUOI CANH: thu
+# tu nhip, cho dat thu pham, ty le mo phong, cau hoi cuoi. Tuc chung kiem cai ma
+# `CONG-THUC.md` goi la khung nhip, con moi phep kiem le o tren thi kiem bo cuc.
+#
+# Vi sao tach thanh mot nhom rieng: mot screenplay co the SACH het moi phep kiem
+# bo cuc ma van la mot bai giang chia thanh slide - khong co gi gay, khong co gi
+# tran, va cung khong co gi de nguoi xem to mo. Cai do khong phep kiem le nao
+# bat duoc, vi no nam o QUAN HE giua cac canh.
+#
+# BA phep la LOI, va ca ba deu chi ma hoa lai dieu `CONG-THUC.md` da ghi la
+# tuyet doi tu truoc, khong phai luat moi:
+#   "Mo bang loi chao        -> mat 4 giay dat nhat cua video"
+#   "Noi ten benh o nhip 1   -> mat sach cang thang, con lai la bai giang"
+#   "Cau hoi cuoi chung chung -> khong ai tra loi"
+# Phan con lai la CANH BAO, vi chung phu thuoc dinh dang: dinh dang HAI DOAN
+# CODE (mua 3) co y khong co canh mo phong dong va khong co nhip thu pham.
+
+# Canh mo phong DONG: co thu gi dang chay theo thoi gian (dau doc, bo dem,
+# duong cong, goi tin). `probe` `compare` `counters` KHONG nam day - chung la
+# bang chung TINH, va nhip RECONSTRUCTION doi mot thu dang chuyen dong.
+CANH_DONG = {"gantt", "thac", "multiply", "queue", "cot", "topology",
+             "ban_sao", "gop",           # theme bench
+             "race", "decay", "flow", "timeline"}   # ba theme cu
+
+# Cum mo dau bi cam. Do bang chinh loi doc cua canh dau tien.
+MO_CAM = ("bạn có biết", "trong video này", "hôm nay chúng ta",
+          "hôm nay mình", "có bao giờ bạn tự hỏi", "xin chào",
+          "chào mọi người", "chào các bạn", "mình sẽ giới thiệu",
+          "chúng ta sẽ tìm hiểu", "chúng ta sẽ học")
+
+# Cum ket bi cam: cau hoi khong ve he thong cua nguoi xem thi khong ai tra loi.
+KET_CAM = ("bạn nghĩ sao", "các bạn nghĩ sao", "ý kiến của bạn",
+           "comment bên dưới", "để lại bình luận", "đừng quên like")
+
+
+def _canh_thu_pham(scenes):
+    """Chi so canh goi ten thu pham, hoac None. Doc theo `chapter` va `label`."""
+    for i, sp in enumerate(scenes):
+        for k in ("chapter", "label"):
+            if "THỦ PHẠM" in str(sp.get(k, "")).upper():
+                return i
+    return None
+
+
+def check_cong(doc, out):
+    scenes = doc.get("scenes") or []
+    if doc.get("chua_xong") or len(scenes) < 3:
+        return
+    kinds = [sp.get("scene") for sp in scenes]
+    n = len(scenes)
+    tag = "cổng kể chuyện"
+
+    # 1. Mo dau. LOI - xem CONG-THUC.md bang "Loi thuong gap".
+    n1 = (scenes[0].get("narration") or "").lower()
+    for cum in MO_CAM:
+        if cum in n1:
+            out.append(("LOI", tag,
+                        f"cảnh 01 mở bằng `{cum}` — bốn giây đắt nhất của video "
+                        f"thành lời dẫn. Nhịp 1 phải là chính cái LỖI"))
+
+    # 2. Cau hoi cuoi. LOI neu chung chung, CANH BAO neu khong ve nguoi xem.
+    hoi = [sp for sp in scenes if sp.get("scene") in ("ask", "qa")]
+    if not hoi:
+        out.append(("CANH BAO", tag,
+                    "không có cảnh `ask` chốt — mất nhịp 7, tức mất chỗ đẩy "
+                    "người xem về bình luận"))
+    else:
+        cuoi = hoi[-1]
+        txt = ((cuoi.get("narration") or "") + " "
+               + str(cuoi.get("text") or "")).lower()
+        for cum in KET_CAM:
+            if cum in txt:
+                out.append(("LOI", tag,
+                            f"câu hỏi cuối dùng `{cum}` — câu hỏi chung chung "
+                            f"thì không ai trả lời. Hỏi về hệ thống CỦA CHÍNH "
+                            f"người xem"))
+        if "của bạn" not in txt and "của mình" not in txt:
+            out.append(("CANH BAO", tag,
+                        "câu hỏi cuối không nhắc tới hệ thống của người xem "
+                        "(`của bạn`) — nó đang hỏi về chủ đề, không hỏi về họ"))
+        if kinds[-1] not in ("ask", "qa"):
+            out.append(("CANH BAO", tag,
+                        f"cảnh cuối là `{kinds[-1]}` chứ không phải `ask` — "
+                        f"câu hỏi chốt nên là thứ cuối cùng người xem thấy"))
+
+    # 3. Thu pham phai goi SAU mo phong. LOI.
+    dong = [i for i, k in enumerate(kinds) if k in CANH_DONG]
+    thu = _canh_thu_pham(scenes)
+    if thu is not None and dong and thu < dong[0]:
+        out.append(("LOI", tag,
+                    f"gọi tên thủ phạm ở cảnh {thu + 1} nhưng mô phỏng mới ở "
+                    f"cảnh {dong[0] + 1} — đặt tên trước khi cho xem là mất "
+                    f"sạch căng thẳng, phần còn lại thành bài giảng"))
+
+    # 4. Nhip RECONSTRUCTION. Canh bao chu khong loi: dinh dang HAI DOAN CODE
+    #    (mua 3) co y khong co canh mo phong dong, no dung `code` + `probe`.
+    if not dong:
+        thay_the = "code" in kinds or "probe" in kinds
+        out.append(("CANH BAO", tag,
+                    "không có cảnh mô phỏng ĐỘNG nào (gantt, thac, multiply, "
+                    "queue, cot, topology, ban_sao, gop) — nhịp dựng lại hiện "
+                    "trường đang được KỂ chứ không được CHO XEM"
+                    + (". Nếu đây là định dạng HAI ĐOẠN CODE thì bỏ qua"
+                       if thay_the else "")))
+    else:
+        # Do theo DO DAI LOI DOC, khong theo so canh. Ly do: `CONG-THUC.md` nham
+        # 35-40% THOI LUONG, ma thoi luong canh do pipeline tinh tu do dai audio,
+        # con do dai audio thi ty le voi so ky tu. Dem so canh la do sai don vi.
+        #
+        # Do doi chieu tren `cache-stale` cho thay proxy nay dung: 2/13 canh la
+        # 15% neu dem canh, nhung 25% neu dem ky tu - va so do THAT tu log render
+        # la 23% thoi luong. Dem canh thi lech 8 diem, dem ky tu thi lech 2.
+        #
+        # Nguong 20%: duoi muc cua MOI file da duyet co canh mo phong
+        # (cache-stale 25%, n-plus-one 24%, async 25%, pool-can 32%).
+        tong = sum(len(sp.get("narration") or "") for sp in scenes)
+        chu = sum(len(scenes[i].get("narration") or "") for i in dong)
+        if tong and chu / tong < 0.20:
+            out.append(("CANH BAO", tag,
+                        f"nhịp mô phỏng chỉ chiếm {chu / tong:.0%} lời đọc "
+                        f"({len(dong)}/{n} cảnh) — thấp hơn mọi bản đã duyệt "
+                        f"(`cache-stale` 25%, `pool-can` 32%), và công thức nhắm "
+                        f"35–40%. Cách sửa là VIẾT THÊM lời đọc cho cảnh mô "
+                        f"phỏng, đừng đóng cứng `min_duration`"))
+
+    # 5. Bao nhieu quy tac la nhieu. Nguong la BA, khong phai HAI - va cho nay
+    #    chinh la mot bay: `CONG-THUC.md` nhip 6 viet "dung MOT quy tac", nhung
+    #    mau dien cua bien the HOOK 5 NHIP o cuoi CHINH FILE DO lai co `rule 01`
+    #    (quy tac chan) va `rule 02` (luoi cuoi). Hai canh la cau truc DA DUYET
+    #    cua `cache-stale`, nen bao o muc hai la bao tren mot file dung.
+    #    Ban dau toi dat nguong 1 va no keu ngay tren file tham chieu.
+    n_rule = kinds.count("rule") + kinds.count("sticky")
+    if n_rule >= 3:
+        out.append(("CANH BAO", tag,
+                    f"{n_rule} cảnh quy tắc — CONG-THUC.md nhịp 6: đúng MỘT "
+                    f"quy tắc chặn, cộng tối đa một `lưới cuối`. Ba quy tắc thì "
+                    f"người xem không nhớ nổi cái nào"))
+
+    # 6. Ve "phat hien som". Day la nua bi bo quen nhieu nhat cua nhip 6, va la
+    #    ly do mid-level luu video lai.
+    if n_rule and not any(
+            "phát hiện sớm" in str(sp.get("small") or "").lower()
+            for sp in scenes if sp.get("scene") in ("rule", "sticky")):
+        out.append(("CANH BAO", tag,
+                    "cảnh quy tắc không có vế `phát hiện sớm` trong `small` — "
+                    "một quy tắc chặn mà không có chỉ số nào để theo dõi thì "
+                    "người xem không biết mình đang dính hay không"))
+
+    # 7. Don dieu: ba canh cung loai lien tiep, va ty le `statement`.
+    lap, i = 1, 1
+    while i < n:
+        lap = max(lap, 1)
+        j = i
+        while j < n and kinds[j] == kinds[j - 1]:
+            j += 1
+        if j - i + 1 >= 3:
+            out.append(("CANH BAO", tag,
+                        f"cảnh {i} tới {j} cùng loại `{kinds[i]}` — ba cảnh "
+                        f"giống nhau liên tiếp thì người xem thấy video đứng lại"))
+        i = max(j, i + 1)
+    st = kinds.count("statement") + kinds.count("bigstat")
+    if n and st / n > 0.25:
+        out.append(("CANH BAO", tag,
+                    f"`statement` chiếm {st}/{n} cảnh ({st / n:.0%}) — nhắm một "
+                    f"phần tư. Mỗi lần định viết `statement` thứ ba thì hỏi lại "
+                    f"xem nó có phải một `compare` bị nén không"))
+
+
 def check(doc):
     out = []
+    check_cong(doc, out)
     check_chua_xong(doc, out)
     check_cau_dai(doc, out)
     check_tu_la(doc, out)

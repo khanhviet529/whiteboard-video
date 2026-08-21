@@ -98,7 +98,7 @@ scenes:
   - scene: cot
     chapter: QUAY CHẬM
     head: Đổi một tham số một lần.
-    narration: Cột đầu là cấu hình mốc. Bốn cột sau, mỗi cột chỉ đổi đúng một tham số. Cột bộ nhớ tám là cột thấp nhất, và cột số nhân bằng một thì lại cao hơn cả mốc.
+    narration: Cột đầu là cấu hình mốc, một trăm mười lăm phần nghìn giây, và đường kẻ ngang chính là mức đó. Bốn cột sau mỗi cột chỉ đổi đúng một tham số, nên chiều cao của nó là phần đóng góp của riêng tham số ấy. Hạ số lần lặp thì cột tụt xuống một nửa. Hạ bộ nhớ xuống tám thì cột tụt hẳn còn một phần năm, thấp nhất cả hàng. Còn cột cuối, cột hạ số nhân, thì lại vượt lên trên đường kẻ.
     caption: Mỗi cột đổi đúng một tham số so với cột mốc.
     truc: THỜI GIAN MỘT LẦN BẤM · MILI GIÂY
     ghi: argon2id · máy rảnh · repro/ket-qua/mua-07-bam-va-bi-mat.txt
@@ -115,15 +115,25 @@ scenes:
   # ================================================================ CHO LA
   # Cho trai truc giac: HA so nhan lai lam CHAM hon. Day la cho giu nguoi xem,
   # va no do duoc chu khong phai mot nhan xet.
-  - scene: statement
+  # `compare` chu khong `statement`: cho la o day la HAI GIA TRI doi nhau, va
+  # cong ke chuyen bat dung - `statement` thu ba trong mot video thuong la mot
+  # `compare` bi nen lai thanh mot cau.
+  - scene: compare
     chapter: CHỖ LẠ
     head: Giảm luồng thì chậm hơn.
     narration: Cột cuối là chỗ lạ. Hạ số nhân từ bốn xuống một làm hàm chạy chậm hơn mốc, một phẩy sáu lần. Vì số nhân không phải số luồng thêm vào, nó là số phần mà cùng khối lượng việc được chia ra.
     caption: Số nhân không thêm việc, nó chia việc ra để làm song song.
-    label: CHỖ LẠ
-    value: GIẢM SỐ NHÂN THÌ CHẠY CHẬM HƠN
-    size: 96
-    sub: Vì nó chia việc ra, không phải thêm việc vào
+    vs: HẠ XUỐNG THÌ
+    box_h: 290
+    items:
+      - label: SỐ NHÂN BẰNG BỐN
+        value: 115,4 MS
+        note: cùng khối việc, chia làm bốn phần
+        color: ok
+      - label: SỐ NHÂN BẰNG MỘT
+        value: 185,4 MS
+        note: cùng khối việc đó, làm một mình
+        color: hot
 
   # ================================================================ THU PHAM
   - scene: statement

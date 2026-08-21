@@ -63,14 +63,25 @@ scenes:
     verdict: CHÍNH THỜI GIAN LÀ CÂU TRẢ LỜI
 
   # ================================================================ NHIP 2
-  - scene: statement
+  # `compare` chu khong `statement`: cau nay noi ve HAI TRUC - dap so va thoi
+  # gian - nen cho hai truc do canh nhau manh hon mot cau tuyen bo. Cong ke
+  # chuyen bat `statement` thu ba, va lan nay no bat dung.
+  - scene: compare
     chapter: HIỆN TRƯỜNG
     head: Hàm đó không sai một chỗ nào.
     narration: Hàm này viết đúng hoàn toàn. Nó trả về đúng đáp số, nó nhanh, và nó là cách ai cũng viết khi so sánh từng phần tử. Chỗ hở không nằm trong đáp số mà nằm ngoài nó.
     caption: Đáp số đúng, chỗ hở nằm ngoài đáp số.
-    value: CHỖ HỞ KHÔNG NẰM Ở ĐÁP SỐ
-    size: 108
-    sub: Nó nằm ở thời gian trả lời
+    vs: NHƯNG CÒN
+    box_h: 290
+    items:
+      - label: ĐÁP SỐ HÀM TRẢ VỀ
+        value: ĐÚNG HOÀN TOÀN
+        note: đúng với mọi cặp chuỗi
+        color: ok
+      - label: THỜI GIAN HÀM TRẢ LỜI
+        value: KHAI RA ĐỘ DÀI ĐÃ TRÙNG
+        note: và không ai kiểm cái này
+        color: hot
 
   # ================================================================ NHIP 3
   # Da van cach nghi ma dan Python hay co: "day bang cua CPython cung ro ri".
@@ -110,7 +121,7 @@ scenes:
   - scene: thac
     chapter: QUAY CHẬM
     head: Dò từng ký tự một.
-    narration: Kẻ tấn công gửi từng phương án rồi bấm đồng hồ. Phương án nào làm hàm trả lời chậm hơn thì đúng thêm một ký tự. Mỗi bậc thang dưới đây là một ký tự đã lộ.
+    narration: Kẻ tấn công gửi từng phương án một rồi bấm đồng hồ, không cần biết đáp án đúng là gì. Phương án nào làm hàm trả lời chậm hơn một chút thì phương án đó đúng thêm một ký tự. Hàng đầu tiên là ba trăm năm sáu nano giây, tức trượt ngay ký tự đầu. Hàng cuối là bốn nghìn một trăm, tức đã trúng sáu mươi ba ký tự. Mỗi bậc thang dài thêm là một ký tự vừa rơi ra khỏi bí mật.
     caption: Bậc thang dài thêm nghĩa là lộ thêm một ký tự.
     ruler: ["0", "1.000 ns", "2.000 ns", "3.000 ns", "4.000 ns"]
     tong: { key: SỐ LẦN GỌI ĐÃ DÙNG, gia: 2304, dv: " lần", le: 0, nhan: 36 phương án cho mỗi ký tự × 64 ký tự }

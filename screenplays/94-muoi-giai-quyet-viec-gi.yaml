@@ -95,7 +95,7 @@ scenes:
   - scene: gop
     chapter: QUAY CHẬM
     head: Ba người gộp về một dòng.
-    narration: Ba người này đặt cùng một mật khẩu, chuyện rất thường. Băm không muối thì cả ba cho ra đúng một dòng. Bẻ được một dòng đó là mở được cả ba tài khoản cùng lúc.
+    narration: Ba người này đặt cùng một mật khẩu, chuyện rất thường ở bất kỳ bảng người dùng nào. Ba địa chỉ khác nhau, ba thời điểm đăng ký khác nhau, nhưng phần đem đi băm thì giống hệt. Băm không muối là hàm thuần, cùng đầu vào thì luôn cùng đầu ra, nên cả ba đổ về đúng một dòng. Bẻ được một dòng đó là mở được cả ba tài khoản, và chi phí bẻ vẫn chỉ là một lần.
     caption: Bẻ một dòng, mở được cả ba tài khoản.
     vao:
       - { nhan: NGƯỜI DÙNG 1, value: "an@shop.vn · 123456", note: "tự đặt" }

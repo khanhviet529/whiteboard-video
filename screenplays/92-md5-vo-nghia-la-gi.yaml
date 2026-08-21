@@ -98,7 +98,7 @@ scenes:
   - scene: gop
     chapter: QUAY CHẬM
     head: Chúng lệch nhau đúng sáu bit.
-    narration: Hai tệp dài một trăm hai tám ký tự. Chúng lệch nhau ở sáu chỗ, mỗi chỗ đúng một bit, tức sáu bit trên một nghìn không hai bốn. Vậy mà mã băm của cả hai ra y hệt nhau.
+    narration: Hai tệp dài một trăm hai tám ký tự. Chúng lệch nhau ở sáu chỗ, mỗi chỗ đúng một bit, tức sáu bit trên một nghìn không hai bốn. Nhìn đoạn lệch đầu tiên thì thấy rõ, một tệp có tám bảy, tệp kia có không bảy. Đưa cả hai qua cùng một phép băm, và cùng một chuỗi ba mươi hai ký tự rơi ra. Không phải gần giống, mà giống tới từng chữ cuối.
     caption: Lệch 6 bit trên 1024. Mã băm vẫn y hệt.
     vao:
       - { nhan: TỆP A · ĐOẠN LỆCH, value: "2fcab587 12467eab", note: "byte thứ 19" }

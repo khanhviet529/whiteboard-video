@@ -246,7 +246,8 @@ NGUYEN_AM = set("aeiouy")
 
 # Tu muon DA Viet hoa, model doc dung. Danh sach nay chi dai ra khi mot tu duoc
 # XAC NHAN doc dung, khong them theo cam tinh.
-DA_QUEN = {"mili", "kilo", "mega", "giga", "tera", "micro", "gam", "met", "lit"}
+DA_QUEN = {"mili", "kilo", "mega", "giga", "tera", "micro", "nano", "pico",
+           "gam", "met", "lit"}
 
 
 def la_am_tiet_viet(tu):

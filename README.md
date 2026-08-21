@@ -504,6 +504,21 @@ python src/render.py <yaml> --no-lint               # bỏ qua
 | `ban_sao` thiếu ô `that` — mất con số sự thật để đối chiếu | CẢNH BÁO |
 | `gop` có mọi `vao.value` hiện y hệt nhau trên màn hình | LOI |
 
+Và một nhóm riêng — `check_cong` — soi **cả chuỗi cảnh** chứ không soi từng
+cảnh, tức kiểm khung nhịp của [CONG-THUC.md](CONG-THUC.md). Xem
+[DAO-DIEN.md](DAO-DIEN.md) mục *"Cổng chất lượng"*:
+
+| Kiểm | Mức |
+|---|---|
+| Cảnh 01 mở bằng lời chào hoặc lời dẫn | LOI |
+| Gọi tên thủ phạm TRƯỚC cảnh mô phỏng | LOI |
+| Câu hỏi cuối là `bạn nghĩ sao` / `comment bên dưới` | LOI |
+| Thiếu cảnh `ask` chốt, hoặc `ask` không nhắc `của bạn` | CẢNH BÁO |
+| Không có cảnh mô phỏng động | CẢNH BÁO |
+| Nhịp mô phỏng dưới 20% **độ dài lời đọc** | CẢNH BÁO |
+| Ba cảnh quy tắc, hoặc thiếu vế *phát hiện sớm* | CẢNH BÁO |
+| Ba cảnh cùng loại liên tiếp, hoặc `statement` quá 25% | CẢNH BÁO |
+
 Cảnh báo *"ô số đổi mà không bước nào vừa xong"* là cái đáng giá nhất: nó chính
 là kiểu sai làm mô phỏng **nói dối** người xem. Con số phải đổi **vì** một việc
 vừa xong, không phải vì người viết đặt mốc cho đẹp.
@@ -690,3 +705,14 @@ Theme `bench` tự khai bố cục riêng (hằng số ở đầu `bench.py`), k
 `reference/` giữ video gốc đã phân tích và 21 keyframe trích ra làm chuẩn style
 (bảng màu trong `style.py` đọc trực tiếp từ các frame đó). Xem `HANDOFF.md` để
 biết bối cảnh và các quyết định ban đầu.
+
+Sáu tài liệu, mỗi cái một việc — đọc theo thứ tự này khi làm một số mới:
+
+| File | Trả lời câu |
+|---|---|
+| [Y-TUONG.md](Y-TUONG.md) | Chủ đề này có qua được hai cửa lọc không? |
+| [KE-HOACH-KHO-292.md](KE-HOACH-KHO-292.md) | Nó thuộc mùa nào, cảnh mô phỏng nào, số liệu lấy ở đâu? |
+| [CONG-THUC.md](CONG-THUC.md) | Khung nhịp bảy nhịp, và tỉ lệ từng nhịp |
+| [DAO-DIEN.md](DAO-DIEN.md) | Người xem đang tin gì ở từng cảnh, giấu gì tới lúc nào, cổng lọc nào phải qua |
+| [VIET-KICH-BAN.md](VIET-KICH-BAN.md) | Bẫy đã va phải — đọc trước khi viết câu đầu tiên |
+| [CAI-DAT-WSL.md](CAI-DAT-WSL.md) | Dựng postgres/redis/docker cho phần bộ đo |
