@@ -25,6 +25,8 @@ import webbrowser
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tiktok as tt  # noqa: E402
 
+tt.bat_utf8()
+
 RONG = 78
 # Raw capture ra .mkv chu khong .mp4: mp4 ghi moov atom o CUOI file, nen neu
 # tien trinh bi kill giua duong thi file khong mo duoc. mkv thi van xem duoc.

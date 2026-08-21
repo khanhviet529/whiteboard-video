@@ -31,6 +31,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tiktok as tt  # noqa: E402
 
+tt.bat_utf8()
+
 REPO = os.path.dirname(tt.GOC)
 OUT = os.path.join(REPO, "out")
 KICH_BAN = os.path.join(REPO, "screenplays")

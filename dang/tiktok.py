@@ -29,6 +29,7 @@ import hashlib
 import json
 import os
 import secrets
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -79,6 +80,25 @@ TEP_ENV = os.path.join(GOC, ".env")
 
 
 # ------------------------------------------------------------------ cau hinh
+def bat_utf8():
+    """Buoc stdout/stderr sang UTF-8. Goi o dau MOI entry point.
+
+    Console Windows mac dinh la cp1252, con du lieu tu TikTok co the chua bat ky
+    ky tu gi - ten hien thi tieng Viet, emoji trong caption. `print` mot chuoi
+    nhu vay tren cp1252 thi UnicodeEncodeError, va no giet lenh SAU KHI goi mang
+    da thanh cong: nhin thi tuong API loi, thuc ra chi la khong in ra duoc.
+
+    errors="replace" chu khong "strict": mat mot ky tu con hon mat ca output.
+    """
+    for luong in (sys.stdout, sys.stderr):
+        # Co the la object khac TextIOWrapper (bi thay the, hoac dang test).
+        if hasattr(luong, "reconfigure"):
+            try:
+                luong.reconfigure(encoding="utf-8", errors="replace")
+            except (OSError, ValueError):
+                pass
+
+
 def _doc_env():
     """Doc client_key/secret tu bien moi truong, hoac tu dang/.env.
 

@@ -290,6 +290,28 @@ def main():
     kiem("doi ve key cu thi token con nguyen", tt.lay_token() == "AT-cu",
          tt.tep_token())
 
+    print("\n14. in duoc ky tu ngoai cp1252")
+    # Console Windows mac dinh cp1252. `creator_info` tra ve creator_nickname la
+    # ten thuc cua tai khoan - tieng Viet co dau. In no tren cp1252 thi
+    # UnicodeEncodeError, va lenh chet SAU KHI goi mang da thanh cong: nhin thi
+    # tuong API loi. Da vap that o buoc `creator` dau tien.
+    goc_out = sys.stdout
+    dem = io.BytesIO()
+    try:
+        sys.stdout = io.TextIOWrapper(dem, encoding="cp1252", errors="strict")
+        tt.bat_utf8()
+        print("Nguyễn Viết Khánh")
+        sys.stdout.flush()
+        # Phai doc byte NGAY o day: TextIOWrapper bi thu gom se dong BytesIO,
+        # va getvalue() sau do nem ValueError.
+        ra = dem.getvalue()
+        dat = "Khánh".encode("utf-8") in ra
+    except UnicodeEncodeError:
+        ra, dat = b"", False
+    finally:
+        sys.stdout = goc_out
+    kiem("in ten tieng Viet tren console cp1252", dat, ra[:40])
+
     srv.shutdown()
     for f in (v, v2):
         os.unlink(f)

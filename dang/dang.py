@@ -22,6 +22,8 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tiktok as tt  # noqa: E402
 
+tt.bat_utf8()
+
 SO_DANG = os.path.join(tt.GOC, "da-dang.json")
 
 
