@@ -114,11 +114,16 @@ def lenh_auth(a):
     print(f"  scope         : {t.get('scope')}")
     print(f"  access_token  : het han sau {t.get('expires_in')}s (~24 gio)")
     print(f"  refresh_token : het han sau {t.get('refresh_expires_in')}s (~365 ngay)")
-    thieu = [x for x in ("video.upload", "video.publish", "video.list")
-             if x not in (t.get("scope") or "")]
+    co = t.get("scope") or ""
+    thieu = [x for x in tt.SCOPE_DANG.split(",") if x not in co]
     if thieu:
         print(f"\n  CANH BAO: token thieu scope {', '.join(thieu)}.")
-        print("  Bat chung trong app TikTok roi chay lai `auth`.")
+        print("  Bat product tuong ung trong app TikTok roi chay lai `auth`.")
+    if tt.SCOPE_SO_LIEU not in co:
+        # Khong phai loi: Display API la product rieng va TikTok khong mo
+        # cho moi app. Noi ro hau qua thay vi de bang so lieu trong im lang.
+        print(f"\n  Khong co `{tt.SCOPE_SO_LIEU}` -> bang so lieu (view, comment) se trong.")
+        print("  Can product Display API trong app TikTok.")
 
 
 # ------------------------------------------------------------------ creator
@@ -228,9 +233,10 @@ def main():
     sub = ap.add_subparsers(dest="lenh", required=True)
 
     p = sub.add_parser("auth", help="dang nhap mot lan, luu token")
-    p.add_argument("--scope", default=tt.SCOPE_DAY_DU,
-                   help="mac dinh xin het 4 scope: upload + publish + list + "
-                        "info.basic, de sau khong phai auth lai")
+    p.add_argument("--scope", default=tt.SCOPE_DANG,
+                   help=f"mac dinh {tt.SCOPE_DANG} (Login Kit + Content Posting "
+                        f"API). Chi them video.list khi app da bat Display API: "
+                        f"--scope {tt.SCOPE_DAY_DU}")
     p.set_defaults(fn=lenh_auth)
 
     p = sub.add_parser("creator", help="xem gioi han that cua tai khoan")

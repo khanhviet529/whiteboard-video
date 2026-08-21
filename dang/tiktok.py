@@ -45,9 +45,16 @@ URL_AUTH = "https://www.tiktok.com/v2/auth/authorize/"
 URL_VIDEO_LIST = f"{BASE}/v2/video/list/"
 URL_VIDEO_QUERY = f"{BASE}/v2/video/query/"
 
-# Bon scope can cho ca hai viec: dang (upload/publish) va doc so lieu
-# (list + info.basic). Xin het mot lan de sau khong phai `auth` lai.
-SCOPE_DAY_DU = "video.upload,video.publish,video.list,user.info.basic"
+# Scope phai khop DUNG voi product da bat trong app. TikTok tu choi CA request
+# neu xin mot scope chua duoc cap - khong phai cap phan con lai roi bo qua. Nen
+# hai hang so, khong phai mot.
+#
+# SCOPE_DANG: Login Kit + Content Posting API. Hai product nay luon co san.
+SCOPE_DANG = "user.info.basic,video.upload,video.publish"
+# `video.list` den tu Display API - mot product RIENG, va TikTok khong mo no cho
+# moi app. Chi ghep vao khi app that su da bat Display API, khong thi `auth` fail.
+SCOPE_SO_LIEU = "video.list"
+SCOPE_DAY_DU = SCOPE_DANG + "," + SCOPE_SO_LIEU
 
 # Truong so lieu. `view_count` la thu TikTok goi la "so lan xem" trong app.
 TRUONG_VIDEO = ("id", "title", "video_description", "create_time",
