@@ -227,6 +227,35 @@ def lenh_trang_thai(a):
 
 
 # --------------------------------------------------------------------- main
+def lenh_cau_hinh(a):
+    """In ra chinh xac nhung gi phai khai trong portal TikTok.
+
+    Ton tai vi mot ly do cu the: Redirect URI phai trung Y NGUYEN giua `.env` va
+    o khai trong Login Kit. Lech mot ky tu - thieu dau `/` cuoi, hoac `http` vs
+    `https` - thi TikTok tu choi voi loi khong noi duoc nguyen nhan. Chep tu day
+    thi khong the go sai.
+
+    KHONG goi `tt.cau_hinh()`: no raise khi thieu key, ma lenh nay phai chay duoc
+    TRUOC khi co key - do la luc can no nhat.
+    """
+    e = tt._doc_env()
+    ru = e.get("TIKTOK_REDIRECT_URI") or "http://127.0.0.1:8723/callback/"
+    print("Khai trong app TikTok (Login Kit -> Redirect URI -> tab Desktop):")
+    print(f"\n    {ru}\n")
+    print("Scope (den TU product, khong khai tay o Add scopes):")
+    for sc, tu in (("user.info.basic", "Login Kit"),
+                   ("video.upload", "Content Posting API"),
+                   ("video.publish", "Content Posting API + cong tac Direct Post")):
+        print(f"    {sc:<18} {tu}")
+    print(f"\n{tt.TEP_ENV}:")
+    for k in ("TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"):
+        v = e.get(k)
+        print(f"    {k:<22} {'co (' + str(len(v)) + ' ky tu)' if v else 'CHUA CO'}")
+    print(f"    {'TIKTOK_REDIRECT_URI':<22} {ru}"
+          f"{'' if e.get('TIKTOK_REDIRECT_URI') else '   (mac dinh)'}")
+    print(f"\nToken se luu vao: {tt.tep_token()}")
+
+
 def main():
     ap = argparse.ArgumentParser(prog="dang.py", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -268,6 +297,10 @@ def main():
     p = sub.add_parser("so-lieu", help="view/like/binh luan cua video da dang")
     p.add_argument("--so", type=int, default=20, help="so video, toi da 20")
     p.set_defaults(fn=lenh_so_lieu)
+
+    p = sub.add_parser("cau-hinh",
+                       help="in dung chuoi phai khai trong portal TikTok")
+    p.set_defaults(fn=lenh_cau_hinh)
 
     p = sub.add_parser("trang-thai", help="hoi trang thai theo publish_id")
     p.add_argument("publish_id")

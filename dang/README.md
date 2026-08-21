@@ -257,6 +257,31 @@ Nếu render bằng `--fps 20` (bản nháp) thì **đừng đăng** — TikTok 
 
 ---
 
+## Vòng lặp chết khi đăng ký app, và đường ra
+
+Production **không Save được** cho đến khi mục App review có demo video
+(`Please upload at least one video`). Mà demo video thì TikTok bắt phải quay bằng
+**sandbox**. Nên đừng bắt đầu từ production.
+
+Sandbox là môi trường thử, **không qua duyệt** — nó không đòi demo video, không
+đòi ToS/Privacy URL. Thứ tự đúng:
+
+1. Tạo sandbox, khai tay Login Kit + Content Posting API (**không clone** từ
+   production — production chưa save thì không có gì để clone)
+2. Lấy key của sandbox → `dang/.env` → `auth` → quay demo
+3. **Rồi** mới về production: tải video lên, Save, Submit
+
+Trước khi khai vào portal, in ra đúng chuỗi phải dán — chạy được cả khi chưa có
+key:
+
+```powershell
+py dang\dang.py cau-hinh
+```
+
+Redirect URI phải trùng **y nguyên** giữa `.env` và ô trong Login Kit. Lệch một
+ký tự — thiếu dấu `/` cuối, hay `http` vs `https` — thì TikTok từ chối với lỗi
+không nói được nguyên nhân. Chép từ output của lệnh đó thì không thể gõ sai.
+
 ## Quay demo video cho app review
 
 TikTok bắt app **chưa được duyệt** phải quay demo bằng **sandbox**, và demo phải
