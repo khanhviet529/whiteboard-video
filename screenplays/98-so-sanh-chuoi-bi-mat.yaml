@@ -63,25 +63,19 @@ scenes:
     verdict: CHÍNH THỜI GIAN LÀ CÂU TRẢ LỜI
 
   # ================================================================ NHIP 2
-  # `compare` chu khong `statement`: cau nay noi ve HAI TRUC - dap so va thoi
-  # gian - nen cho hai truc do canh nhau manh hon mot cau tuyen bo. Cong ke
-  # chuyen bat `statement` thu ba, va lan nay no bat dung.
-  - scene: compare
+  # Da thu doi canh nay thanh `compare` de ha ty le `statement`, nhung canh 03
+  # NGAY SAU cung la `compare` - hai canh lien tiep cung mot dang bong, tuc doi
+  # mot van de lay mot van de khac. Giu `statement`, va tach dang bong bang
+  # `neo: tren` thay vi doi loai canh. Xem `research/do_don_dieu.py`.
+  - scene: statement
     chapter: HIỆN TRƯỜNG
     head: Hàm đó không sai một chỗ nào.
     narration: Hàm này viết đúng hoàn toàn. Nó trả về đúng đáp số, nó nhanh, và nó là cách ai cũng viết khi so sánh từng phần tử. Chỗ hở không nằm trong đáp số mà nằm ngoài nó.
     caption: Đáp số đúng, chỗ hở nằm ngoài đáp số.
-    vs: NHƯNG CÒN
-    box_h: 290
-    items:
-      - label: ĐÁP SỐ HÀM TRẢ VỀ
-        value: ĐÚNG HOÀN TOÀN
-        note: đúng với mọi cặp chuỗi
-        color: ok
-      - label: THỜI GIAN HÀM TRẢ LỜI
-        value: KHAI RA ĐỘ DÀI ĐÃ TRÙNG
-        note: và không ai kiểm cái này
-        color: hot
+    value: CHỖ HỞ KHÔNG NẰM Ở ĐÁP SỐ
+    size: 108
+    neo: tren
+    sub: Nó nằm ở thời gian trả lời
 
   # ================================================================ NHIP 3
   # Da van cach nghi ma dan Python hay co: "day bang cua CPython cung ro ri".
@@ -173,6 +167,7 @@ scenes:
     label: KHÔNG CÓ 100%
     value: DÙNG HÀM CHUẨN VÌ KHÔNG KIỂM SOÁT ĐƯỢC
     size: 84
+    neo: duoi
     color: gold
     sub: Không phải vì đã đo thấy dấu bằng rò
 

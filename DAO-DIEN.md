@@ -188,6 +188,114 @@ màu trong một cảnh cột; các loại cảnh khác thì người viết t�
 
 ---
 
+## Đo độ đơn điệu, thay vì tranh luận về nó
+
+Câu "video đang một màu" là một cảm nhận, và cả dự án này dựng trên luật *đo được
+hoặc bỏ*. Nên có [research/do_don_dieu.py](research/do_don_dieu.py):
+
+```bash
+python src/render.py screenplays/<f>.yaml --stills
+python research/do_don_dieu.py <f> [--hinh]
+```
+
+Phép đo là **blur test**: thu mỗi khung hình xuống lưới 12×21, trừ nền đi, rồi so
+từng cặp. Blur mạnh thì chữ biến mất, màu nhoè, chỉ còn lại **dạng bóng** — đúng
+cái mà mắt người dùng để nhận ra "cảnh này giống cảnh kia" *trước khi* đọc được
+bất kỳ chữ nào.
+
+Số đo trên ba video, thang 0..1, càng cao càng đa dạng:
+
+| Video | Cả khung | Sân diễn | Khung cố định làm phẳng |
+|---|---|---|---|
+| `cache-stale` (13 cảnh) | 0,109 | 0,139 | **21%** |
+| `93-ham-bam-nhanh` (9 cảnh) | 0,101 | 0,161 | **37%** |
+| `91-bam-khong-phai-an-danh` (9 cảnh) | 0,120 | 0,197 | **39%** |
+
+Cột cuối là cột đáng đọc nhất, và nó chỉ ra một nguyên nhân mà "thư viện cảnh quá
+ít" không giải thích được: `chrome()` vẽ rail ở y=62, chip chương ở y=150, tiêu đề
+ở y=244, sân diễn 470–1296, thẻ phụ đề ở y=1332, dòng chân ở y=1524 — **giống hệt
+nhau ở cả 17 loại cảnh, trong mọi video**. Nên hai cảnh khác hẳn nội dung vẫn chia
+nhau một khung xương giống nhau, và khung đó ăn mất 21–39% độ đa dạng.
+
+### Chỗ đơn điệu nhất, và nó là một dòng code
+
+Ba cặp cảnh giống nhau nhất, đo trên `cache-stale`:
+
+```
+0,036   probe      <-> probe
+0,042   statement  <-> statement
+0,071   statement  <-> statement
+```
+
+Cùng một loại cảnh thì dạng bóng gần như **trùng khớp**. Với `statement` `ask`
+`rule` thì nguyên nhân là đúng một dòng, giống nhau ở cả ba hàm:
+
+```python
+y0 = STAGE_CY - blk / 2      # khối chữ LUÔN căn giữa sân diễn
+```
+
+Nên mọi cảnh chữ của cả kênh là một cục chữ ở đúng một chỗ. Đã thêm trường `neo`
+(`tren` / `giua` / `duoi`) cho ba loại đó, mặc định `giua` nên không file cũ nào
+đổi. Đo lại số 91 sau khi neo hai cảnh:
+
+| | trước | sau |
+|---|---|---|
+| khác biệt sân diễn | 0,185 | **0,197** |
+| cặp giống nhau nhất | 0,068 `statement`↔`statement` | **0,112** `compare`↔`rule` |
+
+Cặp `statement`↔`statement` rời khỏi top ba. Hai dòng YAML, không thêm một loại
+cảnh nào, không sửa một pixel nào của thư viện.
+
+### Vì sao CHƯA viết lại renderer thành primitive + composition
+
+Đề xuất thay `sc_bigstat` / `sc_compare` / `sc_flow`… bằng một tầng
+*primitives → compositions → motions* đúng hướng nhưng **sai thứ tự**, và nó đánh
+đổi mất đúng thứ tài sản duy nhất của kênh này.
+
+`gantt` có hình học cố định **vì** `lint.py` kiểm được nó: hai thanh chồng nhau,
+ô số đổi mà không việc nào vừa xong, khoảng chết quá 14%, `verdict_at` chốt trước
+khi mô phỏng chạy hết. Với composition tự do thì **không phép kiểm nào trong số
+đó còn tồn tại** — không lint được "bố cục này có đang nói thật hay không" khi bố
+cục là tuỳ ý. Xem README mục *"`gantt` KHÔNG mô phỏng gì"*: mô phỏng ở đây không
+có model thực thi phía sau, nó vẽ đúng cái người viết khai, nên phần *kiểm* chính
+là phần giữ cho nó không nói dối.
+
+Và một điểm nữa: `composition: shared-state` cộng `motions: [pull_snapshot,
+overwrite]` **cũng là một template**, chỉ chi tiết hơn. Mười tám composition thì
+người viết vẫn sẽ trôi về ba cái quen. Vấn đề đơn điệu không giải được bằng cách
+làm template nhỏ hơn — nó giải được bằng cách **bắt buộc đa dạng** và **đo được**
+đa dạng, tức đúng hai thứ vừa dựng ở trên.
+
+Thứ tự nên làm, xếp theo lợi ích trên chi phí (đo bằng chính `do_don_dieu.py`):
+
+| # | Việc | Trạng thái | Lợi ích đo được |
+|---|---|---|---|
+| 1 | `neo` cho `statement` `ask` `rule` | ✅ xong | cặp giống nhất 0,068 → 0,112 |
+| 2 | Cổng đếm **dạng bóng**, không đếm tên loại cảnh | ✅ xong | bắt được cả hai cảnh khác loại mà cùng một cục chữ |
+| 3 | `head` thành tuỳ chọn, sân diễn giãn lên khi vắng nó | chưa | thu lại phần lớn của 21–39% kia, và cho nhịp mô phỏng thêm 190px |
+| 4 | Thang biểu diễn — bắt mỗi video đi qua ≥3 tầng | chưa | đa dạng ở tầng *nội dung*, không chỉ tầng bố cục |
+| 5 | Thư viện primitive + composition | chưa | chỉ làm sau khi 1–4 đã cạn, và phải mang theo cách lint mới |
+
+### Thang biểu diễn
+
+Một cơ chế biểu diễn được ở năm tầng, và video hay thì **di chuyển giữa các tầng**
+thay vì nằm nguyên ở một tầng:
+
+| Tầng | Là gì | Loại cảnh của `bench` |
+|---|---|---|
+| 1 — vật thể | người, hộp, két, đồng hồ, ổ khoá | đạo cụ (`prop`) |
+| 2 — ẩn dụ gọn | request là gói tin, cache là bản copy | `topology`, `gop` |
+| 3 — sơ đồ hệ thống | trình duyệt → API → Redis → database | `topology`, `thac` |
+| 4 — trạng thái | `cache = 100`, `db = 120` | `gantt` (ô số), `counters`, `ban_sao` |
+| 5 — code | `value = cache.get(key)` | `code`, `probe` |
+
+Mùa 7 nằm gần hết ở tầng 4 và 5 — đó là lý do nó chính xác nhưng khô. Ẩn dụ ở
+tầng 2 phải dùng có giới hạn: khán giả là dev đã đi làm, và `files/skill/` ghi
+đúng nguyên tắc *"dùng một phép so sánh đời thường rồi lập tức quay lại thuật ngữ
+chính xác — đừng dừng ở phép so sánh, vì so sánh nào cũng có chỗ sai"*.
+
+---
+
 ## Cổng chất lượng: cái nào máy chạy, cái nào người phải đọc
 
 ### Máy chạy — `lint.check_cong`

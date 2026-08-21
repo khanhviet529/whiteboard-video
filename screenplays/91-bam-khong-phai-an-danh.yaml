@@ -63,6 +63,7 @@ scenes:
     caption: Không lệnh nào lỗi, nên không ai đi vá.
     value: KHÔNG CÓ LỆNH NÀO LỖI
     size: 118
+    neo: tren
     sub: Nên nó đi qua hết mọi vòng review
 
   # ================================================================ NHIP 3
@@ -123,6 +124,7 @@ scenes:
     label: THỦ PHẠM
     value: MIỀN GIÁ TRỊ ĐẾM ĐƯỢC
     size: 116
+    neo: duoi
     sub: Ba chữ số đầu thì ai cũng đoán ra
 
   # ================================================================ MO PHONG 2

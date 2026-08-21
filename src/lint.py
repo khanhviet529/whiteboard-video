@@ -924,24 +924,45 @@ def check_cong(doc, out):
                     "một quy tắc chặn mà không có chỉ số nào để theo dõi thì "
                     "người xem không biết mình đang dính hay không"))
 
-    # 7. Don dieu: ba canh cung loai lien tiep, va ty le `statement`.
-    lap, i = 1, 1
-    while i < n:
-        lap = max(lap, 1)
-        j = i
-        while j < n and kinds[j] == kinds[j - 1]:
-            j += 1
-        if j - i + 1 >= 3:
+    # 7. Don dieu. Hai phep kiem duoi day dem DANG BONG, khong dem TEN LOAI
+    #    CANH - va do la mot phan biet phai giu cho dung.
+    #
+    #    Ly do: `research/do_don_dieu.py` do dang bong cua tung khung hinh (blur
+    #    test) va cho thay hai canh `statement` trong cung mot video cach nhau
+    #    0,042 tren thang 0..1, tuc gan nhu trung. Nguyen nhan la mot dong code:
+    #    khoi chu luon can giua san dien. Sau khi them `neo: tren|duoi`, cung
+    #    hai canh do cach nhau 0,112 - gap gan ba lan. Cung mot LOAI canh, cung
+    #    mot noi dung, nhung khac dang bong.
+    #
+    #    Nen (loai, neo) moi la don vi dung. Dem theo `scene` khong thi phep
+    #    kiem se bat mot van de da duoc chua, va bo qua hai canh khac loai ma
+    #    van cung mot cuc chu o giua.
+    def bong(sp):
+        k = sp.get("scene")
+        if k in ("statement", "bigstat", "ask", "rule", "sticky"):
+            return f"{k}/{str(sp.get('neo', 'giua')).lower()}"
+        return k
+
+    dang = [bong(sp) for sp in scenes]
+
+    #    Hai canh LIEN TIEP cung dang bong. Nguong la HAI, khong phai ba - nhung
+    #    CHI ap cho canh khong phai mo phong. Hai canh mo phong lien tiep giu Y
+    #    NGUYEN bo cuc la ky thuat manh nhat cua repo (`cache-stale` va
+    #    `async-song-song` deu dung), nen bao o do la bao tren mot file dung.
+    for i in range(1, n):
+        if dang[i] == dang[i - 1] and kinds[i] not in CANH_DONG:
             out.append(("CANH BAO", tag,
-                        f"cảnh {i} tới {j} cùng loại `{kinds[i]}` — ba cảnh "
-                        f"giống nhau liên tiếp thì người xem thấy video đứng lại"))
-        i = max(j, i + 1)
-    st = kinds.count("statement") + kinds.count("bigstat")
-    if n and st / n > 0.25:
-        out.append(("CANH BAO", tag,
-                    f"`statement` chiếm {st}/{n} cảnh ({st / n:.0%}) — nhắm một "
-                    f"phần tư. Mỗi lần định viết `statement` thứ ba thì hỏi lại "
-                    f"xem nó có phải một `compare` bị nén không"))
+                        f"cảnh {i} và {i + 1} cùng một dạng bóng "
+                        f"(`{dang[i]}`) — hai khung hình liên tiếp trông như "
+                        f"nhau. Đổi loại cảnh, hoặc đổi `neo` của một trong hai"))
+    #    Mot dang bong chiem qua mot phan tu tong so canh.
+    from collections import Counter
+    for d, c in Counter(dang).items():
+        if n and c / n > 0.25 and c >= 3:
+            out.append(("CANH BAO", tag,
+                        f"dạng bóng `{d}` chiếm {c}/{n} cảnh ({c / n:.0%}) — "
+                        f"nhắm một phần tư. Đổi `neo` cho một hai cảnh, hoặc "
+                        f"hỏi lại xem cảnh đó có phải một `compare` bị nén không"))
 
 
 def check(doc):
