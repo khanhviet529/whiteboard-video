@@ -42,7 +42,28 @@ giờ commit chúng. Tool không in giá trị token ra log.
 
 ---
 
-## Dùng
+## Dùng — bấm trong UI (cách chính)
+
+```powershell
+python dang\web.py        # -> http://127.0.0.1:8724
+```
+
+Một bảng liệt kê mọi `out/*.mp4`: tên, dung lượng, độ dài, **fps**, đã đăng chưa.
+Mỗi dòng có ô tiêu đề, chọn quyền xem, cờ `is_aigc`, và nút **Đăng**. Bấm xong log
+chạy ngay dưới dòng đó — chunk nào đang đẩy, trạng thái TikTok trả về.
+
+Ba thứ UI tự lo:
+
+- **Cảnh báo bản nháp** — video render `--fps 20` bị gắn cờ *"bản nháp, TikTok có
+  thể từ chối"*. Cũng cảnh báo nếu khung không phải 1080×1920.
+- **Nút bị vô hiệu** với video đã đăng, đọc từ `da-dang.json`.
+- **Trạng thái token** ở đầu trang: đã đăng nhập chưa, access_token còn bao phút.
+  Không in giá trị token.
+
+Chỉ bind `127.0.0.1`, không có xác thực. **Đừng mở ra ngoài** — ai vào được trang
+này là đăng được video lên tài khoản của bạn.
+
+## Dùng — dòng lệnh (để script hoá về sau)
 
 ```powershell
 # 1. đăng nhập một lần — mở browser, tool bắt `code` qua HTTP server tạm
