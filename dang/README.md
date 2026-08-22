@@ -289,20 +289,29 @@ cho thấy **mọi** product/scope đã khai — thiếu một cái là hoãn du
 tự lo phần máy móc:
 
 ```powershell
-# diễn tập trước: không gọi mạng, không cần key. Kiểm khung hình và nhịp.
+# diễn tập: không đẩy video nào lên. Kiểm khung hình và nhịp.
 py dang\quay.py --thu
 
 # quay thật
-py dang\quay.py out\<video>.mp4
+py dang\quay.py
 ```
 
-Nó bật `ffmpeg` (gdigrab) quay cả màn hình, chạy đúng thứ tự reviewer cần thấy,
-rồi **cắt thành 5 file — một file một scope**. TikTok cho tải 5 file, mỗi file
-≤50MB; một file cho một scope thì reviewer đối chiếu được ngay thay vì tua tìm
-trong video hai phút.
+Nó bật `ffmpeg` (gdigrab) quay cả màn hình, dựng sẵn UI ở `127.0.0.1:8724`, chạy
+đúng thứ tự reviewer cần thấy, rồi **cắt thành 5 file — một file một scope**.
+TikTok cho tải 5 file, mỗi file ≤50MB; một file cho một scope thì reviewer đối
+chiếu được ngay thay vì tua tìm trong video hai phút.
 
-Việc của người quay còn đúng ba chỗ: đăng nhập TikTok khi browser mở, và mở
-tiktok.com cho thấy bản nháp / video đã lên. Script nhắc từng chỗ.
+**Demo đi qua UI, không qua CLI** — đây là điều kiện đậu/trượt, không phải sở
+thích. TikTok đòi *"The video should clearly show the user interface and user
+interactions"*. Terminal khó tính là user interface, và đó là kiểu từ chối không
+tranh luận được. Nên cảnh 3-4-5 chạy trong `web.py`: chọn video trong bảng, chọn
+Inbox/Direct, chọn privacy, bấm Đăng, xem log chạy.
+
+`auth` thì vẫn ở terminal — không có UI nào cho OAuth. Nhưng trang đồng ý của
+TikTok chính là user interaction ở cảnh đó.
+
+Cảnh 4 và 5 cần **hai video khác nhau chưa từng đăng** — UI không cho đăng lại
+một file đã đăng, và sổ tính theo nội dung file nên đổi tên không qua được.
 
 Ba chi tiết đáng biết:
 

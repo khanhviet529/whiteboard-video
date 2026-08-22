@@ -1,22 +1,28 @@
 # -*- coding: utf-8 -*-
 """Quay demo video cho app review cua TikTok.
 
-    py dang/quay.py --thu          dien tap: khong goi mang, khong can key
-    py dang/quay.py out/x.mp4      quay that
+    py dang/quay.py --thu          dien tap: khong day video, khong can key
+    py dang/quay.py                quay that
 
-Tu bat ffmpeg (gdigrab), chay dung thu tu ma reviewer can thay, roi cat thanh
-tung file mot scope. Viec cua nguoi quay chi con: dang nhap TikTok khi browser
-mo, va bam Enter o vai cho.
+Tu bat ffmpeg (gdigrab), dung san UI o 127.0.0.1, chay dung thu tu ma reviewer
+can thay, roi cat thanh tung file mot scope.
 
 Vi sao cat thanh nhieu file thay vi mot file dai: TikTok cho tai 5 file, moi file
 <=50MB. Mot file cho mot scope thi reviewer doi chieu duoc ngay, khong phai tua
-tim trong video 2 phut.
+tim trong video hai phut.
+
+Vi sao demo qua UI (`web.py`) chu khong qua CLI: TikTok doi "The video should
+clearly show the user interface and user interactions". Terminal kho tinh la
+user interface, va do la ly do tu choi khong tranh luan duoc. `auth` thi van o
+terminal vi khong co UI nao cho OAuth - nhung trang dong y cua TikTok chinh la
+user interaction o canh do.
 
 Chu tren man hinh la TIENG ANH co y - reviewer cua TikTok doc tieng Anh. Terminal
 in ra tieng Viet khong ai doc duoc thi coi nhu khong co bang chung.
 """
 import argparse
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -28,6 +34,9 @@ import tiktok as tt  # noqa: E402
 tt.bat_utf8()
 
 RONG = 78
+CONG_WEB = int(os.environ.get("DANG_WEB_PORT", "8724"))
+URL_WEB = f"http://127.0.0.1:{CONG_WEB}"
+URL_TRANG = "https://khanhviet529.github.io/whiteboard-video/"
 # Raw capture ra .mkv chu khong .mp4: mp4 ghi moov atom o CUOI file, nen neu
 # tien trinh bi kill giua duong thi file khong mo duoc. mkv thi van xem duoc.
 THO = os.path.join(tt.GOC, "quay-tho.mkv")
@@ -44,9 +53,11 @@ def _khung(tieu_de, dong):
     sys.stdout.flush()
 
 
-def _cho(nhac):
-    print(f"\n  >>> {nhac}")
+def _cho(*nhac):
+    for n in nhac:
+        print(f"  >>> {n}")
     print("  >>> Roi bam Enter.")
+    sys.stdout.flush()
     try:
         input()
     except (EOFError, KeyboardInterrupt):
@@ -58,7 +69,7 @@ def _chay(lenh, thu=False):
     print(f"$ {' '.join(lenh)}")
     sys.stdout.flush()
     if thu:
-        print("  (dien tap: khong goi mang)")
+        print("  (dien tap: bo qua)")
         time.sleep(1.5)
         return 0
     return subprocess.call(lenh)
@@ -109,82 +120,125 @@ def _cat(a, b, ra):
     return os.path.getsize(ra)
 
 
+# ---------------------------------------------------------------------- UI
+def _cong_mo(cong, han=15):
+    het = time.time() + han
+    while time.time() < het:
+        with socket.socket() as s:
+            s.settimeout(0.5)
+            if s.connect_ex(("127.0.0.1", cong)) == 0:
+                return True
+        time.sleep(0.3)
+    return False
+
+
+def _bat_web():
+    """Dung san UI truoc khi quay, de canh 3 khong phai doi no khoi dong."""
+    if _cong_mo(CONG_WEB, han=1):
+        print(f"  ({URL_WEB} da chay san - dung luon)")
+        return None                    # khong phai cua minh thi khong tat
+    p = subprocess.Popen([sys.executable, os.path.join(tt.GOC, "web.py")],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if not _cong_mo(CONG_WEB):
+        p.terminate()
+        raise SystemExit(f"UI khong mo duoc tren {URL_WEB}. Chay tay xem loi gi:\n"
+                         f"  py dang\\web.py")
+    return p
+
+
 # -------------------------------------------------------------------- canh
 def canh_website(a):
     _khung("1 / 5  official website", [
-        "https://khanhviet529.github.io/whiteboard-video/",
+        URL_TRANG,
         "",
         "This is the Website URL declared in the app settings.",
-        "The tool below is a DESKTOP app; this page documents it.",
+        "The app itself is a DESKTOP tool; this page documents it,",
+        "including its Terms of Service and Privacy Policy.",
     ])
-    if not a.thu:
-        webbrowser.open("https://khanhviet529.github.io/whiteboard-video/")
+    webbrowser.open(URL_TRANG)
     _cho("Doi sang browser, cuon trang mot luot cho thay Terms + Privacy")
 
 
 def canh_login(a):
     _khung("2 / 5  login kit  (scope: user.info.basic)", [
-        "The app opens TikTok's authorization page.",
-        "The code returns to a LOOPBACK redirect on this machine:",
+        "The user signs in with TikTok. The app opens TikTok's",
+        "authorization page and receives the code on a LOOPBACK",
+        "redirect on this machine:",
         "    http://127.0.0.1:8723/callback/",
         "PKCE is used, with a hex SHA256 code_challenge.",
+        "",
+        "Then creator_info is queried, which returns the account's",
+        "own display name and real posting limits.",
         "",
         "No token ever leaves this computer.",
     ])
     _chay([sys.executable, os.path.join(tt.GOC, "dang.py"), "auth"], a.thu)
     _cho("Neu browser vua mo: dang nhap va bam Authorize, cho tool in scope")
-
-
-def canh_creator(a):
-    _khung("3 / 5  creator info  (scope: user.info.basic)", [
-        "GET /v2/post/publish/creator_info/query/",
-        "",
-        "The app reads the account's REAL limits before uploading:",
-        "which privacy levels are allowed, max duration, daily quota.",
-        "It never assumes a limit.",
-    ])
     _chay([sys.executable, os.path.join(tt.GOC, "dang.py"), "creator"], a.thu)
-    time.sleep(3)
+    _cho("Doc xong creator_info thi bam Enter")
+
+
+def canh_ui(a):
+    _khung("3 / 5  the app's user interface", [
+        URL_WEB,
+        "",
+        "The app serves its UI on the loopback interface only.",
+        "Every rendered video is listed with a thumbnail. For each one",
+        "the user chooses:",
+        "",
+        "  - Inbox draft, or Direct post",
+        "  - the privacy level, from the account's own allowed list",
+        "  - the caption",
+        "  - the AI-generated-content flag (on by default)",
+        "",
+        "Videos already posted are marked and cannot be posted twice.",
+    ])
+    webbrowser.open(URL_WEB)
+    _cho("Doi sang browser, cuon bang video mot luot",
+         "Mo o chon Inbox/Direct va o Privacy cho thay cac lua chon")
 
 
 def canh_upload(a):
     _khung("4 / 5  upload to inbox  (scope: video.upload)", [
-        "POST /v2/post/publish/inbox/video/init/",
-        "then chunked FILE_UPLOAD, then poll status/fetch",
-        "until SEND_TO_USER_INBOX.",
+        "In the UI: pick a video, choose INBOX, click the post button.",
+        "",
+        "The app calls /v2/post/publish/inbox/video/init/, uploads the",
+        "file in chunks as FILE_UPLOAD, then polls status/fetch until",
+        "SEND_TO_USER_INBOX. The live log shows every step.",
         "",
         "The video lands in the creator's own TikTok inbox as a DRAFT.",
         "The creator writes the caption and publishes it in the app.",
     ])
-    # `--lai` co y: so `da-dang.json` chan dang trung theo NOI DUNG file, dung
-    # cho lich chay tu dong. Nhung mot buoi quay thi CO Y dang lai cung mot file -
-    # canh 4 (inbox) roi canh 5 (direct) - va con quay lai lan hai lan ba. Thieu
-    # co nay thi canh 4 chet giua bai quay, dung luc khong sua duoc gi.
-    lenh = [sys.executable, os.path.join(tt.GOC, "dang.py"), "dang", a.video,
-            "--inbox", "--cho", "--lai"]
-    _chay(lenh, a.thu)
-    _cho("Mo tiktok.com (hoac app TikTok) cho thay ban NHAP vua toi Inbox")
+    if a.thu:
+        print("  (dien tap: KHONG bam Dang - chi xem giao dien)\n")
+    _cho("Chon mot video, dat Inbox, bam Dang",
+         "Cho log chay den SEND_TO_USER_INBOX",
+         "Roi mo tiktok.com cho thay ban NHAP vua toi Inbox")
 
 
 def canh_publish(a):
     _khung("5 / 5  direct post  (scope: video.publish)", [
-        "POST /v2/post/publish/video/init/",
-        "same chunked upload, then poll until PUBLISH_COMPLETE.",
+        "In the UI: pick another video, choose DIRECT POST, set the",
+        "privacy level and the caption, keep the AI flag on, then post.",
         "",
-        "A finished video with its caption is posted directly.",
-        "is_aigc=true on every upload: the voice-over is AI-generated.",
-        "privacy_level=SELF_ONLY here, as an unaudited client.",
+        "The app calls /v2/post/publish/video/init/, uploads the same",
+        "way, and polls until PUBLISH_COMPLETE. A finished video with",
+        "its caption is published without any further step.",
+        "",
+        "is_aigc is always true: the voice-over is AI-generated.",
+        "In Sandbox the result stays private, as documented.",
     ])
-    lenh = [sys.executable, os.path.join(tt.GOC, "dang.py"), "dang", a.video,
-            "--tieu-de", a.tieu_de, "--cho", "--lai"]
-    _chay(lenh, a.thu)
-    _cho("Mo tiktok.com cho thay video vua DANG len profile")
+    if a.thu:
+        print("  (dien tap: KHONG bam Dang - chi xem giao dien)\n")
+    _cho("Chon video KHAC, dat Direct post, bam Dang",
+         "Cho log chay den PUBLISH_COMPLETE",
+         "Roi mo tiktok.com cho thay video vua len profile")
 
 
 CANH = [
     ("01-website", canh_website),
     ("02-login-kit", canh_login),
-    ("03-creator-info", canh_creator),
+    ("03-app-ui", canh_ui),
     ("04-video-upload", canh_upload),
     ("05-video-publish", canh_publish),
 ]
@@ -193,36 +247,31 @@ CANH = [
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("video", nargs="?", help="mp4 de dang thu trong demo")
     ap.add_argument("--thu", action="store_true",
-                    help="dien tap: khong goi mang, khong can key. Dung de kiem "
-                         "khung hinh va nhip truoc khi quay that")
+                    help="dien tap: khong day video len TikTok. Dung de kiem "
+                         "khung hinh va nhip TRUOC khi quay that")
     ap.add_argument("--ra", default=os.path.join(tt.GOC, "demo"),
                     help="thu muc chua cac file cat ra")
-    ap.add_argument("--tieu-de", default="Test upload from Whiteboard Video Uploader")
     ap.add_argument("--giu-tho", action="store_true", help="giu lai file mkv goc")
     a = ap.parse_args()
 
-    if a.thu:
-        # `_chay` in ca lenh ra truoc khi biet la dien tap, nen `video` khong duoc
-        # phep la None - `" ".join` se no TypeError.
-        a.video = a.video or os.path.join("out", "vi-du.mp4")
-    else:
-        if not a.video:
-            raise SystemExit("thieu duong dan video. Hoac dien tap: --thu")
-        if not os.path.exists(a.video):
-            raise SystemExit(f"khong thay {a.video}")
-        # Fail fast: het nua video moi phat hien thieu key la mat cong quay lai.
+    # Fail fast: het nua buoi quay moi phat hien thieu key la mat cong quay lai.
+    if not a.thu:
         tt.cau_hinh()
 
     _khung("chuan bi", [
-        "1. Terminal nay phong TO HET man hinh - reviewer phai doc duoc chu.",
+        "1. Phong TO cua so terminal va browser - reviewer phai doc duoc chu.",
         "2. Dong het cua so khong lien quan (ca thong bao, ca tab rieng tu).",
-        "3. Chuan bi mot tab browser san de mo tiktok.com khi duoc nhac.",
-        "4. Ca man hinh se bi quay, ke ca ten file va thong bao hien ra.",
+        "3. Ca man hinh se bi quay, ke ca ten file va thong bao hien ra.",
+        "4. Canh 4 va 5 can HAI video khac nhau chua tung dang.",
+        "",
+        "Neu muon man hinh dong y cua TikTok hien lai o canh 2, thu hoi quyen",
+        "truoc: app TikTok -> Settings and privacy -> Security and permissions",
+        "-> Manage app permissions -> xoa app nay.",
     ])
     _cho("San sang thi bam Enter de bat dau quay")
 
+    web = _bat_web()
     p = _bat_ffmpeg()
     t0 = time.time()
     moc = []
@@ -233,6 +282,8 @@ def main():
             moc.append((ten, batdau, time.time() - t0))
     finally:
         _tat_ffmpeg(p)
+        if web is not None:
+            web.terminate()
 
     if not os.path.exists(THO) or os.path.getsize(THO) == 0:
         raise SystemExit("ffmpeg khong ghi duoc gi. Kiem quyen ghi vao " + tt.GOC)
