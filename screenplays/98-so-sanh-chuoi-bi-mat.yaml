@@ -1,6 +1,6 @@
 # SO 98 - MUA 7 "BAM VA BI MAT".
 #   chu de   : so sanh chuoi bi mat, va cho ro ri thong tin qua dong ho
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 185
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 185
 #   do bang  : repro/bam_va_bi_mat.py  (ca `timing`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #
@@ -63,6 +63,10 @@ scenes:
     verdict: CHÍNH THỜI GIAN LÀ CÂU TRẢ LỜI
 
   # ================================================================ NHIP 2
+  # Da thu doi canh nay thanh `compare` de ha ty le `statement`, nhung canh 03
+  # NGAY SAU cung la `compare` - hai canh lien tiep cung mot dang bong, tuc doi
+  # mot van de lay mot van de khac. Giu `statement`, va tach dang bong bang
+  # `neo: tren` thay vi doi loai canh. Xem `research/do_don_dieu.py`.
   - scene: statement
     chapter: HIỆN TRƯỜNG
     head: Hàm đó không sai một chỗ nào.
@@ -70,6 +74,7 @@ scenes:
     caption: Đáp số đúng, chỗ hở nằm ngoài đáp số.
     value: CHỖ HỞ KHÔNG NẰM Ở ĐÁP SỐ
     size: 108
+    neo: tren
     sub: Nó nằm ở thời gian trả lời
 
   # ================================================================ NHIP 3
@@ -110,7 +115,7 @@ scenes:
   - scene: thac
     chapter: QUAY CHẬM
     head: Dò từng ký tự một.
-    narration: Kẻ tấn công gửi từng phương án rồi bấm đồng hồ. Phương án nào làm hàm trả lời chậm hơn thì đúng thêm một ký tự. Mỗi bậc thang dưới đây là một ký tự đã lộ.
+    narration: Kẻ tấn công gửi từng phương án một rồi bấm đồng hồ, không cần biết đáp án đúng là gì. Phương án nào làm hàm trả lời chậm hơn một chút thì phương án đó đúng thêm một ký tự. Hàng đầu tiên là ba trăm năm sáu nano giây, tức trượt ngay ký tự đầu. Hàng cuối là bốn nghìn một trăm, tức đã trúng sáu mươi ba ký tự. Mỗi bậc thang dài thêm là một ký tự vừa rơi ra khỏi bí mật.
     caption: Bậc thang dài thêm nghĩa là lộ thêm một ký tự.
     ruler: ["0", "1.000 ns", "2.000 ns", "3.000 ns", "4.000 ns"]
     tong: { key: SỐ LẦN GỌI ĐÃ DÙNG, gia: 2304, dv: " lần", le: 0, nhan: 36 phương án cho mỗi ký tự × 64 ký tự }
@@ -162,6 +167,7 @@ scenes:
     label: KHÔNG CÓ 100%
     value: DÙNG HÀM CHUẨN VÌ KHÔNG KIỂM SOÁT ĐƯỢC
     size: 84
+    neo: duoi
     color: gold
     sub: Không phải vì đã đo thấy dấu bằng rò
 

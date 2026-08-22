@@ -1,6 +1,6 @@
 # SO 91 - MUA 7 "BAM VA BI MAT". Xem KE-HOACH-KHO-292.md.
 #   chu de   : bam mot chieu KHONG co nghia la an danh
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 177
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 177
 #   do bang  : repro/bam_va_bi_mat.py  (ca `so_dien_thoai`, `khong_gian`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt  <- MOT luot chay duy nhat
 #              MOI con so duoi day lay tu dung luot do. Tron so cua hai luot la
@@ -63,6 +63,7 @@ scenes:
     caption: Không lệnh nào lỗi, nên không ai đi vá.
     value: KHÔNG CÓ LỆNH NÀO LỖI
     size: 118
+    neo: tren
     sub: Nên nó đi qua hết mọi vòng review
 
   # ================================================================ NHIP 3
@@ -123,6 +124,7 @@ scenes:
     label: THỦ PHẠM
     value: MIỀN GIÁ TRỊ ĐẾM ĐƯỢC
     size: 116
+    neo: duoi
     sub: Ba chữ số đầu thì ai cũng đoán ra
 
   # ================================================================ MO PHONG 2

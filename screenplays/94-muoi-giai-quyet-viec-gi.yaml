@@ -1,6 +1,6 @@
 # SO 94 - MUA 7 "BAM VA BI MAT".
 #   chu de   : muoi giai quyet viec gi, va no KHONG lam mat khau manh hon
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 180
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 180
 #   do bang  : repro/bam_va_bi_mat.py  (ca `muoi`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #
@@ -95,7 +95,7 @@ scenes:
   - scene: gop
     chapter: QUAY CHẬM
     head: Ba người gộp về một dòng.
-    narration: Ba người này đặt cùng một mật khẩu, chuyện rất thường. Băm không muối thì cả ba cho ra đúng một dòng. Bẻ được một dòng đó là mở được cả ba tài khoản cùng lúc.
+    narration: Ba người này đặt cùng một mật khẩu, chuyện rất thường ở bất kỳ bảng người dùng nào. Ba địa chỉ khác nhau, ba thời điểm đăng ký khác nhau, nhưng phần đem đi băm thì giống hệt. Băm không muối là hàm thuần, cùng đầu vào thì luôn cùng đầu ra, nên cả ba đổ về đúng một dòng. Bẻ được một dòng đó là mở được cả ba tài khoản, và chi phí bẻ vẫn chỉ là một lần.
     caption: Bẻ một dòng, mở được cả ba tài khoản.
     vao:
       - { nhan: NGƯỜI DÙNG 1, value: "an@shop.vn · 123456", note: "tự đặt" }

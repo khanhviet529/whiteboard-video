@@ -160,6 +160,18 @@ Hai điều nữa về sự đơn điệu:
 
 ---
 
+## Bẫy khi tự viết phép kiểm cho cổng kể chuyện
+
+Ba bẫy dưới đây va phải trong đúng một buổi, khi biến cổng chất lượng thành
+`lint.check_cong`. Cả ba đều là **phép kiểm sai**, không phải kịch bản sai — và
+một phép kiểm sai thì đắt hơn một kịch bản sai, vì nó dạy sai cho mọi số sau.
+
+| Bẫy | Đã xảy ra thế nào | Cách tránh |
+|---|---|---|
+| **Đo sai đơn vị** | Đặt ngưỡng "mô phỏng ≥ 15% **số cảnh**", nhưng công thức nhắm 35–40% **thời lượng**. Đối chiếu trên `cache-stale`: 2/13 cảnh là 15% nếu đếm cảnh, 25% nếu đếm ký tự lời đọc — và số đo THẬT từ log render là 23% thời lượng. Đếm cảnh lệch 8 điểm, đếm ký tự lệch 2 | Đo bằng **độ dài lời đọc**. Pipeline tính thời lượng cảnh từ độ dài audio, mà độ dài audio tỷ lệ với số ký tự — nên ký tự là proxy đúng, còn số cảnh thì không |
+| **Ngưỡng chống lại chính mẫu đã duyệt** | Đặt "quá 1 cảnh `rule` là cảnh báo" theo đúng câu *"đúng MỘT quy tắc"* ở nhịp 6. Nhưng mẫu điền của biến thể HOOK 5 NHỊP, nằm ở **cuối chính file đó**, lại có `rule 01` và `rule 02`. Phép kiểm kêu ngay trên `cache-stale` | Trước khi chốt một ngưỡng, chạy nó lên file tham chieu. Kêu trên file đã duyệt thì hoặc ngưỡng sai, hoặc file đó sai — và phải biết là cái nào |
+| **Danh sách tiền tố SI thiếu mục** | `phienam.DA_QUEN` có `mili` `micro` `mega` `giga` `tera` nhưng **không có** `nano`. Nên câu "ba trăm năm sáu nano giây" bị báo là từ tiếng Anh chưa khai, trong khi `micro giây` ngay cạnh thì im | Danh sách kiểu này phải đầy đủ theo họ, không thêm theo từng lần gặp. Đã thêm `nano` và `pico` |
+
 ## Bẫy của bốn cảnh mô phỏng mới (`cot` `thac` `ban_sao` `gop`)
 
 Bốn loại này dựng trong một buổi cùng với mùa 7, nên mục dưới đây là bẫy **đã va

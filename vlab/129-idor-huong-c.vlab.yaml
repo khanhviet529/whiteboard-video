@@ -1,0 +1,163 @@
+# VISUAL LAB - de tai 129 (IDOR), HUONG C: the gioi ben vung + ong kinh.
+#
+# Y NGHIA HINH: `so_huu` - AI THAY GI. Nhom lon nhat chua co hinh trong
+# `research/ban_do_hinh.py` (25 chu de).
+#
+# MO HINH TU DUY: video la MOT khong gian lien tuc. Don CUA BAN va don CUA NGUOI
+# KHAC la hai vung trong khong gian do, va **ong kinh la co che he lo**. Nhip
+# 1-2 quay sat vung cua ban, nen vung kia khong phai "chua duoc ve" ma NAM NGOAI
+# KHUNG. Nhip 3 lui ra, va do la khoanh khac phat hien - khong mot doi tuong moi
+# nao duoc them, chi ong kinh doi.
+#
+# Day la thu `bench` khong lam duoc: moi canh cua bench la mot to giay moi, nen
+# "he lo" o do bat buoc phai la VE THEM mot canh - tuc noi cho nguoi xem, khong
+# phai de ho tu thay.
+#
+# ---------------------------------------------------------------------------
+# BAN NAY LA BAN THU HAI. Ban dau xep hai vung NAM NGANG canh nhau, va no hong:
+# khung hinh 9:16 cao gap 1,78 lan be rong, nen mot the gioi nam ngang bi nhet
+# vao khung doc de lai 40% dien tich trong o tren va duoi, con chu thi tut xuong
+# san 17px va khong doc noi.
+#
+# Bai hoc: trong khung DOC thi duong bien phai NAM NGANG, va cu he lo phai la
+# mot cu lui/truot theo chieu DOC. "Ngoai khung" o dinh dang nay nghia la o
+# TREN hoac o DUOI, khong phai o ben canh.
+# ---------------------------------------------------------------------------
+
+brand: 'HIỆN TRƯỜNG · SỐ 129'
+tag: 'bảo mật · sở hữu'
+y_nghia: so_huu
+de_tai: 129
+
+# ---------------------------------------------------------------- THE GIOI
+# Hai vung XEP DOC, cach nhau mot khe 380 don vi. Khe do la duong bien, va
+# nhip 4 quay sat vao no.
+the_gioi:
+  - { id: api, loai: the, x: 90, y: 120, w: 1020, h: 190,
+      nhan: 'GET /api/orders/118', mau: cool, gia_tri: '200 OK', co: 46 }
+
+  - { id: v_ban, loai: vung, x: 60, y: 380, w: 1080, h: 1040,
+      nhan: 'ĐƠN CỦA BẠN', sub: 'user_id = 7', mau: cool }
+  - { id: r118, loai: hang, x: 120, y: 560, w: 960, h: 124,
+      nhan: '#118', sub: 'của bạn' }
+  - { id: r119, loai: hang, x: 120, y: 700, w: 960, h: 124,
+      nhan: '#119', sub: 'của bạn' }
+  - { id: r120, loai: hang, x: 120, y: 840, w: 960, h: 124,
+      nhan: '#120', sub: 'của bạn' }
+  - { id: r121, loai: hang, x: 120, y: 980, w: 960, h: 124,
+      nhan: '#121', sub: 'của bạn' }
+
+  # --- khe 1420..1800: duong bien. Cong nam giua khe.
+  - { id: gate, loai: cong, x: 500, y: 1510, w: 200, h: 200,
+      nhan: 'PHÉP KIỂM', trang_thai: tat }
+  - { id: n_khe, loai: nhan, x: 740, y: 1556, nhan: 'KHÔNG CÓ GÌ',
+      sub: 'ở đúng chỗ này', mau: hot, co: 34, kieu: mono }
+
+  - { id: v_khac, loai: vung, x: 60, y: 1800, w: 1080, h: 1040,
+      nhan: 'ĐƠN CỦA NGƯỜI KHÁC', sub: 'user_id = 41 · 42 · 43', mau: violet }
+  - { id: r1043, loai: hang, x: 120, y: 1980, w: 960, h: 124,
+      nhan: '#1043', sub: 'của user 41' }
+  - { id: r1044, loai: hang, x: 120, y: 2120, w: 960, h: 124,
+      nhan: '#1044', sub: 'của user 42' }
+  - { id: r1045, loai: hang, x: 120, y: 2260, w: 960, h: 124,
+      nhan: '#1045', sub: 'của user 43' }
+
+  - { id: n_thu, loai: nhan, x: 120, y: 1190, nhan: 'PHÉP KIỂM ĐỨNG SAI CHỖ',
+      sub: 'nó canh cửa vào, không canh đường biên', mau: hot, co: 78,
+      kieu: slab }
+
+# ---------------------------------------------------------------- NHIP
+nhip:
+  # NHIP 1 - hien truong. Ong kinh SAT vung cua ban. Vung kia o DUOI khung,
+  # nguoi xem chua biet no ton tai. Khung `day` de nhan ra kenh.
+  - ten: 'Bạn gọi đơn của mình.'
+    cam: [600, 700, 1080]
+    khung: day
+    hien: [v_ban, r118, r119, r120, r121, api]
+    doi: { api: ok, r118: ok }
+    chu_y: [api, r118]
+    boi_canh: [v_ban]
+    caption: 'Gọi đơn #118 của bạn. Trả về đúng đơn đó.'
+    ghi: 'user_id = 7 · đã đăng nhập'
+    narration: >
+      Bạn gọi đơn một một tám của mình. Ây pi ai trả về đúng đơn đó, và mọi
+      phép kiểm đều xanh.
+
+  # NHIP 2 - CAU HOI DUOC SINH RA. Cung ong kinh, chi doi so tren the endpoint.
+  # Response co du lieu that ma tren man hinh khong co hang nao khop.
+  - ten: 'Đổi số. Vẫn 200 OK.'
+    cam: [600, 700, 1080]
+    khung: toi_gian
+    doi: { api: sai, r118: thuong }
+    chu_y: [api]
+    caption: 'Đổi thành #1043. Vẫn 200 OK, và có dữ liệu thật.'
+    ghi: 'vẫn user_id = 7'
+    narration: >
+      Giờ đổi số trên đường dẫn thành một không bốn ba. Ây pi ai vẫn trả về hai
+      trăm ô kê, và trong đó có dữ liệu thật. Nhưng trên màn hình này không có
+      đơn nào mang số đó.
+
+  # NHIP 3 - HE LO BANG ONG KINH. Khong doi tuong moi nao duoc ve them ngoai
+  # vung thu hai; ong kinh lui ra va no xuat hien tu phia DUOI. Nhip nay khong
+  # ton tai duoc trong `bench`, va la ly do ca huong C duoc thu.
+  #
+  # Khung `khong`: bo sach rail va tieu de. Cu lui nay la cao trao thi giac, mot
+  # cai rail o goc tren se keo mat ra khoi no.
+  - ten: 'Nó ở dưới kia.'
+    cam: [600, 1560, 1420]
+    khung: khong
+    hien: [v_khac, r1043, r1044, r1045]
+    doi: { r1043: sai }
+    # `chu_y` chi con r1043: bo kiem ngu nghia bat duoc rang the `api` da troi
+    # ra ngoai canh tren o cu lui nay, nen bao nguoi xem chu y vao no la sai.
+    chu_y: [r1043]
+    # Nghia cua nhip nay la PHEP SO SANH hai vung, nen ca hai phai doc duoc.
+    boi_canh: [v_ban, v_khac, r118, r119, r120, r121, r1044, r1045]
+    caption: 'Đơn #1043 nằm trong vùng của người khác. Bạn vừa đọc được nó.'
+    narration: >
+      Đơn đó nằm ở đây. Nó thuộc một người dùng khác, trong một vùng mà bạn
+      không có quyền gì. Và bạn vừa đọc được nó bằng một dòng địa chỉ.
+
+  # NHIP 4 - QUAY SAT DUONG BIEN. Cung the gioi, zoom vao KHE giua hai vung.
+  # Cong dang MO, tuc khong co gi canh.
+  - ten: 'Đường biên trống.'
+    cam: [600, 1610, 900]
+    khung: toi_gian
+    hien: [gate, n_khe]
+    chu_y: [gate, n_khe]
+    boi_canh: [v_ban, v_khac]
+    caption: 'Phép kiểm hỏi "đã đăng nhập chưa", không hỏi "đơn này của ai".'
+    ghi: 'chỗ duy nhất cần một phép kiểm'
+    narration: >
+      Quay sát vào đúng chỗ đó. Giữa hai vùng không có gì cả. Phép kiểm của bạn
+      hỏi đã đăng nhập chưa, và câu đó thì đúng, nên nó cho qua.
+
+  # NHIP 5 - THU PHAM. Lui ra mot muc trung, va nhan chu dam dat THANG trong
+  # khong gian - khong trong the, khong can giua. Do la dang bong ma `bench`
+  # khong tao ra duoc, vi o do moi chu phai nam trong mot khoi.
+  - ten: 'Gọi tên thủ phạm.'
+    cam: [600, 1250, 1700]
+    khung: khong
+    hien: [n_thu]
+    chu_y: [n_thu]
+    boi_canh: [gate, v_ban, v_khac]
+    caption: 'Nó canh cửa vào nhà, không canh ranh giới giữa hai vùng.'
+    narration: >
+      Thủ phạm không phải thiếu phép kiểm. Là phép kiểm đứng sai chỗ, nó canh
+      cửa vào nhà chứ không canh ranh giới giữa hai vùng.
+
+  # NHIP 6 - BAN SUA. Ong kinh Y NGUYEN nhip 4, chi doi mot vat: cong dong lai
+  # va sang xanh. Giu nguyen khung nhin la ky thuat da duoc chung minh o
+  # `cache-stale` (hai `gantt` cung bo cuc) - o day no duoc ap cho ONG KINH.
+  - ten: 'Đóng cổng ở đúng chỗ.'
+    cam: [600, 1610, 900]
+    khung: day
+    an: [n_khe, n_thu]
+    doi: { gate: dong, r1043: thuong }
+    chu_y: [gate]
+    boi_canh: [v_ban, v_khac]
+    caption: 'Điều kiện chủ sở hữu phải nằm trong chính câu truy vấn.'
+    ghi: 'WHERE id = ? AND user_id = ?'
+    narration: >
+      Quy tắc chỉ một câu. Điều kiện chủ sở hữu phải nằm trong chính câu truy
+      vấn, không nằm trong một lần kiểm riêng phía trên.

@@ -1,6 +1,6 @@
 # SO 97 - MUA 7 "BAM VA BI MAT".
 #   chu de   : chu ky bang bam noi dung thi ai cung ky lai duoc
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 184 (HMAC)
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 184 (HMAC)
 #   do bang  : repro/bam_va_bi_mat.py  (ca `hmac_webhook`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #
@@ -101,7 +101,7 @@ scenes:
   - scene: gantt
     chapter: QUAY CHẬM
     head: Quay chậm đường về của gói tin.
-    narration: Cổng gửi đi một trăm nghìn kèm chữ ký. Trên đường về có người chen vào, sửa số tiền xuống một đồng, rồi tự bấm lại mã băm của nội dung mới. Máy chủ của bạn nhận được, so lại, và thấy khớp.
+    narration: Cổng gửi đi một trăm nghìn kèm chữ ký, và ô số bên trên đang giữ đúng con số đó. Trên đường về có người chen vào. Họ sửa số tiền xuống một đồng, và ô số đổi theo ngay lúc bước đó vừa xong. Rồi họ tự bấm lại mã băm của nội dung mới, vì phép bấm đó không cần khoá nào. Máy chủ nhận được, so lại, và ô kiểm chữ ký hiện chữ khớp.
     caption: Sửa nội dung rồi tự ký lại. Server so lại thì thấy khớp.
     ruler: ["0", "10ms", "20ms", "30ms"]
     lanes:

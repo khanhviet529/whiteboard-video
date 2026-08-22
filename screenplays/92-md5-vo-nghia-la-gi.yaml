@@ -1,6 +1,6 @@
 # SO 92 - MUA 7 "BAM VA BI MAT".
 #   chu de   : "MD5 vo" nghia la gi, va no KHONG nghia la doc nguoc duoc
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 178
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 178
 #   do bang  : repro/bam_va_bi_mat.py  (ca `md5_trung`)
 #
 # CAP KHOI 128 BYTE trong script la cap noi tieng cua Wang & Yu (2004), khong
@@ -98,7 +98,7 @@ scenes:
   - scene: gop
     chapter: QUAY CHẬM
     head: Chúng lệch nhau đúng sáu bit.
-    narration: Hai tệp dài một trăm hai tám ký tự. Chúng lệch nhau ở sáu chỗ, mỗi chỗ đúng một bit, tức sáu bit trên một nghìn không hai bốn. Vậy mà mã băm của cả hai ra y hệt nhau.
+    narration: Hai tệp dài một trăm hai tám ký tự. Chúng lệch nhau ở sáu chỗ, mỗi chỗ đúng một bit, tức sáu bit trên một nghìn không hai bốn. Nhìn đoạn lệch đầu tiên thì thấy rõ, một tệp có tám bảy, tệp kia có không bảy. Đưa cả hai qua cùng một phép băm, và cùng một chuỗi ba mươi hai ký tự rơi ra. Không phải gần giống, mà giống tới từng chữ cuối.
     caption: Lệch 6 bit trên 1024. Mã băm vẫn y hệt.
     vao:
       - { nhan: TỆP A · ĐOẠN LỆCH, value: "2fcab587 12467eab", note: "byte thứ 19" }

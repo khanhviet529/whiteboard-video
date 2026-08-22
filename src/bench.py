@@ -556,7 +556,21 @@ def sc_statement(b, sp, acc):
     sub_h = 96 if sub else 0
     lab_h = 62 if label else 0
     blk = total + sub_h + lab_h
-    y0 = STAGE_CY - blk / 2
+    # `neo` = neo khoi chu theo chieu doc. Mac dinh `giua`, y nguyen hanh vi cu.
+    #
+    # Vi sao co truong nay: do bang `research/do_don_dieu.py` thi hai canh
+    # `statement` trong cung mot video chi cach nhau 0,042 tren thang 0..1 - tuc
+    # gan nhu TRUNG dang bong. Nguyen nhan khong phai noi dung ma la mot dong
+    # code: khoi chu luon can giua san dien, nen moi canh `statement` `ask`
+    # `rule` deu la mot cuc chu o dung mot cho. Neo len hoac xuong thi cung noi
+    # dung do cho ra mot dang bong khac han, khong ton mot pixel nao them.
+    neo = str(sp.get("neo", "giua")).lower()
+    if neo == "tren":
+        y0 = STAGE_TOP + 40
+    elif neo == "duoi":
+        y0 = STAGE_BOTTOM - blk - 60
+    else:
+        y0 = STAGE_CY - blk / 2
     ytxt = y0 + lab_h
     gw = max(track_w(l, f, -2.5) for l in lines)
     fbox = (CX - gw / 2 - 54, ytxt - 40, CX + gw / 2 + 54, ytxt + total + 34)
@@ -662,7 +676,16 @@ def sc_rule(b, sp, acc):
     head_h = 118
     inner = blh * len(blines) + ((slh * len(slines) + 34) if slines else 0) + 92
     hgt = head_h + inner
-    y0 = STAGE_CY - hgt / 2
+    # `neo`: xem chu thich o `sc_statement`. Ba loai canh `statement` `ask`
+    # `rule` deu la khoi chu can giua, nen chung la nguon don dieu lon nhat do
+    # duoc trong `research/do_don_dieu.py`.
+    neo = str(sp.get("neo", "giua")).lower()
+    if neo == "tren":
+        y0 = STAGE_TOP + 30
+    elif neo == "duoi":
+        y0 = STAGE_BOTTOM - hgt - 30
+    else:
+        y0 = STAGE_CY - hgt / 2
     box = (MARGIN, y0, W - MARGIN, y0 + hgt)
 
     def fn_c(base, d, p):
@@ -763,7 +786,16 @@ def sc_ask(b, sp, acc):
     total = lh * len(lines)
     hint = sp.get("hint")
     hgt = total + (120 if hint else 0)
-    y0 = STAGE_CY - hgt / 2
+    # Cung ly do nhu `sc_statement`: canh `ask` va canh `statement` deu la mot
+    # khoi chu can giua, nen do dang bong thi chung cach nhau 0,082 - gan trung.
+    # Xem `research/do_don_dieu.py`.
+    neo = str(sp.get("neo", "giua")).lower()
+    if neo == "tren":
+        y0 = STAGE_TOP + 96
+    elif neo == "duoi":
+        y0 = STAGE_BOTTOM - hgt - 40
+    else:
+        y0 = STAGE_CY - hgt / 2
     fbox = (MARGIN + 20, y0 - 56, W - MARGIN - 20, y0 + total + 46)
 
     def fn_f(base, d, p):

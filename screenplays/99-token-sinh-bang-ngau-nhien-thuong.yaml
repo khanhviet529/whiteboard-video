@@ -1,6 +1,6 @@
 # SO 99 - MUA 7 "BAM VA BI MAT". So cuoi mua.
 #   chu de   : doan mot dong sinh token pho bien nhat, va hai cho no hong
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 186
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 186
 #   do bang  : repro/bam_va_bi_mat.py  (ca `token_36`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #
@@ -102,7 +102,7 @@ scenes:
   - scene: cot
     chapter: QUAY CHẬM
     head: Hai trăm nghìn token, xếp theo độ dài.
-    narration: Đây là hai trăm nghìn chuỗi mã xếp theo độ dài. Gần hết đúng chín ký tự. Nhưng năm nghìn bốn trăm sáu chín cái ngắn hơn, và sáu cái trong đó chỉ có sáu ký tự.
+    narration: Đây là hai trăm nghìn chuỗi mã xếp theo độ dài, và trục này là trục lô ga rít. Cột phải cùng là nhóm chín ký tự, gần hai trăm nghìn cái, đúng như mong đợi. Nhưng ba cột bên trái không rỗng. Năm nghìn ba trăm cái dài tám ký tự, một trăm bốn lăm cái dài bảy, và sáu cái chỉ có sáu ký tự. Sáu ký tự nghĩa là không gian tụt từ trăm nghìn tỉ xuống còn hai tỉ.
     caption: 5.469 cái ngắn hơn 9 ký tự, 6 cái chỉ có 6.
     truc: SỐ TOKEN SINH RA · TRÊN 200.000 CÁI
     thang: log

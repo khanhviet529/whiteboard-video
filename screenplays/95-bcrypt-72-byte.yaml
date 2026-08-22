@@ -1,6 +1,6 @@
 # SO 95 - MUA 7 "BAM VA BI MAT".
 #   chu de   : gioi han 72 byte cua bcrypt, va hai kieu no lam hong he thong
-#   nguon y  : files/kho-chu-de-content-it-phan-2.md bai 181
+#   nguon y  : files/ke-hoach/kho-chu-de-p2.md bai 181
 #   do bang  : repro/bam_va_bi_mat.py  (ca `bcrypt_72`)
 #   ban do   : repro/ket-qua/mua-07-bam-va-bi-mat.txt
 #
@@ -100,7 +100,7 @@ scenes:
   - scene: cot
     chapter: QUAY CHẬM
     head: Bao nhiêu ký tự thật sự vào.
-    narration: Trục dọc là số ký tự thật sự đi vào mã băm. Mười hai ký tự thì vào đủ mười hai. Bốn mươi thì vào đủ bốn mươi. Nhưng tám mươi và hai trăm đều chỉ vào đúng bảy mươi hai.
+    narration: Trục dọc là số ký tự thật sự đi vào mã băm. Mười hai ký tự thì vào đủ mười hai, bốn mươi thì vào đủ bốn mươi. Hai cột đó dựng lên đúng bằng độ dài của chúng. Cột thứ ba là mật khẩu tám mươi ký tự, và nó dừng lại ở bảy mươi hai. Cột thứ tư là mật khẩu hai trăm ký tự, cũng dừng ở đúng chỗ đó. Hai cột cuối cao bằng nhau, và đó là cả nội dung của cảnh này.
     caption: 80 và 200 ký tự đều chỉ vào đúng 72.
     truc: SỐ KÝ TỰ THẬT SỰ ĐI VÀO MÃ BĂM
     ghi: bcrypt · số ký tự vào = ít hơn giữa độ dài và 72
